@@ -2,17 +2,15 @@
 #include <TMC2209.h>
 #include "wiring_private.h" // pinPeripheral() function
 
-// This example will not work on Arduino boards without HardwareSerial ports,
-// such as the Uno, Nano, and Mini.
-//
-// See this reference for more details:
-// https://www.arduino.cc/reference/en/language/functions/communication/serial/
-Uart Serial2 (&sercom3, SCL, SDA, SERCOM_RX_PAD_1, UART_TX_PAD_0);
+#define STEP 6
+#define DIR 5
+
+Uart Serial2(&sercom3, SCL, SDA, SERCOM_RX_PAD_1, UART_TX_PAD_0);
 void SERCOM3_Handler()
 {
   Serial2.IrqHandler();
 }
-HardwareSerial & serial_stream = Serial2;
+HardwareSerial &serial_stream = Serial2;
 
 const long SERIAL_BAUD_RATE = 115200;
 const int DELAY = 100;
@@ -20,32 +18,51 @@ const int DELAY = 100;
 // Instantiate TMC2209
 TMC2209 stepper_driver;
 
-
 void setup()
 {
   pinPeripheral(SCL, PIO_SERCOM);
   pinPeripheral(SDA, PIO_SERCOM);
   Serial.begin(SERIAL_BAUD_RATE);
-
+  //while (!Serial)
+  //  ;
+  pinMode(STEP, OUTPUT);
+  pinMode(DIR, OUTPUT);
+  pinMode(13, OUTPUT);
   stepper_driver.setup(serial_stream, 9600);
+
+  while (!stepper_driver.isCommunicating())
+  {
+    Serial.println("waiting for comms");
+    delay(10);
+  }
+  stepper_driver.setRunCurrent(100);
+  stepper_driver.enableCoolStep();
+  stepper_driver.enable();
+  
 }
 
 void loop()
 {
-  if (stepper_driver.isSetupAndCommunicating())
+
+  Serial.println("running");
+  digitalWrite(13, HIGH);
+  digitalWrite(DIR, HIGH);
+  for (int i = 0; i < 1000; i++)
   {
-    Serial.println("good");
+    digitalWrite(STEP, HIGH);
+    delayMicroseconds(1);
+    digitalWrite(STEP, LOW);
+    delay(1);
   }
-  else if (stepper_driver.isCommunicatingButNotSetup())
+  delay(1000);
+  digitalWrite(13, LOW);
+  digitalWrite(DIR, LOW);
+  for (int i = 0; i < 1000; i++)
   {
-    Serial.println("Stepper driver is communicating but not setup!");
-    Serial.println("Running setup again...");
-    stepper_driver.setup(serial_stream, 9600);
+    digitalWrite(STEP, HIGH);
+    delayMicroseconds(1);
+    digitalWrite(STEP, LOW);
+    delay(1);
   }
-  else
-  {
-    Serial.println(".5");
-  }
-  Serial.println();
-  delay(DELAY);
+  delay(1000);
 }
