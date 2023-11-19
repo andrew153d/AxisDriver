@@ -67,7 +67,7 @@ void trySettings(){
   chop_cfg.diss2g = 0;
   chop_cfg.double_edge = 0;
   chop_cfg.interpolation = 1;
-  chop_cfg.mres = 8;
+  chop_cfg.mres = 0;
   chop_cfg.vsense = 0;
   chop_cfg.tbl = 0;
   chop_cfg.hstart = 0;
@@ -212,8 +212,8 @@ void setup()
   pinMode(DIR, OUTPUT);
   pinMode(13, OUTPUT);
 
-  a_stepper.setMaxSpeed(20000.0);
-  a_stepper.setAcceleration(10000.0);
+  a_stepper.setMaxSpeed(2000.0);
+  a_stepper.setAcceleration(1000.0);
 
 
   stepper_driver.setup(serial_stream, 9600);
@@ -227,16 +227,10 @@ void setup()
 
 
  
-
-  #ifdef SET
-  stepper_driver.setRunCurrent(10);
-  stepper_driver.setMicrostepsPerStep(256);
-  stepper_driver.useInternalSenseResistors();
-  //stepper_driver.disableCoolStep();
-  //stepper_driver.enable();
-  #else
   trySettings();
-  #endif
+  stepper_driver.enable();
+  
+ 
 }
 
 void loop()
@@ -246,7 +240,7 @@ void loop()
   readSettings();
   Serial.println("running");
   digitalWrite(13, HIGH);
-  a_stepper.runToNewPosition(5000);
+  a_stepper.runToNewPosition(1000);
   digitalWrite(13, LOW);
   a_stepper.runToNewPosition(0);
   delay(1000);
