@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <TMC2209.h>
+#include <easyTMC2209.h>
 #include "wiring_private.h" // pinPeripheral() function
 #include <AccelStepper.h>
 
@@ -16,67 +16,66 @@ HardwareSerial &serial_stream = Serial2;
 const long SERIAL_BAUD_RATE = 115200;
 const int DELAY = 100;
 
-// Instantiate TMC2209
-TMC2209 stepper_driver;
+// Instantiate easyTMC2209
+easyTMC2209 stepper_driver;
 AccelStepper a_stepper(AccelStepper::DRIVER, STEP, DIR);
 #define SET
 void trySettings(){
-   
-
-  TMC2209::GlobalConfig cfg;
+  easyTMC2209::GlobalConfig cfg;
   cfg.i_scale_analog = 1;
   cfg.internal_rsense = 0;
-  cfg.enable_spread_cycle = 0;
+  cfg.enable_spread_cycle = 1;
   cfg.shaft = 0;
   cfg.index_otpw = 1;
   cfg.index_step = 0;
   cfg.pdn_disable = 1; // always 1
   cfg.mstep_reg_select = 1;
-  cfg.multistep_filt = 0;
+  cfg.multistep_filt = 1; //maybe
   cfg.test_mode = 0;
 
   stepper_driver.global_config_ = cfg;
   stepper_driver.writeStoredGlobalConfig();
 
-  TMC2209::DriverCurrent cfg_current;
-  cfg_current.ihold = 20;
-  cfg_current.irun = 20;
+  easyTMC2209::DriverCurrent cfg_current;
+  cfg_current.ihold = 5;
+  cfg_current.irun = 16;
   cfg_current.iholddelay = 14;
 
   stepper_driver.driver_current_ = cfg_current;
   stepper_driver.writeStoredDriverCurrent();
 
-  stepper_driver.write(TMC2209::ADDRESS_TPOWERDOWN, 20); 
-  stepper_driver.write(TMC2209::ADDRESS_TPWMTHRS, 0xFFFFFF);
-  stepper_driver.write(TMC2209::ADDRESS_VACTUAL, 0);
-  stepper_driver.write(TMC2209::ADDRESS_TCOOLTHRS, 0xFFFF);
-  stepper_driver.write(TMC2209::ADDRESS_SGTHRS, 60);
+  stepper_driver.write(easyTMC2209::ADDRESS_TPOWERDOWN, 20); 
+  stepper_driver.write(easyTMC2209::ADDRESS_TPWMTHRS, 0xFFF);
+  stepper_driver.write(easyTMC2209::ADDRESS_VACTUAL, 0);
+  stepper_driver.write(easyTMC2209::ADDRESS_TCOOLTHRS, 0x8F);
+  stepper_driver.write(easyTMC2209::ADDRESS_SGTHRS, 60);
   
-  TMC2209::CoolConfig cool_cfg;
-  cool_cfg.seimin = 0;
-  cool_cfg.sedn = 0;
-  cool_cfg.semax = 0xF;
-  cool_cfg.seup = 1;
-  cool_cfg.semin = 0000;
+  easyTMC2209::CoolConfig cool_cfg;
+  cool_cfg.seimin = 0;  
+  cool_cfg.sedn = 0b11;
+  cool_cfg.semax = 0x5;
+  cool_cfg.seup = 0b11;
+  cool_cfg.semin = 1;
 
   stepper_driver.cool_config_ = cool_cfg;
-  stepper_driver.write(TMC2209::ADDRESS_COOLCONF, stepper_driver.cool_config_.bytes);
+  stepper_driver.write(easyTMC2209::ADDRESS_COOLCONF, stepper_driver.cool_config_.bytes);
 
-  TMC2209::ChopperConfig chop_cfg;
+  easyTMC2209::ChopperConfig chop_cfg;
   chop_cfg.diss2vs = 0;
   chop_cfg.diss2g = 0;
   chop_cfg.double_edge = 0;
-  chop_cfg.interpolation = 1;
-  chop_cfg.mres = 0;
+  chop_cfg.interpolation = 0;
+  chop_cfg.mres = 0b1000;
   chop_cfg.vsense = 0;
   chop_cfg.tbl = 0;
   chop_cfg.hstart = 0;
   chop_cfg.toff = 0b0011;
   
-  stepper_driver.chopper_config_ = chop_cfg;
-  stepper_driver.write(TMC2209::ADDRESS_CHOPCONF, stepper_driver.chopper_config_.bytes);
+  stepper_driver.chopper_config_.bytes  = easyTMC2209::CHOPPER_CONFIG_DEFAULT;// = chop_cfg;
+  stepper_driver.chopper_config_.toff = 5;
+  stepper_driver.write(easyTMC2209::ADDRESS_CHOPCONF, stepper_driver.chopper_config_.bytes);
 
-  TMC2209::PwmConfig pwm_cfg;
+  easyTMC2209::PwmConfig pwm_cfg;
   pwm_cfg.pwm_lim = 12;
   pwm_cfg.pwm_reg = 8;
   pwm_cfg.freewheel = 0;
@@ -86,15 +85,26 @@ void trySettings(){
   pwm_cfg.pwm_grad = 0x14;
   pwm_cfg.pwm_offset = 36;
   
-  stepper_driver.pwm_config_ = pwm_cfg;
+  //stepper_driver.pwm_config_ = pwm_cfg;
+  stepper_driver.pwm_config_.bytes = easyTMC2209::PWM_CONFIG_DEFAULT;
   stepper_driver.writeStoredPwmConfig();
   
+  // stepper_driver.global_config_.bytes = 0x1D5;
+  // stepper_driver.driver_current_.bytes = 0xE1005;
+  // stepper_driver.cool_config_.bytes = 0x6561;
+  // stepper_driver.chopper_config_.bytes = 0x10000053;
+  // stepper_driver.pwm_config_.bytes = 0xC10D0024;
+  // stepper_driver.writeStoredGlobalConfig();
+  // stepper_driver.writeStoredDriverCurrent();
+  // stepper_driver.write(easyTMC2209::ADDRESS_COOLCONF, stepper_driver.cool_config_.bytes);
+  // stepper_driver.writeStoredChopperConfig();
+  // stepper_driver.writeStoredPwmConfig();
 }
 
 void readSettings(){
    Serial.println("*************************");
   Serial.println("getSettings()");
-  TMC2209::Settings settings = stepper_driver.getSettings();
+  easyTMC2209::Settings settings = stepper_driver.getSettings();
   Serial.print("settings.is_communicating = ");
   Serial.println(settings.is_communicating);
   Serial.print("settings.is_setup = ");
@@ -110,16 +120,16 @@ void readSettings(){
   Serial.print("settings.standstill_mode = ");
   switch (settings.standstill_mode)
   {
-    case TMC2209::NORMAL:
+    case easyTMC2209::NORMAL:
       Serial.println("normal");
       break;
-    case TMC2209::FREEWHEELING:
+    case easyTMC2209::FREEWHEELING:
       Serial.println("freewheeling");
       break;
-    case TMC2209::STRONG_BRAKING:
+    case easyTMC2209::STRONG_BRAKING:
       Serial.println("strong_braking");
       break;
-    case TMC2209::BRAKING:
+    case easyTMC2209::BRAKING:
       Serial.println("braking");
       break;
   }
@@ -162,7 +172,7 @@ void readSettings(){
 
   Serial.println("*************************");
   Serial.println("getStatus()");
-  TMC2209::Status status = stepper_driver.getStatus();
+  easyTMC2209::Status status = stepper_driver.getStatus();
   Serial.print("status.over_temperature_warning = ");
   Serial.println(status.over_temperature_warning);
   Serial.print("status.over_temperature_shutdown = ");
@@ -195,6 +205,8 @@ void readSettings(){
   Serial.println(status.standstill);
   Serial.println("*************************");
   Serial.println();
+
+  
 }
 
 void setup()
@@ -230,14 +242,20 @@ void setup()
   trySettings();
   stepper_driver.enable();
   
+  readSettings();
  
 }
 
 void loop()
 {
 
-
-  readSettings();
+Serial.println();
+  Serial.println(stepper_driver.global_config_.bytes, HEX);
+  Serial.println(stepper_driver.driver_current_.bytes, HEX);
+  Serial.println(stepper_driver.cool_config_.bytes, HEX);
+  Serial.println(stepper_driver.chopper_config_.bytes, HEX);
+  Serial.println(stepper_driver.pwm_config_.bytes, HEX);
+  //readSettings();
   Serial.println("running");
   digitalWrite(13, HIGH);
   a_stepper.runToNewPosition(1000);
