@@ -1,10 +1,10 @@
 #include <Arduino.h>
-#include <easyTMC2209.h>
 #include "wiring_private.h" // pinPeripheral() function
 #include <AccelStepper.h>
+#include <TMCStepper.h>
 
-#define STEP 6
-#define DIR 5
+#define STEP_PIN 6
+#define DIR_PIN 5
 
 Uart Serial2(&sercom3, SCL, SDA, SERCOM_RX_PAD_1, UART_TX_PAD_0);
 void SERCOM3_Handler()
@@ -13,253 +13,74 @@ void SERCOM3_Handler()
 }
 HardwareSerial &serial_stream = Serial2;
 
-const long SERIAL_BAUD_RATE = 115200;
-const int DELAY = 100;
+#include <AccelStepper.h>
+AccelStepper stepper = AccelStepper(stepper.DRIVER, STEP_PIN, DIR_PIN);
 
-// Instantiate easyTMC2209
-easyTMC2209 stepper_driver;
-AccelStepper a_stepper(AccelStepper::DRIVER, STEP, DIR);
-#define SET
-void trySettings(){
-  easyTMC2209::GlobalConfig cfg;
-  cfg.i_scale_analog = 1;
-  cfg.internal_rsense = 0;
-  cfg.enable_spread_cycle = 1;
-  cfg.shaft = 0;
-  cfg.index_otpw = 1;
-  cfg.index_step = 0;
-  cfg.pdn_disable = 1; // always 1
-  cfg.mstep_reg_select = 1;
-  cfg.multistep_filt = 1; //maybe
-  cfg.test_mode = 0;
 
-  stepper_driver.global_config_ = cfg;
-  stepper_driver.writeStoredGlobalConfig();
+#define EN_PIN           11 // Enable
+//#define DIR_PIN          55 // Direction
+//#define STEP_PIN         54 // Step
+//#define CS_PIN           42 // Chip select
+//#define SW_MOSI          66 // Software Master Out Slave In (MOSI)
+//#define SW_MISO          44 // Software Master In Slave Out (MISO)
+//#define SW_SCK           64 // Software Slave Clock (SCK)
+//#define SW_RX            63 // TMC2208/TMC2224 SoftwareSerial receive pin
+//#define SW_TX            40 // TMC2208/TMC2224 SoftwareSerial transmit pin
+#define SERIAL_PORT Serial2 // TMC2208/TMC2224 HardwareSerial port
+#define DRIVER_ADDRESS 0b00 // TMC2209 Driver address according to MS1 and MS2
 
-  easyTMC2209::DriverCurrent cfg_current;
-  cfg_current.ihold = 5;
-  cfg_current.irun = 16;
-  cfg_current.iholddelay = 14;
+#define R_SENSE 0.11f // Match to your driver
+                      // SilentStepStick series use 0.11
+                      // UltiMachine Einsy and Archim2 boards use 0.2
+                      // Panucatt BSD2660 uses 0.1
+                      // Watterott TMC5160 uses 0.075
 
-  stepper_driver.driver_current_ = cfg_current;
-  stepper_driver.writeStoredDriverCurrent();
+// Select your stepper driver type
+//TMC2130Stepper driver(CS_PIN, R_SENSE);                           // Hardware SPI
+//TMC2130Stepper driver(CS_PIN, R_SENSE, SW_MOSI, SW_MISO, SW_SCK); // Software SPI
+//TMC2660Stepper driver(CS_PIN, R_SENSE);                           // Hardware SPI
+//TMC2660Stepper driver(CS_PIN, R_SENSE, SW_MOSI, SW_MISO, SW_SCK);
+//TMC5160Stepper driver(CS_PIN, R_SENSE);
+//TMC5160Stepper driver(CS_PIN, R_SENSE, SW_MOSI, SW_MISO, SW_SCK);
 
-  stepper_driver.write(easyTMC2209::ADDRESS_TPOWERDOWN, 20); 
-  stepper_driver.write(easyTMC2209::ADDRESS_TPWMTHRS, 0xFFF);
-  stepper_driver.write(easyTMC2209::ADDRESS_VACTUAL, 0);
-  stepper_driver.write(easyTMC2209::ADDRESS_TCOOLTHRS, 0x8F);
-  stepper_driver.write(easyTMC2209::ADDRESS_SGTHRS, 60);
-  
-  easyTMC2209::CoolConfig cool_cfg;
-  cool_cfg.seimin = 0;  
-  cool_cfg.sedn = 0b11;
-  cool_cfg.semax = 0x5;
-  cool_cfg.seup = 0b11;
-  cool_cfg.semin = 1;
+//TMC2208Stepper driver(&SERIAL_PORT, R_SENSE);                     // Hardware Serial
+//TMC2208Stepper driver(SW_RX, SW_TX, R_SENSE);                     // Software serial
+TMC2209Stepper driver(&SERIAL_PORT, R_SENSE, DRIVER_ADDRESS);
+//TMC2209Stepper driver(SW_RX, SW_TX, R_SENSE, DRIVER_ADDRESS);
 
-  stepper_driver.cool_config_ = cool_cfg;
-  stepper_driver.write(easyTMC2209::ADDRESS_COOLCONF, stepper_driver.cool_config_.bytes);
+void setup() {
+  pinMode(EN_PIN, OUTPUT);
+  pinMode(STEP_PIN, OUTPUT);
+  pinMode(DIR_PIN, OUTPUT);
+  digitalWrite(EN_PIN, LOW);      // Enable driver in hardware
 
-  easyTMC2209::ChopperConfig chop_cfg;
-  chop_cfg.diss2vs = 0;
-  chop_cfg.diss2g = 0;
-  chop_cfg.double_edge = 0;
-  chop_cfg.interpolation = 0;
-  chop_cfg.mres = 0b1000;
-  chop_cfg.vsense = 0;
-  chop_cfg.tbl = 0;
-  chop_cfg.hstart = 0;
-  chop_cfg.toff = 0b0011;
-  
-  stepper_driver.chopper_config_.bytes  = easyTMC2209::CHOPPER_CONFIG_DEFAULT;// = chop_cfg;
-  stepper_driver.chopper_config_.toff = 5;
-  stepper_driver.write(easyTMC2209::ADDRESS_CHOPCONF, stepper_driver.chopper_config_.bytes);
+                                  // Enable one according to your setup
+ //SPI.begin();                    // SPI drivers
+ SERIAL_PORT.begin(9600);      // HW UART drivers
+ //driver.beginSerial(115200);     // SW UART drivers
 
-  easyTMC2209::PwmConfig pwm_cfg;
-  pwm_cfg.pwm_lim = 12;
-  pwm_cfg.pwm_reg = 8;
-  pwm_cfg.freewheel = 0;
-  pwm_cfg.pwm_autograd = 0;
-  pwm_cfg.pwm_autoscale = 1;
-  pwm_cfg.pwm_freq = 1;
-  pwm_cfg.pwm_grad = 0x14;
-  pwm_cfg.pwm_offset = 36;
-  
-  //stepper_driver.pwm_config_ = pwm_cfg;
-  stepper_driver.pwm_config_.bytes = easyTMC2209::PWM_CONFIG_DEFAULT;
-  stepper_driver.writeStoredPwmConfig();
-  
-  // stepper_driver.global_config_.bytes = 0x1D5;
-  // stepper_driver.driver_current_.bytes = 0xE1005;
-  // stepper_driver.cool_config_.bytes = 0x6561;
-  // stepper_driver.chopper_config_.bytes = 0x10000053;
-  // stepper_driver.pwm_config_.bytes = 0xC10D0024;
-  // stepper_driver.writeStoredGlobalConfig();
-  // stepper_driver.writeStoredDriverCurrent();
-  // stepper_driver.write(easyTMC2209::ADDRESS_COOLCONF, stepper_driver.cool_config_.bytes);
-  // stepper_driver.writeStoredChopperConfig();
-  // stepper_driver.writeStoredPwmConfig();
+  driver.begin();                 //  SPI: Init CS pins and possible SW SPI pins
+                                  // UART: Init SW UART (if selected) with default 115200 baudrate
+  driver.toff(5);                 // Enables driver in software
+  driver.rms_current(1200);        // Set motor RMS current
+  driver.microsteps(16);          // Set microsteps to 1/16th
+
+//driver.en_pwm_mode(true);       // Toggle stealthChop on TMC2130/2160/5130/5160
+driver.en_spreadCycle(false);   // Toggle spreadCycle on TMC2208/2209/2224
+  driver.pwm_autoscale(true);     // Needed for stealthChop
+
+
+   stepper.setMaxSpeed(10000); // 100mm/s @ 80 steps/mm
+    stepper.setAcceleration(5000); // 2000mm/s^2
+    stepper.setEnablePin(EN_PIN);
+    stepper.setPinsInverted(false, false, true);
+    stepper.enableOutputs();
 }
 
-void readSettings(){
-   Serial.println("*************************");
-  Serial.println("getSettings()");
-  easyTMC2209::Settings settings = stepper_driver.getSettings();
-  Serial.print("settings.is_communicating = ");
-  Serial.println(settings.is_communicating);
-  Serial.print("settings.is_setup = ");
-  Serial.println(settings.is_setup);
-  Serial.print("settings.software_enabled = ");
-  Serial.println(settings.software_enabled);
-  Serial.print("settings.microsteps_per_step = ");
-  Serial.println(settings.microsteps_per_step);
-  Serial.print("settings.inverse_motor_direction_enabled = ");
-  Serial.println(settings.inverse_motor_direction_enabled);
-  Serial.print("settings.stealth_chop_enabled = ");
-  Serial.println(settings.stealth_chop_enabled);
-  Serial.print("settings.standstill_mode = ");
-  switch (settings.standstill_mode)
-  {
-    case easyTMC2209::NORMAL:
-      Serial.println("normal");
-      break;
-    case easyTMC2209::FREEWHEELING:
-      Serial.println("freewheeling");
-      break;
-    case easyTMC2209::STRONG_BRAKING:
-      Serial.println("strong_braking");
-      break;
-    case easyTMC2209::BRAKING:
-      Serial.println("braking");
-      break;
-  }
-  Serial.print("settings.irun_percent = ");
-  Serial.println(settings.irun_percent);
-  Serial.print("settings.irun_register_value = ");
-  Serial.println(settings.irun_register_value);
-  Serial.print("settings.ihold_percent = ");
-  Serial.println(settings.ihold_percent);
-  Serial.print("settings.ihold_register_value = ");
-  Serial.println(settings.ihold_register_value);
-  Serial.print("settings.iholddelay_percent = ");
-  Serial.println(settings.iholddelay_percent);
-  Serial.print("settings.iholddelay_register_value = ");
-  Serial.println(settings.iholddelay_register_value);
-  Serial.print("settings.automatic_current_scaling_enabled = ");
-  Serial.println(settings.automatic_current_scaling_enabled);
-  Serial.print("settings.automatic_gradient_adaptation_enabled = ");
-  Serial.println(settings.automatic_gradient_adaptation_enabled);
-  Serial.print("settings.pwm_offset = ");
-  Serial.println(settings.pwm_offset);
-  Serial.print("settings.pwm_gradient = ");
-  Serial.println(settings.pwm_gradient);
-  Serial.print("settings.cool_step_enabled = ");
-  Serial.println(settings.cool_step_enabled);
-  Serial.print("settings.analog_current_scaling_enabled = ");
-  Serial.println(settings.analog_current_scaling_enabled);
-  Serial.print("settings.internal_sense_resistors_enabled = ");
-  Serial.println(settings.internal_sense_resistors_enabled);
-  Serial.println("*************************");
-  Serial.println();
+bool shaft = false;
 
-  Serial.println("*************************");
-  Serial.println("hardwareDisabled()");
-  bool hardware_disabled = stepper_driver.hardwareDisabled();
-  Serial.print("hardware_disabled = ");
-  Serial.println(hardware_disabled);
-  Serial.println("*************************");
-  Serial.println();
-
-  Serial.println("*************************");
-  Serial.println("getStatus()");
-  easyTMC2209::Status status = stepper_driver.getStatus();
-  Serial.print("status.over_temperature_warning = ");
-  Serial.println(status.over_temperature_warning);
-  Serial.print("status.over_temperature_shutdown = ");
-  Serial.println(status.over_temperature_shutdown);
-  Serial.print("status.short_to_ground_a = ");
-  Serial.println(status.short_to_ground_a);
-  Serial.print("status.short_to_ground_b = ");
-  Serial.println(status.short_to_ground_b);
-  Serial.print("status.low_side_short_a = ");
-  Serial.println(status.low_side_short_a);
-  Serial.print("status.low_side_short_b = ");
-  Serial.println(status.low_side_short_b);
-  Serial.print("status.open_load_a = ");
-  Serial.println(status.open_load_a);
-  Serial.print("status.open_load_b = ");
-  Serial.println(status.open_load_b);
-  Serial.print("status.over_temperature_120c = ");
-  Serial.println(status.over_temperature_120c);
-  Serial.print("status.over_temperature_143c = ");
-  Serial.println(status.over_temperature_143c);
-  Serial.print("status.over_temperature_150c = ");
-  Serial.println(status.over_temperature_150c);
-  Serial.print("status.over_temperature_157c = ");
-  Serial.println(status.over_temperature_157c);
-  Serial.print("status.current_scaling = ");
-  Serial.println(status.current_scaling);
-  Serial.print("status.stealth_chop_mode = ");
-  Serial.println(status.stealth_chop_mode);
-  Serial.print("status.standstill = ");
-  Serial.println(status.standstill);
-  Serial.println("*************************");
-  Serial.println();
-
-  
-}
-
-void setup()
-{
-  pinPeripheral(SCL, PIO_SERCOM);
-  pinPeripheral(SDA, PIO_SERCOM);
-
-
-
-
-  Serial.begin(SERIAL_BAUD_RATE);
-  //while (!Serial)
-  //  ;
-  pinMode(STEP, OUTPUT);
-  pinMode(DIR, OUTPUT);
-  pinMode(13, OUTPUT);
-
-  a_stepper.setMaxSpeed(2000.0);
-  a_stepper.setAcceleration(1000.0);
-
-
-  stepper_driver.setup(serial_stream, 9600);
-
-  while (!stepper_driver.isCommunicating())
-  {
-    Serial.println("waiting for comms");
-    delay(10);
-  }
-
-
-
- 
-  trySettings();
-  stepper_driver.enable();
-  
-  readSettings();
- 
-}
-
-void loop()
-{
-
-Serial.println();
-  Serial.println(stepper_driver.global_config_.bytes, HEX);
-  Serial.println(stepper_driver.driver_current_.bytes, HEX);
-  Serial.println(stepper_driver.cool_config_.bytes, HEX);
-  Serial.println(stepper_driver.chopper_config_.bytes, HEX);
-  Serial.println(stepper_driver.pwm_config_.bytes, HEX);
-  //readSettings();
-  Serial.println("running");
-  digitalWrite(13, HIGH);
-  a_stepper.runToNewPosition(1000);
-  digitalWrite(13, LOW);
-  a_stepper.runToNewPosition(0);
-  delay(1000);
+void loop() {
+  stepper.runToNewPosition(10000);
+  stepper.runToNewPosition(0);
+  delay(5000);
 }
