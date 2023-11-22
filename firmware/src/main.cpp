@@ -5,7 +5,7 @@
 
 #define STEP_PIN 6
 #define DIR_PIN 5
-
+#define LIMIT_PIN A0
 Uart Serial2(&sercom3, SCL, SDA, SERCOM_RX_PAD_1, UART_TX_PAD_0);
 void SERCOM3_Handler()
 {
@@ -52,6 +52,7 @@ void setup() {
   pinMode(EN_PIN, OUTPUT);
   pinMode(STEP_PIN, OUTPUT);
   pinMode(DIR_PIN, OUTPUT);
+  pinMode(LIMIT_PIN, INPUT_PULLUP);
   digitalWrite(EN_PIN, LOW);      // Enable driver in hardware
 
                                   // Enable one according to your setup
@@ -70,17 +71,26 @@ driver.en_spreadCycle(false);   // Toggle spreadCycle on TMC2208/2209/2224
   driver.pwm_autoscale(true);     // Needed for stealthChop
 
 
-   stepper.setMaxSpeed(10000); // 100mm/s @ 80 steps/mm
-    stepper.setAcceleration(5000); // 2000mm/s^2
-    stepper.setEnablePin(EN_PIN);
-    stepper.setPinsInverted(false, false, true);
-    stepper.enableOutputs();
+  stepper.setMaxSpeed(1000000); 
+  stepper.setAcceleration(500000); 
+  stepper.setEnablePin(EN_PIN);
+  stepper.setPinsInverted(false, false, true);
+  stepper.enableOutputs();
+
+  stepper.setSpeed(-10000);
+  while(digitalRead(LIMIT_PIN)){
+    stepper.runSpeed();
+  }
+  stepper.stop();
+  stepper.setCurrentPosition(0);
+  stepper.runToNewPosition(100);
+  delay(2000);
 }
 
-bool shaft = false;
 
 void loop() {
-  stepper.runToNewPosition(10000);
   stepper.runToNewPosition(0);
-  delay(5000);
+  stepper.runToNewPosition(10000);
+  
+  delay(20000);
 }
