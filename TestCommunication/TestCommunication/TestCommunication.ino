@@ -22,12 +22,14 @@ TMC2209 stepper_driver;
 
 void setup()
 {
+  pinMode(SCL, OUTPUT);
   pinPeripheral(SCL, PIO_SERCOM);
   pinPeripheral(SDA, PIO_SERCOM);
   Serial.begin(SERIAL_BAUD_RATE);
 
   stepper_driver.setup(serial_stream, 9600);
 }
+
 
 void loop()
 {
