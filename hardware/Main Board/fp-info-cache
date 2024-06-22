@@ -1,4 +1,4 @@
-22561028669788556
+22571316392840007
 18650
 254 clip
 
@@ -2281,6 +2281,13 @@ SW PUSH SMALL Tactile C&K
 0
 4
 2
+Button_THT
+SW2_1825027-C_TEC
+
+1825027-8 
+0
+4
+4
 Buzzer_Beeper
 Buzzer_12x9.5RM7.6
 Generic Buzzer, D12mm height 9.5mm with RM7.6mm
@@ -62425,6 +62432,20 @@ THT
 0
 4
 2
+JTAH
+JTAG
+
+
+0
+0
+0
+JTAH
+JTAG_Shielded
+
+
+0
+0
+0
 Jumper
 SolderJumper-2_P1.3mm_Bridged2Bar_Pad1.0x1.5mm
 SMD Solder Jumper, 1x1.5mm Pads, 0.3mm gap, bridged with 2 copper strips
@@ -82228,6 +82249,13 @@ TO-264-5 Vertical RM 3.81mm
 0
 5
 5
+Potentiometer
+Potentiometer_Bourns_PVT111-3
+
+
+0
+6
+3
 Potentiometer_SMD
 Potentiometer_ACP_CA6-VSMD_Vertical
 Potentiometer, vertical, ACP CA6-VSMD, http://www.acptechnologies.com/wp-content/uploads/2017/06/01-ACP-CA6.pdf
@@ -93498,6 +93526,13 @@ XCVR_ESP32-C3-MINI-1-N4
 0
 61
 61
+XCVR_ESP32-S3-MINI-1-N8
+XCVR_ESP32-S3-MINI-1-N8
+
+
+0
+73
+65
 XT30-U
 XT30-U
 
@@ -93505,3 +93540,10 @@ XT30-U
 0
 2
 2
+footprints
+CONN_GSB1CA11101DSHR_AMP
+
+GSB1CA11101DSHR 
+0
+20
+20
