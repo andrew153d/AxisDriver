@@ -551,7 +551,7 @@
       "idf": "",
       "netlist": "",
       "specctra_dsn": "",
-      "step": "../../../Downloads/Axis_Basic.step",
+      "step": "../../../../Downloads/Axis_Basic.step",
       "vrml": "../../../Downloads/Axis_Basic.wrl"
     },
     "page_layout_descr_file": ""
