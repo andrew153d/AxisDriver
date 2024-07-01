@@ -1,6 +1,9 @@
+#pragma once
+
 #include <vector>
 #include <cstdint>
 #include <Arduino.h>
+
 class ITask {
 private:
     uint32_t lastExecutionTime = 0;
