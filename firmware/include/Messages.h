@@ -28,13 +28,15 @@ LedControlMessageTypeUpperBounds = 0x50,
 
 PACKEDSTRUCT Header{
  MessageTypes message_type;
- uint16_t message_size; //size of header+body+footer
  uint16_t body_size;
 };
 
 PACKEDSTRUCT Footer{
  uint16_t checksum;
 };
+
+const uint16_t HEADER_SIZE = sizeof(Header);
+const uint16_t FOOTER_SIZE = sizeof(Footer);
 
 PACKEDSTRUCT LedColors{
  union {

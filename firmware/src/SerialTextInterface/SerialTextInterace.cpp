@@ -48,7 +48,7 @@ void SerialTextInterface::OnRun()
 
     while(bytes_available){
         bytes_read = Serial.readBytes(&char_buf[bytes_read], bytes_available);
-
+        Serial.printf("Serial has read %d bytes\n", bytes_read);
 
         bytes_available = Serial.available();
         bytes_available = min(bytes_available, 256-bytes_read);
@@ -90,6 +90,8 @@ void SerialTextInterface::HandleIncomingMsg(uint8_t* recv_bytes, uint32_t recv_b
     
     if(processor_interface_!=nullptr){
         processor_interface_->HandleIncomingMsg(&recv_buf[0], out_len);
+    }else{
+        Serial.println("processor_interface is null");
     }
 }
 
