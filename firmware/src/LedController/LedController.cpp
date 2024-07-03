@@ -19,21 +19,42 @@ void LedController::OnRun(){
         leds[0].r = brightness*cos(radians(Wrap360(colorWheelAngle+0)))+brightness;
         leds[0].g = brightness*cos(radians(Wrap360(colorWheelAngle+120)))+brightness;
         leds[0].b = brightness*cos(radians(Wrap360(colorWheelAngle+240)))+brightness;
-        // switch(flashState){
-        //   case 0:
-        //     leds[0] = 0x010002;
-        //     flashState++;
-        //   break;
-        //   case 1:
-        //     leds[0] = 0x010000;
-        //     flashState=0;
-        //   break;
-        // }
         FastLED.show();
     }
 
 void LedController::HandleIncomingMsg(uint8_t* recv_bytes, uint32_t recv_bytes_size = 0)
 {
+    if(recv_bytes_size < HEADER_SIZE+FOOTER_SIZE){
+        Serial.println("Size too small");
+    }
+
+    Header* header = (Header*)recv_bytes;
+    
+    if(recv_bytes_size < HEADER_SIZE+header->body_size+FOOTER_SIZE){
+        Serial.printf("Invalid body size: recv_bytes:%d, header_size:%d, body_size:%d, footer_size:%d\n", recv_bytes_size, HEADER_SIZE, header->body_size, FOOTER_SIZE);
+        return;
+    }
+    
+    Serial.printf("MessageType: 0x%X\n", header->message_type);
+
+    switch(header->message_type){
+        case MessageTypes::SetLed:
+            if(header->body_size == 3){
+                leds[0] = (CRGB)*(&recv_bytes[HEADER_SIZE]);
+
+                FastLED.show();
+            }else{
+                Serial.println("SetLed body sizze incorrect");
+            }
+        break;
+        case MessageTypes::GetLed:
+
+        break;
+        default:
+        break;
+    }
+
+
     Serial.println("Led Controller got message");
 }
 

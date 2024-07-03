@@ -35,19 +35,24 @@ struct InterfaceLimits{
 
 class MessageProcessor : public ITask, public ISenderInterface{
 private:
-  std::vector<InterfaceLimits> interfaces;   // Vector to hold pointers to interfaces
-  
+  std::vector<ISenderInterface*> externalInterfaces;   // Vector to hold pointers to interfaces
+  std::vector<InterfaceLimits> controllerInterfaces;   // Vector to hold pointers to interfaces
 public:
     MessageProcessor(uint32_t period){
       executionPeriod = period;
     }
 
-    void AddExternalInterface(ISenderInterface* new_interface, MessageTypes low, MessageTypes high){
+    void AddExternalInterface(ISenderInterface* new_interface){
+      externalInterfaces.push_back(new_interface);
+      new_interface->SetProcessorInterface(this);
+    }
+
+    void AddControllerInterface(ISenderInterface* new_interface, MessageTypes low, MessageTypes high){
       InterfaceLimits interface_to_add;
       interface_to_add.highLimit = (uint16_t)high;
       interface_to_add.lowLimit = (uint16_t)low;
       interface_to_add.interface = new_interface;
-      interfaces.push_back(interface_to_add);
+      controllerInterfaces.push_back(interface_to_add);
       new_interface->SetProcessorInterface(this);
     }
 
@@ -71,9 +76,12 @@ public:
 
       Header* hdr = (Header*)&recv_bytes[0];
 
-      for(InterfaceLimits interface : interfaces){
+      for(InterfaceLimits interface : controllerInterfaces){
         if((uint16_t)hdr->message_type > interface.lowLimit && (uint16_t)hdr->message_type < interface.highLimit){
+          Serial.println("Sending to led");
           interface.interface->HandleIncomingMsg(recv_bytes, recv_bytes_size);
+        }else{
+          Serial.println("Invalid message limits");
         }
       }
       
@@ -92,8 +100,8 @@ LedController ledController(0);
 void setup() {
 
 //connect the SerialTextInterface to the Message Processor
-  messageProcessor.AddExternalInterface(&serialTextInterface, MessageTypes::LedControlMessageTypeLowerBounds, MessageTypes::LedControlMessageTypeUpperBounds);
-
+  messageProcessor.AddControllerInterface(&ledController, MessageTypes::LedControlMessageTypeLowerBounds, MessageTypes::LedControlMessageTypeUpperBounds);
+  messageProcessor.AddExternalInterface(&serialTextInterface);
   manager.AddTask(&serialTextInterface);
   manager.AddTask(&messageProcessor);
 

@@ -5,7 +5,7 @@
 #include "Task.h"
 #include "FastLED.h"
 #include "ExternalInterface.h"
-
+#include "Messages.h"
 class LedController : public ITask, public ISenderInterface {
 private:
   uint16_t colorWheelAngle = 0;
