@@ -67,6 +67,12 @@
     "visible_layers": "800f0b0_fffffff9",
     "zone_display_mode": 0
   },
+  "git": {
+    "repo_password": "",
+    "repo_type": "",
+    "repo_username": "",
+    "ssh_key": ""
+  },
   "meta": {
     "filename": "Axis_Basic.kicad_prl",
     "version": 3
