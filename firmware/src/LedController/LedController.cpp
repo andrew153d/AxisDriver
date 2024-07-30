@@ -1,8 +1,8 @@
 #include "LedController.h"
 
 void LedController::OnStart() {
-      leds[0] = 0;
-      FastLED.addLeds<NEOPIXEL, NEOPIXEL_BUILTIN>(leds, NEOPIXEL_BUILTIN);
+      leds[0] = CRGB::Green;
+      FastLED.addLeds<NEOPIXEL, PIN_PA07>(leds, PIN_PA07);
 }
 
 void LedController::OnStop(){
