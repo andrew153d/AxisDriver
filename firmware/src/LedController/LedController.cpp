@@ -1,9 +1,9 @@
 #include "LedController.h"
 
 void LedController::OnStart() {
-      //leds[0] = CHSV(1, 100, 100);
+      leds[0] = CHSV(1, 100, 100);
       FastLED.addLeds<NEOPIXEL, 40>(leds, 1);
-      //FastLED.show();
+      FastLED.show();
 }
 
 void LedController::OnStop(){
@@ -12,11 +12,8 @@ void LedController::OnStop(){
 
 void LedController::OnRun(){
     
-        Serial.println("swiching status LED");
     hue = (hue + 1)%255;
-    Serial.printf("Setting Hue: %d\n", hue);
     leds[0] = CHSV(hue, 255, 100);
-    
     FastLED.show();
 }
 
