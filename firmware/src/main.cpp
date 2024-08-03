@@ -183,7 +183,7 @@ public:
 TaskManager manager;
 SerialTextInterface serialTextInterface(0);
 MessageProcessor messageProcessor(0);
-LedController ledController(0);
+LedController ledController(40);
 StatusLedDriver statusLight(1000);
 
 void setup() {
@@ -195,6 +195,7 @@ void setup() {
   manager.AddTask(&serialTextInterface);
   manager.AddTask(&messageProcessor);
   manager.AddTask(&statusLight);
+  manager.AddTask(&ledController);
 //start the interfaces
   serialTextInterface.Start();
 

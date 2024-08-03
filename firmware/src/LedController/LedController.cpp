@@ -1,8 +1,9 @@
 #include "LedController.h"
 
 void LedController::OnStart() {
-      leds[0] = CRGB::Green;
-      FastLED.addLeds<NEOPIXEL, PIN_PA05>(leds, 1);
+      //leds[0] = CHSV(1, 100, 100);
+      FastLED.addLeds<NEOPIXEL, 40>(leds, 1);
+      //FastLED.show();
 }
 
 void LedController::OnStop(){
@@ -10,17 +11,14 @@ void LedController::OnStop(){
 }
 
 void LedController::OnRun(){
-        return;
-        const uint16_t b = 10;
-        const uint16_t brightness = b/2;
-        colorWheelAngle += 1;
-        colorWheelAngle%=360;
-        
-        leds[0].r = brightness*cos(radians(Wrap360(colorWheelAngle+0)))+brightness;
-        leds[0].g = brightness*cos(radians(Wrap360(colorWheelAngle+120)))+brightness;
-        leds[0].b = brightness*cos(radians(Wrap360(colorWheelAngle+240)))+brightness;
-        FastLED.show();
-    }
+    
+        Serial.println("swiching status LED");
+    hue = (hue + 1)%255;
+    Serial.printf("Setting Hue: %d\n", hue);
+    leds[0] = CHSV(hue, 255, 100);
+    
+    FastLED.show();
+}
 
 void LedController::HandleIncomingMsg(uint8_t* recv_bytes, uint32_t recv_bytes_size = 0)
 {
