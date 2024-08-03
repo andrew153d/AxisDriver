@@ -92,30 +92,118 @@ public:
     }
 };
 
+void pinMode(EPortType port, uint32_t pin, uint32_t pinMask, uint32_t ulMode )
+{
+  // Set pin mode according to chapter '22.6.3 I/O Pin Configuration'
+  switch ( ulMode )
+  {
+    case INPUT:
+      // Set pin to input mode
+      PORT->Group[port].PINCFG[pin].reg = (uint8_t) (PORT_PINCFG_INEN);
+      PORT->Group[port].DIRCLR.reg = pinMask;
+    break;
+
+    case INPUT_PULLUP:
+      // Set pin to input mode with pull-up resistor enabled
+      PORT->Group[port].PINCFG[pin].reg = (uint8_t) (PORT_PINCFG_INEN | PORT_PINCFG_PULLEN);
+      PORT->Group[port].DIRCLR.reg = pinMask;
+
+      // Enable pull level (cf '22.6.3.2 Input Configuration' and '22.8.7 Data Output Value Set')
+      PORT->Group[port].OUTSET.reg = pinMask;
+    break;
+
+    case INPUT_PULLDOWN:
+      // Set pin to input mode with pull-down resistor enabled
+      PORT->Group[port].PINCFG[pin].reg = (uint8_t) (PORT_PINCFG_INEN | PORT_PINCFG_PULLEN);
+      PORT->Group[port].DIRCLR.reg = pinMask;
+
+      // Enable pull level (cf '22.6.3.2 Input Configuration' and '22.8.6 Data Output Value Clear')
+      PORT->Group[port].OUTCLR.reg = pinMask;
+    break;
+
+    case OUTPUT:
+      // enable input, to support reading back values, with pullups disabled
+      PORT->Group[port].PINCFG[pin].reg = (uint8_t) (PORT_PINCFG_INEN | PORT_PINCFG_DRVSTR);
+
+      // Set pin to output mode
+      PORT->Group[port].DIRSET.reg = pinMask;
+    break;
+
+    default:
+      // do nothing
+    break;
+  }
+}
+
+void digitalWrite(EPortType port, uint32_t pin, uint32_t pinMask, uint32_t ulVal )
+{
+  if ( (PORT->Group[port].DIRSET.reg & pinMask) == 0 ) {
+    // the pin is not an output, disable pull-up if val is LOW, otherwise enable pull-up
+    PORT->Group[port].PINCFG[pin].bit.PULLEN = ((ulVal == LOW) ? 0 : 1) ;
+  }
+
+  switch ( ulVal )
+  {
+    case LOW:
+      PORT->Group[port].OUTCLR.reg = pinMask;
+    break ;
+
+    default:
+      PORT->Group[port].OUTSET.reg = pinMask;
+    break ;
+  }
+
+  return ;
+}
+
+
+class StatusLedDriver : public ITask{
+private:
+  uint32_t led_timer = 0;
+  bool led_state = 0;
+public:
+    StatusLedDriver(uint32_t period){
+      executionPeriod = period;
+    }
+
+    void OnStart() override {
+       pinMode(PORTB, 13, PORT_PB13, OUTPUT);
+    }
+
+    void OnStop() override {
+    }
+
+    void OnRun() override {
+        digitalWrite(PORTB, 13, PORT_PB13, led_state = !led_state);
+    }
+};
+
+
+
 TaskManager manager;
 SerialTextInterface serialTextInterface(0);
 MessageProcessor messageProcessor(0);
 LedController ledController(0);
+StatusLedDriver statusLight(1000);
 
 void setup() {
-
+  Serial.begin(115200);
+  Serial.println("Starting Axis");
 //connect the SerialTextInterface to the Message Processor
   messageProcessor.AddControllerInterface(&ledController, MessageTypes::LedControlMessageTypeLowerBounds, MessageTypes::LedControlMessageTypeUpperBounds);
   messageProcessor.AddExternalInterface(&serialTextInterface);
   manager.AddTask(&serialTextInterface);
   manager.AddTask(&messageProcessor);
-
+  manager.AddTask(&statusLight);
 //start the interfaces
   serialTextInterface.Start();
 
 //start the message processor
   messageProcessor.Start();
   ledController.Start();
-
+  statusLight.Start();
 }
 
 void loop() {
   manager.RunTasks();
-  // Serial.printf("%X", 0x12);
-  // delay(1000);
 }

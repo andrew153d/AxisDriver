@@ -2,7 +2,7 @@
 
 void LedController::OnStart() {
       leds[0] = CRGB::Green;
-      FastLED.addLeds<NEOPIXEL, PIN_PA07>(leds, PIN_PA07);
+      FastLED.addLeds<NEOPIXEL, PIN_PA05>(leds, 1);
 }
 
 void LedController::OnStop(){
