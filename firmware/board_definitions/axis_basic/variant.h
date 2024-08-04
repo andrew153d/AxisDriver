@@ -80,6 +80,47 @@ extern "C"
  */
 // #define digitalPinToTimer(P)
 
+// //Axis Basic 
+
+// //Auxiliary Port
+// #define PA02 (1)
+// #define PA03 (2)
+// #define PB04 (3)
+// #define PB05 (4)
+// #define PB30 (5)
+// #define PB31 (6)
+
+// //LEDS
+// #define NEOPIX (7)
+// #define STAT_LED (8)
+
+// //Motor Control
+// #define EN (11)
+// #define DIR (12)
+// #define STEP (13)
+// #define MOT_M1 (14)
+// #define MOT_M0 (15)
+// #define INDEX (16)
+// #define DIAG (17)
+// #define SPREAD (18)
+// #define UART_RX (19)
+// #define UART_TX (20)
+
+// //Connectivity
+// #define SDA2 (21)
+// #define SCL2 (22)
+// #define SDA1 (23)
+// #define SCL1 (24)
+
+// #define EEPROM_CS (25)
+// #define ETH_CS (26)
+// #define MOSI (27)
+// #define MISO (28)
+// #define SCK (29)
+
+// #define SYNC (30)
+
+
 // LEDs
 #define PIN_LED_13           (13u)
 #define PIN_LED_RXL          (25u)
