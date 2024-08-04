@@ -33,7 +33,7 @@
     "mcu": "samd51j19a",
     "system": "samd",
     "usb_product": "Grow Engn Axis Basic",
-    "variant": "feather_m4"
+    "variant": "axis_basic"
   },
   "debug": {
     "jlink_device": "ATSAMD51J19",
