@@ -57,10 +57,10 @@ extern "C"
  *----------------------------------------------------------------------------*/
 
 // Number of pins defined in PinDescription array
-#define PINS_COUNT           (40u)
-#define NUM_DIGITAL_PINS     (20u)
-#define NUM_ANALOG_INPUTS    (6u)
-#define NUM_ANALOG_OUTPUTS   (1u)
+#define PINS_COUNT           (30u)
+#define NUM_DIGITAL_PINS     (30u)
+#define NUM_ANALOG_INPUTS    (0u)
+#define NUM_ANALOG_OUTPUTS   (0u)
 #define analogInputToDigitalPin(p)  ((p < 6u) ? (p) + 14u : -1)
 
 #define digitalPinToPort(P)        ( &(PORT->Group[g_APinDescription[P].ulPort]) )
@@ -80,56 +80,44 @@ extern "C"
  */
 // #define digitalPinToTimer(P)
 
-// //Axis Basic 
+//Axis Basic 
+#define SYNC (0)
 
-// //Auxiliary Port
-// #define PA02 (1)
-// #define PA03 (2)
-// #define PB04 (3)
-// #define PB05 (4)
-// #define PB30 (5)
-// #define PB31 (6)
+//Auxiliary Port
+#define PA02 (1)
+#define PA03 (2)
+#define PB04 (3)
+#define PB05 (4)
+#define PB30 (5)
+#define PB31 (6)
 
-// //LEDS
-// #define NEOPIX (7)
-// #define STAT_LED (8)
+//LEDS
+#define NEOPIX (7)
+#define STAT_LED (8)
 
-// //Motor Control
-// #define EN (11)
-// #define DIR (12)
-// #define STEP (13)
-// #define MOT_M1 (14)
-// #define MOT_M0 (15)
-// #define INDEX (16)
-// #define DIAG (17)
-// #define SPREAD (18)
-// #define UART_RX (19)
-// #define UART_TX (20)
+//Motor Control
+#define MOTOR_EN (11)
+#define MOTOR_DIR (12)
+#define MOTOR_STEP (13)
+#define MOTOR_M1 (14)
+#define MOTOR_M0 (15)
+#define MOTOR_INDEX (16)
+#define MOTOR_DIAG (17)
+#define MOTOR_SPREAD (18)
+#define UART_RX (19)
+#define UART_TX (20)
 
-// //Connectivity
-// #define SDA2 (21)
-// #define SCL2 (22)
-// #define SDA1 (23)
-// #define SCL1 (24)
+//Connectivity
+#define SDA2 (21)
+#define SCL2 (22)
+#define SDA1 (23)
+#define SCL1 (24)
 
-// #define EEPROM_CS (25)
-// #define ETH_CS (26)
-// #define MOSI (27)
-// #define MISO (28)
-// #define SCK (29)
-
-// #define SYNC (30)
-
-
-// LEDs
-#define PIN_LED_13           (13u)
-#define PIN_LED_RXL          (25u)
-#define PIN_LED_TXL          (26u)
-#define PIN_LED              PIN_LED_13
-#define PIN_LED2             PIN_LED_RXL
-#define PIN_LED3             PIN_LED_TXL
-#define LED_BUILTIN          PIN_LED_13
-#define PIN_NEOPIXEL         (8)
+#define EEPROM_CS (25)
+#define ETH_CS (26)
+#define MOSI (27)
+#define MISO (28)
+#define SCK (29)
 
 /*
  * Analog pins
@@ -155,6 +143,7 @@ static const uint8_t A6  = PIN_A6 ;
 
 static const uint8_t DAC0 = PIN_DAC0;
 static const uint8_t DAC1 = PIN_DAC1;
+
 
 #define ADC_RESOLUTION		12
 
@@ -184,10 +173,10 @@ static const uint8_t ATN = PIN_ATN;
 #define PAD_SPI_TX           SPI_PAD_3_SCK_1
 #define PAD_SPI_RX           SERCOM_RX_PAD_2
 
-static const uint8_t SS	  = 9 ;	// SERCOM1 last PAD is present on d9 but HW SS isn't used. Set here only for reference.
-static const uint8_t MOSI = PIN_SPI_MOSI ;
-static const uint8_t MISO = PIN_SPI_MISO ;
-static const uint8_t SCK  = PIN_SPI_SCK ;
+// static const uint8_t SS	  = 9 ;	// SERCOM1 last PAD is present on d9 but HW SS isn't used. Set here only for reference.
+// static const uint8_t MOSI = PIN_SPI_MOSI ;
+// static const uint8_t MISO = PIN_SPI_MISO ;
+// static const uint8_t SCK  = PIN_SPI_SCK ;
 
 /*
  * Wire Interfaces
@@ -216,20 +205,20 @@ static const uint8_t SCL = PIN_WIRE_SCL;
 /*
  * I2S Interfaces
  */
-#define I2S_INTERFACES_COUNT 1
+// #define I2S_INTERFACES_COUNT 1
 
-#define I2S_DEVICE          0
-#define I2S_CLOCK_GENERATOR 3
+// #define I2S_DEVICE          0
+// #define I2S_CLOCK_GENERATOR 3
 
-#define PIN_I2S_SDO          (11u)
-#define PIN_I2S_SDI          (12u)
-#define PIN_I2S_SCK          PIN_SERIAL1_TX
-#define PIN_I2S_FS           (10u)
-#define PIN_I2S_MCK          PIN_SERIAL1_RX
+// #define PIN_I2S_SDO          (11u)
+// #define PIN_I2S_SDI          (12u)
+// #define PIN_I2S_SCK          PIN_SERIAL1_TX
+// #define PIN_I2S_FS           (10u)
+// #define PIN_I2S_MCK          PIN_SERIAL1_RX
 
 // On-board QSPI Flash
-#define EXTERNAL_FLASH_DEVICES   GD25Q16C
-#define EXTERNAL_FLASH_USE_QSPI
+// #define EXTERNAL_FLASH_DEVICES   GD25Q16C
+// #define EXTERNAL_FLASH_USE_QSPI
 
 //QSPI Pins
 #define PIN_QSPI_SCK    (34u)

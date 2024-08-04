@@ -167,23 +167,23 @@ public:
     }
 
     void OnStart() override {
-       pinMode(PORTB, 13, PORT_PB13, OUTPUT);
+       //pinMode(PORTB, 13, PORT_PB13, OUTPUT);
+       pinMode(STAT_LED, OUTPUT);
     }
 
     void OnStop() override {
     }
 
     void OnRun() override {
-        digitalWrite(PORTB, 13, PORT_PB13, led_state = !led_state);
+        //digitalWrite(PORTB, 13, PORT_PB13, led_state = !led_state);
+        digitalWrite(STAT_LED, led_state = !led_state);
     }
 };
-
-
 
 TaskManager manager;
 SerialTextInterface serialTextInterface(0);
 MessageProcessor messageProcessor(0);
-LedController ledController(40);
+LedController ledController(500);
 StatusLedDriver statusLight(1000);
 
 void setup() {
@@ -202,8 +202,9 @@ void setup() {
 //start the message processor
   messageProcessor.Start();
   ledController.Start();
+  ledController.SetLedState(BOOTUP);
   statusLight.Start();
-}
+  }
 
 void loop() {
   manager.RunTasks();
