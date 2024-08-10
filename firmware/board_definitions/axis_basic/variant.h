@@ -57,8 +57,8 @@ extern "C"
  *----------------------------------------------------------------------------*/
 
 // Number of pins defined in PinDescription array
-#define PINS_COUNT           (30u)
-#define NUM_DIGITAL_PINS     (30u)
+#define PINS_COUNT           (28u)
+#define NUM_DIGITAL_PINS     (28u)
 #define NUM_ANALOG_INPUTS    (0u)
 #define NUM_ANALOG_OUTPUTS   (0u)
 #define analogInputToDigitalPin(p)  ((p < 6u) ? (p) + 14u : -1)
@@ -81,68 +81,55 @@ extern "C"
 // #define digitalPinToTimer(P)
 
 //Axis Basic 
-#define SYNC (0)
 
 //Auxiliary Port
-#define PA02 (1)
-#define PA03 (2)
-#define PB04 (3)
-#define PB05 (4)
-#define PB30 (5)
-#define PB31 (6)
+#define PA02 (0)
+#define PA03 (1)
+#define PB04 (2)
+#define PB05 (3)
+#define PB30 (4)
+#define PB31 (5)
 
 //LEDS
-#define NEOPIX (7)
-#define STAT_LED (8)
+#define NEOPIX (6)
+#define STAT_LED (7)
 
 //Motor Control
-#define MOTOR_EN (11)
-#define MOTOR_DIR (12)
-#define MOTOR_STEP (13)
-#define MOTOR_M1 (14)
-#define MOTOR_M0 (15)
-#define MOTOR_INDEX (16)
-#define MOTOR_DIAG (17)
-#define MOTOR_SPREAD (18)
-#define UART_RX (19)
-#define UART_TX (20)
+#define MOTOR_EN (8)
+#define MOTOR_DIR (9)
+#define MOTOR_STEP (10)
+#define MOTOR_M1 (11)
+#define MOTOR_M0 (12)
+#define MOTOR_INDEX (13)
+#define MOTOR_DIAG (14)
+#define MOTOR_SPREAD (15)
 
 //Connectivity
-#define SDA2 (21)
-#define SCL2 (22)
-#define SDA1 (23)
-#define SCL1 (24)
+#define SDA2 (18)
+#define SCL2 (19)
+#define SDA1 (20)
+#define SCL1 (21)
+#define SYNC (22)
 
-#define EEPROM_CS (25)
-#define ETH_CS (26)
-#define MOSI (27)
-#define MISO (28)
-#define SCK (29)
+#define EEPROM_CS (23)
+#define ETH_CS (24)
+#define MOSI (25)
+#define MISO (26)
+#define SCK (27)
 
-/*
- * Analog pins
- */
-#define PIN_A0               (14ul)
-#define PIN_A1               (PIN_A0 + 1)
-#define PIN_A2               (PIN_A0 + 2)
-#define PIN_A3               (PIN_A0 + 3)
-#define PIN_A4               (PIN_A0 + 4)
-#define PIN_A5               (PIN_A0 + 5)
-#define PIN_A6               (PIN_A0 + 6)
+#define PIN_DAC0             (50)
+#define PIN_DAC1             (50)
 
-#define PIN_DAC0             (14ul)
-#define PIN_DAC1             PIN_A1
+static const uint8_t A0  = 50;
+// static const uint8_t A1  = PIN_A1;
+// static const uint8_t A2  = PIN_A2;
+// static const uint8_t A3  = PIN_A3;
+// static const uint8_t A4  = PIN_A4;
+// static const uint8_t A5  = PIN_A5;
+// static const uint8_t A6  = PIN_A6 ;
 
-static const uint8_t A0  = PIN_A0;
-static const uint8_t A1  = PIN_A1;
-static const uint8_t A2  = PIN_A2;
-static const uint8_t A3  = PIN_A3;
-static const uint8_t A4  = PIN_A4;
-static const uint8_t A5  = PIN_A5;
-static const uint8_t A6  = PIN_A6 ;
-
-static const uint8_t DAC0 = PIN_DAC0;
-static const uint8_t DAC1 = PIN_DAC1;
+//static const uint8_t DAC0 = PIN_DAC0;
+//static const uint8_t DAC1 = PIN_DAC1;
 
 
 #define ADC_RESOLUTION		12
@@ -151,14 +138,21 @@ static const uint8_t DAC1 = PIN_DAC1;
 #define PIN_ATN              (31ul)
 static const uint8_t ATN = PIN_ATN;
 
+// External Serial?: S0
+// Internal Serial: 
+// Motor UART: S0
+// Internal I2C: needs alternative
+// External I2C: S2, works
+// SPI: S5 MOSI:3, MISO:0, SCK:1
+
 /*
  * Serial interfaces
  */
 
 // Serial1
-#define PIN_SERIAL1_RX       (0ul)
-#define PIN_SERIAL1_TX       (1ul)
-#define PAD_SERIAL1_RX       (SERCOM_RX_PAD_1)
+#define PIN_SERIAL1_RX       (17)
+#define PIN_SERIAL1_TX       (16)
+#define PAD_SERIAL1_RX       (SERCOM_RX_PAD_3)
 #define PAD_SERIAL1_TX       (UART_TX_PAD_0)
 
 /*
@@ -166,12 +160,12 @@ static const uint8_t ATN = PIN_ATN;
  */
 #define SPI_INTERFACES_COUNT 1
 
-#define PIN_SPI_MISO         (23u)
-#define PIN_SPI_MOSI         (24u)
-#define PIN_SPI_SCK          (25u)
-#define PERIPH_SPI           sercom1
+#define PIN_SPI_MISO         (MISO)
+#define PIN_SPI_MOSI         (MOSI)
+#define PIN_SPI_SCK          (SCK)
+#define PERIPH_SPI           sercom0
 #define PAD_SPI_TX           SPI_PAD_3_SCK_1
-#define PAD_SPI_RX           SERCOM_RX_PAD_2
+#define PAD_SPI_RX           SERCOM_RX_PAD_0
 
 // static const uint8_t SS	  = 9 ;	// SERCOM1 last PAD is present on d9 but HW SS isn't used. Set here only for reference.
 // static const uint8_t MOSI = PIN_SPI_MOSI ;
@@ -181,10 +175,12 @@ static const uint8_t ATN = PIN_ATN;
 /*
  * Wire Interfaces
  */
-#define WIRE_INTERFACES_COUNT 1
+#define WIRE_INTERFACES_COUNT 2
 
-#define PIN_WIRE_SDA         (21u)
-#define PIN_WIRE_SCL         (22u)
+
+//External I2C
+#define PIN_WIRE_SDA          (SDA2)
+#define PIN_WIRE_SCL         (SCL2)
 #define PERIPH_WIRE          sercom2
 #define WIRE_IT_HANDLER      SERCOM2_Handler
 #define WIRE_IT_HANDLER_0    SERCOM2_0_Handler
@@ -192,8 +188,16 @@ static const uint8_t ATN = PIN_ATN;
 #define WIRE_IT_HANDLER_2    SERCOM2_2_Handler
 #define WIRE_IT_HANDLER_3    SERCOM2_3_Handler
 
-static const uint8_t SDA = PIN_WIRE_SDA;
-static const uint8_t SCL = PIN_WIRE_SCL;
+//Internal I2C
+#define PIN_WIRE1_SDA         (SDA1)
+#define PIN_WIRE1_SCL         (SCL1)
+#define PERIPH_WIRE1          sercom5
+#define WIRE1_IT_HANDLER      SERCOM5_Handler
+#define WIRE1_IT_HANDLER_0    SERCOM5_0_Handler
+#define WIRE1_IT_HANDLER_1    SERCOM5_1_Handler
+#define WIRE1_IT_HANDLER_2    SERCOM5_2_Handler
+#define WIRE1_IT_HANDLER_3    SERCOM5_3_Handler
+
 
 /*
  * USB
@@ -202,31 +206,9 @@ static const uint8_t SCL = PIN_WIRE_SCL;
 #define PIN_USB_DM          (29ul)
 #define PIN_USB_DP          (30ul)
 
-/*
- * I2S Interfaces
- */
-// #define I2S_INTERFACES_COUNT 1
-
-// #define I2S_DEVICE          0
-// #define I2S_CLOCK_GENERATOR 3
-
-// #define PIN_I2S_SDO          (11u)
-// #define PIN_I2S_SDI          (12u)
-// #define PIN_I2S_SCK          PIN_SERIAL1_TX
-// #define PIN_I2S_FS           (10u)
-// #define PIN_I2S_MCK          PIN_SERIAL1_RX
-
 // On-board QSPI Flash
 // #define EXTERNAL_FLASH_DEVICES   GD25Q16C
 // #define EXTERNAL_FLASH_USE_QSPI
-
-//QSPI Pins
-#define PIN_QSPI_SCK    (34u)
-#define PIN_QSPI_CS     (35u)
-#define PIN_QSPI_IO0    (36u)
-#define PIN_QSPI_IO1    (37u)
-#define PIN_QSPI_IO2    (38u)
-#define PIN_QSPI_IO3    (39u)
 
 #if !defined(VARIANT_QSPI_BAUD_DEFAULT)
   // TODO: meaningful value for this
@@ -277,7 +259,6 @@ extern Uart Serial1;
 #define SERIAL_PORT_MONITOR         Serial
 // Serial has no physical pins broken out, so it's not listed as HARDWARE port
 #define SERIAL_PORT_HARDWARE        Serial1
-#define SERIAL_PORT_HARDWARE_OPEN   Serial1
 
 #endif /* _VARIANT_FEATHER_M4_ */
 

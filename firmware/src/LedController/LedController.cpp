@@ -1,15 +1,15 @@
 #include "LedController.h"
 
-void LedController::OnStart()
+void AddrLedController::OnStart()
 {
     FastLED.addLeds<NEOPIXEL, NEOPIX>(leds, 1);
 }
 
-void LedController::OnStop()
+void AddrLedController::OnStop()
 {
 }
 
-void LedController::OnRun()
+void AddrLedController::OnRun()
 {
     switch (ledState)
     {
@@ -90,13 +90,13 @@ void LedController::OnRun()
         break;
     case RAINBOW:
         hue = (hue + 1);
-        leds[0] = CHSV(hue, 255, 100);
+        leds[0] = CHSV(hue, 255, ledConfig.rainbow_brightness);
         FastLED.show();
         break;
     }
 }
 
-void LedController::SetLedState(LedStates state)
+void AddrLedController::SetLedState(LedStates state)
 {
     prevState = ledState;
     ledState = state;
@@ -128,7 +128,7 @@ void LedController::SetLedState(LedStates state)
     }
 }
 
-void LedController::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size = 0)
+void AddrLedController::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size = 0)
 {
     if (recv_bytes_size < HEADER_SIZE + FOOTER_SIZE)
     {
@@ -169,7 +169,7 @@ void LedController::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_s
     Serial.println("Led Controller got message");
 }
 
-void LedController::SendMsg(uint8_t *send_bytes, uint32_t send_bytes_size)
+void AddrLedController::SendMsg(uint8_t *send_bytes, uint32_t send_bytes_size)
 {
     Serial.println(" Trying to send message ");
 }
