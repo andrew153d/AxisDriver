@@ -3739,7 +3739,7 @@
 			)
 		)
 		(property "Footprint" "Push_Button:button_RKB2SJK250SMTR LFS"
-			(at 0 0 360)
+			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "e2e4798f-aa27-4afa-ac1f-cdd562743201")
@@ -3751,7 +3751,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 0 0 360)
+			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "8fc0cfd0-fcd4-4328-abee-fc3fb4ebb14c")
@@ -3763,7 +3763,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 0 0 360)
+			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "25bdb1dc-1750-4084-8aec-353ed8525ee7")
@@ -11184,7 +11184,7 @@
 			)
 		)
 		(property "Footprint" "Push_Button:button_RKB2SJK250SMTR LFS"
-			(at 0 0 360)
+			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "9b9c447f-6085-49b8-9e8e-5965c76fff74")
@@ -11196,7 +11196,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 0 0 360)
+			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "53d00d70-e4f0-4a84-8b1c-21c976c05143")
@@ -11208,7 +11208,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 0 0 360)
+			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "ef60b597-cb4c-4223-a995-2fc6c62c26a0")
@@ -13280,7 +13280,7 @@
 		(descr "Resistor SMD 0402 (1005 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
 		(tags "resistor")
 		(property "Reference" "R9"
-			(at 0 -1.17 360)
+			(at 0 -1.17 0)
 			(layer "F.SilkS")
 			(hide yes)
 			(uuid "a747a117-832f-484f-89b0-fd2f6d4f2872")
@@ -13292,7 +13292,7 @@
 			)
 		)
 		(property "Value" "10k"
-			(at 0 1.17 360)
+			(at 0 1.17 0)
 			(layer "F.Fab")
 			(uuid "ee582fd4-1bc3-4e35-8ada-e87606c4383c")
 			(effects
@@ -13444,7 +13444,7 @@
 			(uuid "fd4e1be1-efe0-4bfb-91a1-ae85e9b30e26")
 		)
 		(fp_text user "${REFERENCE}"
-			(at 0 0 360)
+			(at 0 0 0)
 			(layer "F.Fab")
 			(uuid "6591ae69-41ff-4693-bd4a-182f3a8ca127")
 			(effects

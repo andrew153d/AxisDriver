@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <Arduino.h>
 
+typedef void (*TaskPointer)();
+
 class ITask {
 private:
     uint32_t lastExecutionTime = 0;
@@ -28,7 +30,7 @@ public:
 class TaskManager {
 private:
     std::vector<ITask*> tasks;   // Vector to hold pointers to tasks
-
+    std::vector<TaskPointer> functions;
 public:
     // Add a task to the task manager
     void AddTask(ITask* task) {

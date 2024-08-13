@@ -179,7 +179,7 @@ static const uint8_t ATN = PIN_ATN;
 
 
 //External I2C
-#define PIN_WIRE_SDA          (SDA2)
+#define PIN_WIRE_SDA         (SDA2)
 #define PIN_WIRE_SCL         (SCL2)
 #define PERIPH_WIRE          sercom2
 #define WIRE_IT_HANDLER      SERCOM2_Handler

@@ -11,7 +11,6 @@ void MotorController::OnStart(){
   digitalWrite(MOTOR_M0, HIGH);
   digitalWrite(MOTOR_M1, HIGH);
   digitalWrite(MOTOR_EN, LOW);
-  Serial.println("trying to send data");
   
 //   while(!Serial2.availableForWrite()){
 //     delay(1000);
@@ -20,18 +19,17 @@ void MotorController::OnStart(){
 
   Serial1.begin(9600);
   delay(1000);
-  driver.begin();                 //  SPI: Init CS pins and possible SW SPI pins
-                                 // UART: Init SW UART (if selected) with default 115200 baudrate
+  driver.begin();
 
-  driver.toff(5);                 // Enables driver in software
+  driver.toff(5);
   delay(100);
-  driver.rms_current(1200);        // Set motor RMS current
+  driver.rms_current(1200);
   delay(100);
-  driver.microsteps(16);          // Set microsteps to 1/16th
+  driver.microsteps(16);
   delay(100);
-  driver.en_spreadCycle(false);   // Toggle spreadCycle on TMC2208/2209/2224
+  driver.en_spreadCycle(false);
   delay(100);
-  driver.pwm_autoscale(true);     // Needed for stealthChop
+  driver.pwm_autoscale(true);
   delay(100);
   Serial.printf("Got version: 0x%X\n", driver.IOIN());
   Serial.printf("test: 0x%X", driver.freewheel());

@@ -125,7 +125,14 @@ void AddrLedController::SetLedState(LedStates state)
         FastLED.show();
         executionPeriod = RAINBOW_EXEC_PERIOD;
         break;
+    case SOLID:
+        executionPeriod = 0xFFFFFFFF;
     }
+}
+
+void AddrLedController::SetLEDColor(CHSV color){
+    leds[0] = color;
+    FastLED.show();
 }
 
 void AddrLedController::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size = 0)

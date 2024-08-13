@@ -139,13 +139,12 @@ MessageProcessor messageProcessor(0);
 AddrLedController addrLedController(500);
 StatusLedDriver statusLight(1000);
 EncoderController encoderController(100);
-// MotorController motorController(0);
+MotorController motorController(0);
 
 void setup()
 {
   Serial.begin(115200);
   Serial.println("Starting Axis");
-  // while(!Serial);
   //  connect the SerialTextInterface to the Message Processor
   //  messageProcessor.AddControllerInterface(&addrLedController, MessageTypes::LedControlMessageTypeLowerBounds, MessageTypes::LedControlMessageTypeUpperBounds);
   //  messageProcessor.AddExternalInterface(&serialTextInterface);
@@ -154,7 +153,7 @@ void setup()
   manager.AddTask(&statusLight);
   manager.AddTask(&addrLedController);
   manager.AddTask(&encoderController);
-  // manager.AddTask(&motorController);
+  manager.AddTask(&motorController);
   //  start the interfaces
   serialTextInterface.Start();
 
@@ -162,14 +161,15 @@ void setup()
   messageProcessor.Start();
 
   addrLedController.Start();
-  addrLedController.SetLedState(BOOTUP);
+  addrLedController.SetLedState(SOLID);
   addrLedController.SetRainbowBrightness(100);
 
   statusLight.Start();
 
   encoderController.Start();
-  // motorController.Start();
-  // Serial1.begin(9600);
+  Serial1.begin(9600);
+  motorController.Start();
+  // 
 }
 float angle;
 void loop()
@@ -179,6 +179,7 @@ void loop()
   if (angle != encoderController.GetShaftAngle())
   {
     angle = encoderController.GetShaftAngle();
-    Serial.printf("%f %f %f\n",angle,encoderController.GetRunningAverageShaftAngle(), encoderController.GetSlidingWindowShaftAngle());
+    addrLedController.SetLEDColor(CHSV(angle*(0.7), 255, 100));
+    //Serial.printf("%f %f %f\n",angle,encoderController.GetRunningAverageShaftAngle(), encoderController.GetSlidingWindowShaftAngle());
   }
 }
