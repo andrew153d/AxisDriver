@@ -149,7 +149,7 @@ void setup()
   messageProcessor.Start();
 
   addrLedController.Start();
-  addrLedController.SetLedState(RAINBOW);
+  addrLedController.SetLedState(BOOTUP);
   addrLedController.SetRainbowBrightness(100);
 
   statusLight.Start();
