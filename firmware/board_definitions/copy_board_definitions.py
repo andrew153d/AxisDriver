@@ -58,5 +58,5 @@ def copy_directory(source_dir, destination_dir):
 
 
 home_dir = str(Path.home())
-copy_file('firmware/board_definitions/grow_engn_axis_basic.json', home_dir+"/.platformio/platforms/atmelsam/boards/grow_engn_axis_basic.json")
-copy_directory('firmware/board_definitions/axis_basic', home_dir+"/.platformio/packages/framework-arduino-samd-adafruit/variants/axis_basic")
+copy_file('firmware/board_definitions/grow_engn_axis_driver.json', home_dir+"/.platformio/platforms/atmelsam/boards/grow_engn_axis_driver.json")
+copy_directory('firmware/board_definitions/axis_driver', home_dir+"/.platformio/packages/framework-arduino-samd-adafruit/variants/axis_driver")

@@ -48,8 +48,6 @@ void SerialTextInterface::OnRun()
 
     while(bytes_available){
         bytes_read = Serial.readBytes(&char_buf[bytes_read], bytes_available);
-        Serial.printf("Serial has read %d bytes\n", bytes_read);
-
         bytes_available = Serial.available();
         bytes_available = min(bytes_available, 256-bytes_read);
     }
@@ -71,12 +69,12 @@ void SerialTextInterface::OnRun()
 
 void SerialTextInterface::HandleIncomingMsg(uint8_t* recv_bytes, uint32_t recv_bytes_size = 0)
 {
-    if(recv_bytes_size%2){
-        Serial.println("Character not even");
-        Serial.println(recv_bytes_size);
-        Serial.println(char_buf);
-        return;
-    }
+    // if(recv_bytes_size%2){
+    //     Serial.println("Character not even");
+    //     Serial.println(recv_bytes_size);
+    //     Serial.println(char_buf);
+    //     return;
+    // }
 
     if(recv_bytes[recv_bytes_size-1]==0x0A){
         recv_bytes_size--;

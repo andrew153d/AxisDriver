@@ -109,7 +109,7 @@ extern "C"
 #define SCL2 (19)
 #define SDA1 (20)
 #define SCL1 (21)
-#define SYNC (22)
+#define SYNC_PIN (22)
 
 #define EEPROM_CS (23)
 #define ETH_CS (24)

@@ -78,25 +78,13 @@ public:
 
   void HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size = 0)
   {
-    Serial.println("message manager handling message: ");
-    for (int i = 0; i < recv_bytes_size; i++)
-    {
-      Serial.printf("%2X, ", recv_bytes[i]);
-    }
-    Serial.println();
-
     Header *hdr = (Header *)&recv_bytes[0];
 
     for (InterfaceLimits interface : controllerInterfaces)
     {
       if ((uint16_t)hdr->message_type > interface.lowLimit && (uint16_t)hdr->message_type < interface.highLimit)
       {
-        Serial.println("Sending to led");
         interface.interface->HandleIncomingMsg(recv_bytes, recv_bytes_size);
-      }
-      else
-      {
-        Serial.println("Invalid message limits");
       }
     }
   }
@@ -146,8 +134,8 @@ void setup()
   Serial.begin(115200);
   Serial.println("Starting Axis");
   //  connect the SerialTextInterface to the Message Processor
-  //  messageProcessor.AddControllerInterface(&addrLedController, MessageTypes::LedControlMessageTypeLowerBounds, MessageTypes::LedControlMessageTypeUpperBounds);
-  //  messageProcessor.AddExternalInterface(&serialTextInterface);
+  messageProcessor.AddControllerInterface(&addrLedController, MessageTypes::LedControlMessageTypeLowerBounds, MessageTypes::LedControlMessageTypeUpperBounds);
+  messageProcessor.AddExternalInterface(&serialTextInterface);
   manager.AddTask(&serialTextInterface);
   manager.AddTask(&messageProcessor);
   manager.AddTask(&statusLight);
@@ -161,25 +149,26 @@ void setup()
   messageProcessor.Start();
 
   addrLedController.Start();
-  addrLedController.SetLedState(SOLID);
+  addrLedController.SetLedState(RAINBOW);
   addrLedController.SetRainbowBrightness(100);
 
   statusLight.Start();
 
   encoderController.Start();
-  Serial1.begin(9600);
   motorController.Start();
+  motorController.setEncoderValueSource(encoderController.GetShaftAnglePtr());
   // 
 }
-float angle;
+
 void loop()
 {
   manager.RunTasks();
-
+  static float angle;
   if (angle != encoderController.GetShaftAngle())
   {
     angle = encoderController.GetShaftAngle();
-    addrLedController.SetLEDColor(CHSV(angle*(0.7), 255, 100));
-    //Serial.printf("%f %f %f\n",angle,encoderController.GetRunningAverageShaftAngle(), encoderController.GetSlidingWindowShaftAngle());
+    float angle0_255 = angle*(0.7);
+    //addrLedController.SetLEDColor(CHSV(int(angle0_255*2)%255, 255, 100));
+    //Serial.printf("%f %f %f\n",angle,encoderController.GetShaftAngle());
   }
 }

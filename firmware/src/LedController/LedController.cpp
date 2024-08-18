@@ -53,7 +53,7 @@ void AddrLedController::OnRun()
             break;
         }
         step_counter++;
-        step_counter%=2;
+        step_counter %= 2;
         break;
     case BOOTUP:
         switch (step_counter)
@@ -83,7 +83,7 @@ void AddrLedController::OnRun()
             FastLED.show();
             break;
         case 6:
-            SetLedState(RAINBOW);
+            SetLedState(OFF);
             break;
         }
         step_counter++;
@@ -130,7 +130,8 @@ void AddrLedController::SetLedState(LedStates state)
     }
 }
 
-void AddrLedController::SetLEDColor(CHSV color){
+void AddrLedController::SetLEDColor(CHSV color)
+{
     leds[0] = color;
     FastLED.show();
 }
@@ -150,15 +151,14 @@ void AddrLedController::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_byt
         return;
     }
 
-    Serial.printf("MessageType: 0x%X\n", header->message_type);
-
     switch (header->message_type)
     {
     case MessageTypes::SetLed:
         if (header->body_size == 3)
         {
-            leds[0] = (CRGB) * (&recv_bytes[HEADER_SIZE]);
-
+            leds[0].r = recv_bytes[HEADER_SIZE];
+            leds[0].g = recv_bytes[HEADER_SIZE+1];
+            leds[0].b = recv_bytes[HEADER_SIZE+2];
             FastLED.show();
         }
         else
@@ -172,8 +172,6 @@ void AddrLedController::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_byt
     default:
         break;
     }
-
-    Serial.println("Led Controller got message");
 }
 
 void AddrLedController::SendMsg(uint8_t *send_bytes, uint32_t send_bytes_size)
