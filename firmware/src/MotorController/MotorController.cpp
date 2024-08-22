@@ -37,7 +37,7 @@ void MotorController::OnRun()
   if(abs(error)<0.5){
     stepper.disableOutputs();
   }else{
-    stepper.enableOutputs();
+    //stepper.enableOutputs();
   }
   stepper.runSpeed();
   //Serial.printf("Target: %8.1f, Position: %8.1f, Error: %8.1f, Speed: %8.1f\n", target, *encoder_ptr, error, speed);

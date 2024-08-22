@@ -4,25 +4,16 @@
 #include <Arduino.h>
 #include "Task.h"
 #include "MessageProcessor/MessageProcessor.h"
-#include <stdlib.h>
-
-#define CR 0x0D
-#define LR 0x0A
+#include "Messages.h"
 
 
-class SerialTextInterface : public ITask, public IExternalInterface{
-private:
-  char char_buf[256];
-  uint8_t recv_buf[256];
+class DeviceManager : public ITask, public IInternalInterface {
 public:
-    SerialTextInterface(uint32_t period){
-      executionPeriod = period;
+    DeviceManager(uint32_t period){
+        executionPeriod = period;
     }
-
     void OnStart();
-
     void OnStop();
-
     void OnRun();
 
     void HandleIncomingMsg(uint8_t* recv_bytes, uint32_t recv_bytes_size);

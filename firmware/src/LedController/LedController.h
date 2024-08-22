@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include "Task.h"
 #include "FastLED.h"
-#include "ExternalInterface.h"
+#include "MessageProcessor/MessageProcessor.h"
 #include "Messages.h"
 
 // #if !defined(FASTLED_FORCE_SOFTWARE_PINS) 
@@ -29,7 +29,7 @@ enum LedStates{
   SOLID,
 };
 
-class AddrLedController : public ITask, public ISenderInterface {
+class AddrLedController : public ITask, public IInternalInterface {
 private:
   uint16_t colorWheelAngle = 0;
   CRGB leds[1];

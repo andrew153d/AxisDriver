@@ -6,24 +6,30 @@ typedef void (*HandleIncomingMsgPtrType)(uint8_t* recv_bytes, uint32_t recv_byte
 typedef void (*SendMsgPtrType)(uint8_t* send_bytes, uint32_t send_bytes_size);
 
 
-enum class MessageTypes : uint8_t{
+enum class MessageTypes : uint16_t{
 // General Device Info
-
+DeviceInfoMessageTypeLowerBounds = 0x0000,
+GetVersionMessageId = 0x0001,
+VersionMessageId = 0x0002,
+DeviceInfoMessageTypeUpperBounds = 0x00FF,
 
 // Device Settings
-
+DeviceSettingsMessageTypeLowerBounds = 0x0500,
+DeviceSettingsMessageTypeUpperBounds = 0x05FF,
 
 //LED control
-LedControlMessageTypeLowerBounds = 0x40,
-SetLed = 0x41,
-GetLed = 0x42,
-LedControlMessageTypeUpperBounds = 0x50,
+LedControlMessageTypeLowerBounds = 0x3000,
+SetLed = 0x3001,
+GetLed = 0x3002,
+LedControlMessageTypeUpperBounds = 0x30FF,
 
 // Drive Configuration
 
 
 // Motor Driving
+MotorControlMessageTypeLowerBounds = 0x5000,
 
+MotorControlMessageTypeUpperBounds = 0x50FF,
 };
 
 PACKEDSTRUCT Header{
@@ -37,6 +43,17 @@ PACKEDSTRUCT Footer{
 
 const uint16_t HEADER_SIZE = sizeof(Header);
 const uint16_t FOOTER_SIZE = sizeof(Footer);
+
+PACKEDSTRUCT GetVersionMessage{
+    Header header;
+    Footer footer;
+};
+
+PACKEDSTRUCT VersionMessage{
+    Header header;
+    char version[32];
+    Footer footer;
+};
 
 PACKEDSTRUCT LedColors{
  union {
@@ -56,4 +73,10 @@ PACKEDSTRUCT LedColors{
         };
         uint8_t raw[3];
     };
+};
+
+PACKEDSTRUCT SetLedColorMessage{
+    Header header;
+    LedColors ledColor;
+    Footer footer;
 };

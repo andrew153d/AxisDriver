@@ -144,7 +144,6 @@ void AddrLedController::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_byt
     }
 
     Header *header = (Header *)recv_bytes;
-
     if (recv_bytes_size < HEADER_SIZE + header->body_size + FOOTER_SIZE)
     {
         Serial.printf("Invalid body size: recv_bytes:%d, header_size:%d, body_size:%d, footer_size:%d\n", recv_bytes_size, HEADER_SIZE, header->body_size, FOOTER_SIZE);
