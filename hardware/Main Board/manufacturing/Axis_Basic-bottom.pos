@@ -1,7 +1,0 @@
-### Footprint positions - created on Thu Feb 29 20:21:39 2024 ###
-### Printed by KiCad version 7.0.6
-## Unit = mm, Angle = deg.
-## Side : bottom
-# Ref     Val       Package                PosX       PosY       Rot  Side
-U1        TLV493D   SOT-23-6           150.0000  -100.0000  180.0000  bottom
-## End
