@@ -29,9 +29,9 @@ void DeviceManager::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_s
 
     switch (header->message_type)
     {
-    case MessageTypes::GetVersionMessageId:
+    case MessageTypes::GetVersion:
         VersionMessage msg;
-        msg.header.message_type = MessageTypes::VersionMessageId;
+        msg.header.message_type = MessageTypes::GetVersion;
         msg.header.body_size = sizeof(msg.version);
         strcpy(msg.version, "AxisDriver V0.0");
         msg.footer.checksum = 0;

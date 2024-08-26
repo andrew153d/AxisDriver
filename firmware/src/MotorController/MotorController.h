@@ -8,7 +8,7 @@
 
 #define SERIAL_PORT Serial1 // TMC2208/TMC2224 HardwareSerial port
 #define DRIVER_ADDRESS 0b00 // TMC2209 Driver address according to MS1 and MS2
-
+#define VELOCITY_FOLLLOWING_ERROR 0x02
 #define R_SENSE 0.12f
 
 class MotorController : public ITask
@@ -21,6 +21,7 @@ private:
     float *encoder_ptr = nullptr;
     int step = 0;
     float target = 0;
+    uint32_t error_flag;
 public:
     MotorController(uint32_t period) : serial_stream(Serial1),
                                        pid(50, 0.01, 0, 100000, 100000),
@@ -35,6 +36,6 @@ public:
     void OnRun();
 
     void setEncoderValueSource(float *encoder_value);
-
+    uint32_t GetErrors();
     // functions needed by simple foc
 };

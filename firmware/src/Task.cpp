@@ -3,7 +3,7 @@
 void ITask::Run(){
     if(!isRunning)
         return;
-    if(millis()-lastExecutionTime>executionPeriod){
+    if(executionPeriod == 0 || millis()-lastExecutionTime>executionPeriod){
         lastExecutionTime = millis();
         OnRun();
     }

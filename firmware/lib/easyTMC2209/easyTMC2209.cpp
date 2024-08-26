@@ -512,6 +512,13 @@ uint8_t easyTMC2209::getInterfaceTransmissionCounter()
   return read(ADDRESS_IFCNT);
 }
 
+easyTMC2209::GlobalStatus easyTMC2209::getGlobalStatus()
+{
+    GlobalStatus stat;
+    stat.bytes = read(ADDRESS_GSTAT);
+    return stat;
+}
+
 uint32_t easyTMC2209::getInterstepDuration()
 {
   return read(ADDRESS_TSTEP);
@@ -564,14 +571,14 @@ void easyTMC2209::initialize(long serial_baud_rate,
                              SerialAddress serial_address)
 {
   serial_baud_rate_ = serial_baud_rate;
-
+  
   setOperationModeToSerial(serial_address);
-  setRegistersToDefaults();
+  //setRegistersToDefaults();
 
-  minimizeMotorCurrent();
-  disable();
-  disableAutomaticCurrentScaling();
-  disableAutomaticGradientAdaptation();
+  //minimizeMotorCurrent();
+  //disable();
+  //disableAutomaticCurrentScaling();
+  //disableAutomaticGradientAdaptation();
 }
 
 int easyTMC2209::serialAvailable()
@@ -635,7 +642,7 @@ void easyTMC2209::setOperationModeToSerial(SerialAddress serial_address)
   global_config_.i_scale_analog = 0;
   global_config_.pdn_disable = 1;
   global_config_.mstep_reg_select = 1;
-  global_config_.multistep_filt = 1;
+  //global_config_.multistep_filt = 1;
 
   writeStoredGlobalConfig();
 }

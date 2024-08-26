@@ -10,8 +10,8 @@ static const uint32_t device_address = 0x5E;
 
 float number_full_turns = 0;
 float home_position_offset = 0;
-float full_shaft_position = 0;
-
+float last_full_shaft_position = 0, full_shaft_position = 0;
+float shaft_velocity = 0;
 //testing using an averaging filter
 static const uint32_t average_filter_length = 100;
 float average_filter[average_filter_length] = {};
@@ -40,6 +40,6 @@ public:
     float GetShaftAngle();
     float GetRunningAverageShaftAngle();
     float GetSlidingWindowShaftAngle();
-
+    float GetSpeedDegPerS();
     float* GetShaftAnglePtr();
 };

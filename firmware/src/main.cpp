@@ -119,12 +119,8 @@ void setup()
 void loop()
 {
   manager.RunTasks();
-  static float angle;
-  if (angle != encoderController.GetShaftAngle())
-  {
-    angle = encoderController.GetShaftAngle();
-    float angle0_255 = angle*(0.7);
-    //addrLedController.SetLEDColor(CHSV(int(angle0_255*2)%255, 255, 100));
-    //Serial.printf("%f %f %f\n",angle,encoderController.GetShaftAngle());
+  
+  if(motorController.GetErrors()>0){
+    addrLedController.SetLedState(FLASH_ERROR);
   }
 }

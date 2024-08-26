@@ -8,28 +8,38 @@ typedef void (*SendMsgPtrType)(uint8_t* send_bytes, uint32_t send_bytes_size);
 
 enum class MessageTypes : uint16_t{
 // General Device Info
-DeviceInfoMessageTypeLowerBounds = 0x0000,
-GetVersionMessageId = 0x0001,
-VersionMessageId = 0x0002,
+DeviceInfoMessageTypeLowerBounds = 0x0001,
+GetVersion,
 DeviceInfoMessageTypeUpperBounds = 0x00FF,
 
 // Device Settings
-DeviceSettingsMessageTypeLowerBounds = 0x0500,
-DeviceSettingsMessageTypeUpperBounds = 0x05FF,
+SetI2CAddress = 0x0500,
+GetI2CAddress = 0x0501,
+
 
 //LED control
 LedControlMessageTypeLowerBounds = 0x3000,
-SetLed = 0x3001,
-GetLed = 0x3002,
+SetLedColor,
+GetLedColor,
+SetLedState,
 LedControlMessageTypeUpperBounds = 0x30FF,
 
 // Drive Configuration
 
 
 // Motor Driving
-MotorControlMessageTypeLowerBounds = 0x5000,
+GetMotorPosition = 0x5000,
+GetMotorVelocity,
+GetMotorCurrent,
 
-MotorControlMessageTypeUpperBounds = 0x50FF,
+SetMotorPosition,
+SetMotorVelocity,
+SetMotorCurrent,
+
+SetControlMode,
+GetControlMode,
+
+GetMotorStatus,
 };
 
 PACKEDSTRUCT Header{

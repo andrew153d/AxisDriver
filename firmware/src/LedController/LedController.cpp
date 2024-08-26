@@ -98,6 +98,10 @@ void AddrLedController::OnRun()
 
 void AddrLedController::SetLedState(LedStates state)
 {
+
+    if(state == ledState)
+        return;
+
     prevState = ledState;
     ledState = state;
     switch (ledState)
@@ -152,7 +156,7 @@ void AddrLedController::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_byt
 
     switch (header->message_type)
     {
-    case MessageTypes::SetLed:
+    case MessageTypes::SetLedColor:
         if (header->body_size == 3)
         {
             leds[0].r = recv_bytes[HEADER_SIZE];
@@ -165,7 +169,7 @@ void AddrLedController::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_byt
             Serial.println("SetLed body size incorrect");
         }
         break;
-    case MessageTypes::GetLed:
+    case MessageTypes::GetLedColor:
 
         break;
     default:

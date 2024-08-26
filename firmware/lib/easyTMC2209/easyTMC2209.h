@@ -132,6 +132,8 @@ public:
 
   Status getStatus();
 
+  GlobalStatus getGlobalStatus();
+
   uint8_t getInterfaceTransmissionCounter();
 
   uint32_t getInterstepDuration();
