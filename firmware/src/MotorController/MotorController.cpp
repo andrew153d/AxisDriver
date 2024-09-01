@@ -24,13 +24,12 @@ void MotorController::CheckForErrors()
   if(previousErrors.errors == 0 && motorErrors.errors > 0){
     stepper.disableOutputs();
     Serial.printf("Motor Error Present: %4x\n", motorErrors.errors);
+    //addrLedController.SetLedState(FLASH_ERROR);
+    controlMode = ControlMode::MOTOR_OFF;
   }
 
   previousErrors = motorErrors;
 
-  if(motorErrors.errors > 0){
-    addrLedController.SetLedState(FLASH_ERROR);
-  }
 }
 
 void MotorController::OnStart()

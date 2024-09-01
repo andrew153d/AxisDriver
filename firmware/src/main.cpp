@@ -121,8 +121,4 @@ void setup()
 void loop()
 {
   manager.RunTasks();
-  
-  if(motorController.GetErrors()>0){
-    addrLedController.SetLedState(FLASH_ERROR);
-  }
 }

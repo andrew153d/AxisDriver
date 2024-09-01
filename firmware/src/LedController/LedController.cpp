@@ -173,6 +173,13 @@ void AddrLedController::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_byt
     case MessageTypes::GetLedColor:
 
         break;
+    case MessageTypes::SetLedState:
+        {
+            LedStates s = (LedStates)recv_bytes[HEADER_SIZE];
+            Serial.printf("Setting LED Mode: %d", (uint8_t)s);
+            SetLedState(s);
+        }
+    break;
     default:
         break;
     }
