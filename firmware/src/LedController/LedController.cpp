@@ -3,6 +3,7 @@
 void AddrLedController::OnStart()
 {
     FastLED.addLeds<NEOPIXEL, NEOPIX>(leds, 1);
+    prevState = LedStates::OFF;
 }
 
 void AddrLedController::OnStop()
@@ -83,7 +84,7 @@ void AddrLedController::OnRun()
             FastLED.show();
             break;
         case 6:
-            SetLedState(OFF);
+            SetLedState(prevState);
             break;
         }
         step_counter++;
@@ -181,3 +182,5 @@ void AddrLedController::SendMsg(uint8_t *send_bytes, uint32_t send_bytes_size)
 {
     Serial.println(" Trying to send message ");
 }
+
+AddrLedController addrLedController(500);

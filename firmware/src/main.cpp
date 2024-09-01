@@ -79,10 +79,10 @@ MessageProcessor messageProcessor(0);
 SerialTextInterface serialTextInterface(0);
 
 //internal devices
-AddrLedController addrLedController(500);
+//AddrLedController addrLedController(500);
 StatusLedDriver statusLight(1000);
-EncoderController encoderController(100);
-MotorController motorController(0);
+EncoderController encoderController(500);
+//MotorController motorController(0);
 
 DeviceManager deviceManager(0xFFFFFFFF);
 void setup()
@@ -93,6 +93,7 @@ void setup()
   messageProcessor.AddControllerInterface(&addrLedController, MessageTypes::LedControlMessageTypeLowerBounds, MessageTypes::LedControlMessageTypeUpperBounds);
   messageProcessor.AddControllerInterface(&deviceManager, MessageTypes::DeviceInfoMessageTypeLowerBounds, MessageTypes::DeviceInfoMessageTypeUpperBounds);
   messageProcessor.AddExternalInterface(&serialTextInterface);
+  
   manager.AddTask(&serialTextInterface);
   manager.AddTask(&messageProcessor);
   manager.AddTask(&statusLight);
@@ -104,16 +105,17 @@ void setup()
 
   // start the message processor
   messageProcessor.Start();
-
+  pinMode(USR_INPUT, INPUT);
   addrLedController.Start();
-  addrLedController.SetLedState(BOOTUP);
   addrLedController.SetRainbowBrightness(100);
+  addrLedController.SetLedState(SOLID);
+  addrLedController.SetLedState(BOOTUP);
 
   statusLight.Start();
 
   encoderController.Start();
   motorController.Start();
-  motorController.setEncoderValueSource(encoderController.GetShaftAnglePtr());
+  motorController.setEncoderValueSource(&encoderController);
 }
 
 void loop()

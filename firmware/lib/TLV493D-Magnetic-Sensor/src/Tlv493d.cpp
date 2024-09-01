@@ -65,8 +65,8 @@ void Tlv493d::begin(TwoWire &bus)
 void Tlv493d::begin(TwoWire &bus, Tlv493d_Address_t slaveAddress, bool reset)
 {
 	initInterface(&mInterface, &bus, slaveAddress);
+	
 	delay(TLV493D_STARTUPDELAY);
-
 	mInterface.bus->begin();
 
 	if(reset == true)

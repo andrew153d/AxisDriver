@@ -2,8 +2,9 @@
 #include <Arduino.h>
 #include "Task.h"
 #include <Tlv493d.h>
+#include "Messages.h"
 
-class EncoderController : public ITask
+class EncoderController : public ITask, public IEncoderInterface
 {
 private:
 static const uint32_t device_address = 0x5E;
@@ -36,6 +37,9 @@ public:
     void OnStart();
     void OnStop();
     void OnRun();
+
+    float GetVelocityDegreesPerSecond();
+    float GetPositionDegrees();
 
     float GetShaftAngle();
     float GetRunningAverageShaftAngle();

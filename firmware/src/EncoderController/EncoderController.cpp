@@ -12,6 +12,7 @@ float Wrap0to360(float input)
 
 void EncoderController::OnStart()
 {
+    
     Wire1.begin();
     Tlv493dMagnetic3DSensor.begin(Wire1);
     Tlv493dMagnetic3DSensor.setAccessMode(Tlv493dMagnetic3DSensor.MASTERCONTROLLEDMODE);
@@ -33,7 +34,7 @@ void EncoderController::OnRun()
     }
     Tlv493dMagnetic3DSensor.updateData();
     raw_shaft_angle = Wrap0to360(degrees(Tlv493dMagnetic3DSensor.getAzimuth()) - home_position_offset);
-
+    //Serial.printf("%d\n", raw_shaft_angle);
     // load the sliding window filter
     // to avoid invalid values at the ends, apply an offset
     {
@@ -80,6 +81,16 @@ void EncoderController::OnRun()
 }
 
 float EncoderController::GetShaftAngle()
+{
+    return full_shaft_position;
+}
+
+float EncoderController::GetVelocityDegreesPerSecond()
+{
+    return shaft_velocity;
+}
+
+float EncoderController::GetPositionDegrees()
 {
     return full_shaft_position;
 }

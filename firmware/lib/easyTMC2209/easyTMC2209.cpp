@@ -573,12 +573,12 @@ void easyTMC2209::initialize(long serial_baud_rate,
   serial_baud_rate_ = serial_baud_rate;
   
   setOperationModeToSerial(serial_address);
-  //setRegistersToDefaults();
+  setRegistersToDefaults();
 
   //minimizeMotorCurrent();
   //disable();
-  //disableAutomaticCurrentScaling();
-  //disableAutomaticGradientAdaptation();
+  disableAutomaticCurrentScaling();
+  disableAutomaticGradientAdaptation();
 }
 
 int easyTMC2209::serialAvailable()

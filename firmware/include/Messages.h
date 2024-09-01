@@ -5,6 +5,12 @@
 typedef void (*HandleIncomingMsgPtrType)(uint8_t* recv_bytes, uint32_t recv_bytes_size);
 typedef void (*SendMsgPtrType)(uint8_t* send_bytes, uint32_t send_bytes_size);
 
+class IEncoderInterface {
+    public:
+        virtual float GetVelocityDegreesPerSecond();
+        virtual float GetPositionDegrees();
+};
+
 
 enum class MessageTypes : uint16_t{
 // General Device Info

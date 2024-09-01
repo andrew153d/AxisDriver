@@ -94,6 +94,9 @@ extern "C"
 #define NEOPIX (6)
 #define STAT_LED (7)
 
+//INPUT
+#define USR_INPUT (30)
+
 //Motor Control
 #define MOTOR_EN (8)
 #define MOTOR_DIR (9)
@@ -119,9 +122,16 @@ extern "C"
 
 #define PIN_DAC0             (50)
 #define PIN_DAC1             (50)
+/*
+ * Analog pins
+ */
 
-static const uint8_t A0  = 50;
-// static const uint8_t A1  = PIN_A1;
+#define PIN_VUSB (28ul)
+#define PIN_VBUS (29ul)
+
+
+static const uint8_t A0  = PIN_VUSB;
+static const uint8_t A1  = PIN_VBUS;
 // static const uint8_t A2  = PIN_A2;
 // static const uint8_t A3  = PIN_A3;
 // static const uint8_t A4  = PIN_A4;
@@ -163,7 +173,7 @@ static const uint8_t ATN = PIN_ATN;
 #define PIN_SPI_MISO         (MISO)
 #define PIN_SPI_MOSI         (MOSI)
 #define PIN_SPI_SCK          (SCK)
-#define PERIPH_SPI           sercom0
+#define PERIPH_SPI           sercom1
 #define PAD_SPI_TX           SPI_PAD_3_SCK_1
 #define PAD_SPI_RX           SERCOM_RX_PAD_0
 

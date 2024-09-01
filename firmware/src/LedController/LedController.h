@@ -65,3 +65,5 @@ public:
     void SetLEDColor(CHSV color);
 
 };
+
+extern AddrLedController addrLedController;
