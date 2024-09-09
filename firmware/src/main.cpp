@@ -92,6 +92,7 @@ void setup()
   //  connect the SerialTextInterface to the Message Processor
   messageProcessor.AddControllerInterface(&addrLedController, MessageTypes::LedControlMessageTypeLowerBounds, MessageTypes::LedControlMessageTypeUpperBounds);
   messageProcessor.AddControllerInterface(&deviceManager, MessageTypes::DeviceInfoMessageTypeLowerBounds, MessageTypes::DeviceInfoMessageTypeUpperBounds);
+  messageProcessor.AddControllerInterface(&motorController, MessageTypes::MotorControlMessageTypeLowerBounds, MessageTypes::MotorControlMessageTypeUpperBounds);
   messageProcessor.AddExternalInterface(&serialTextInterface);
   
   manager.AddTask(&serialTextInterface);

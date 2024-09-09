@@ -3,6 +3,7 @@
 #include "Task.h"
 #include <AccelStepper.h>
 #include "../LedController/LedController.h"
+#include "MessageProcessor/MessageProcessor.h"
 #include "easyTMC2209.h"
 #include "wiring_private.h"
 #include "pid.h"
@@ -30,7 +31,7 @@ union MotorError {
 };
 
 
-class MotorController : public ITask
+class MotorController : public ITask, public IInternalInterface
 {
 private:
     HardwareSerial &serial_stream;
@@ -53,6 +54,8 @@ private:
     uint32_t error_check_timer = 0;
     const uint32_t error_check_period = 1000;
     void CheckForErrors();
+
+    uint8_t send_buffer[1024];
 public:
 
     
@@ -69,9 +72,11 @@ public:
     void OnStart();
     void OnStop();
     void OnRun();
-
+    void HandleIncomingMsg(uint8_t* recv_bytes, uint32_t recv_bytes_size);
     void setEncoderValueSource(IEncoderInterface *encoder_value);
     uint32_t GetErrors();
+
+    void PrintErrorsToSerial();
 };
 
 extern MotorController motorController;

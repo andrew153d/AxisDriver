@@ -34,7 +34,8 @@ LedControlMessageTypeUpperBounds = 0x30FF,
 
 
 // Motor Driving
-GetMotorPosition = 0x5000,
+MotorControlMessageTypeLowerBounds = 0x5000,
+GetMotorPosition,
 GetMotorVelocity,
 GetMotorCurrent,
 
@@ -46,6 +47,8 @@ SetControlMode,
 GetControlMode,
 
 GetMotorStatus,
+StartMotor,
+MotorControlMessageTypeUpperBounds = 0x5FFF,
 };
 
 PACKEDSTRUCT Header{
