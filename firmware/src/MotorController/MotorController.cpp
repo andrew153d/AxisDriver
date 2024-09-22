@@ -55,16 +55,21 @@ void MotorController::OnStart()
   stepper.setAcceleration(50000);
   stepper.setEnablePin(MOTOR_EN);
   stepper.setPinsInverted(true, false, true);
-  stepper.disableOutputs();
+  stepper.enableOutputs();
 
   driver.setup(serial_stream, 115200, TMC2209base::SerialAddress::SERIAL_ADDRESS_0);
-  driver.setMicrostepsPerStepPowerOfTwo(4);
-  driver.setAllCurrentValues(70, 0, 0);
+  driver.setMicrostepsPerStep(4);
+  driver.enableAutomaticCurrentScaling();
+  driver.enableStealthChop();
+  driver.useExternalSenseResistors();
+  //driver.enableAutomaticGradientAdaptation();
+  driver.setAllCurrentValues(1, 1, 100);
   driver.enable();
   // driver.getSettings();
   stepper.enableOutputs();
   controlMode = ControlMode::MOTOR_OFF;
   start_millis = millis();
+  target = 0;
 }
 
 void MotorController::OnStop()
@@ -76,10 +81,31 @@ void MotorController::OnRun()
 {
   if (controlMode == MOTOR_OFF && UserButtonPressed() && (millis() - start_millis > 500))
   {
-    controlMode = TEST;
+    // stepper.setSpeed(200);
+    // start_millis = millis();
+    // while((millis()-start_millis)<1000){
+    //   stepper.runSpeed();
+    // }
+    // stepper.setSpeed(-200);
+    // start_millis = millis();
+    // while((millis()-start_millis)<1000){
+    //   stepper.runSpeed();
+    // }
+    // stepper.setSpeed(0);
+    controlMode = TEST2;
     start_millis = millis();
+    stepper.setAcceleration(1000*driver.getMicrostepsPerStep());
+    stepper.setMaxSpeed(500*driver.getMicrostepsPerStep());
+
+    if(target == 0)
+    {
+      target = 500*driver.getMicrostepsPerStep();
+    }else{
+      target = 0;
+    }
+    stepper.moveTo(target);
   }
-  if (controlMode == TEST && UserButtonPressed() && (millis() - start_millis > 500))
+  if (controlMode == TEST2 && UserButtonPressed() && (millis() - start_millis > 500))
   {
     controlMode = MOTOR_OFF;
     start_millis = millis();
@@ -94,32 +120,49 @@ void MotorController::OnRun()
   switch (controlMode)
   {
   case MOTOR_OFF:
-    stepper.setSpeed(0);
+    //stepper.setSpeed(0);
     break;
   case DETECTSTEPS:
   {
     static uint8_t step = 0;
     static uint32_t start_time = millis();
-    static float speed = 100;
-    stepper.runSpeed();
+    static float speed = 0;
+    static float speed_incr = 100*driver.getMicrostepsPerStep();
+    static float pos_target = 0;
     switch (step)
     {
     case 0:
-      stepper.setSpeed(speed += 100);
+      stepper.setMaxSpeed(speed+=speed_incr);
+      stepper.setAcceleration(2000*driver.getMicrostepsPerStep());
+      if(pos_target==0){
+        pos_target = (1400*driver.getMicrostepsPerStep());
+      }else{
+        pos_target = 0;
+      }
+      stepper.moveTo(pos_target);
+
       start_time = millis();
       step++;
       break;
     case 1:
-      if (millis() - start_time > 2000)
+      stepper.run();
+      if (stepper.distanceToGo() == 0)
       {
-        float actual_speed = encoder_ptr->GetVelocityDegreesPerSecond() * (200.0f / 360.0f);
-        Serial.printf("Target: %f, Speed: %f, Error: %f\n", speed, actual_speed, speed - (encoder_ptr->GetVelocityDegreesPerSecond() * (200 / 360)));
-        Serial.println(driver.getVersion());
-        Serial.println(readVBUS());
-        Serial.println(readVUSB());
-        step = 0;
+        float error = encoder_ptr->GetPositionDegrees()*(200.0/360.0)*driver.getMicrostepsPerStep() - (float)stepper.currentPosition();
+        Serial.printf("%f, %f, %f ,%lu, %f\n", speed, encoder_ptr->GetPositionDegrees(), encoder_ptr->GetPositionDegrees()*(200.0/360.0)*driver.getMicrostepsPerStep(), stepper.currentPosition(), error);
+        
+        if(abs(error)<10){
+          step=0;
+          break;
+        }
+        
+        step = 2;
       }
       break;
+    case 2:
+        step = 0;
+        controlMode = MOTOR_OFF;
+    break;
     }
   }
   break;
@@ -154,12 +197,10 @@ void MotorController::OnRun()
     break;
   case TEST2:
   {
-    if (millis() - start_millis > 5000)
-    {
+    stepper.run();
+    if(stepper.distanceToGo() == 0){
       controlMode = MOTOR_OFF;
     }
-    stepper.setSpeed(100);
-    stepper.runSpeed();
   }
   break;
   }

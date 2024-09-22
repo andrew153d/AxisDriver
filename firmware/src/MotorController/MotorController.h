@@ -12,14 +12,16 @@
 #define SERIAL_PORT Serial1
 #define R_SENSE 0.12f
 
+
 enum ControlMode{
         MOTOR_OFF,
-        DETECTSTEPS,
-        TEST,
-        TEST2,
         POSITION,
         VELOCITY,
-        TORQUE,        
+        TORQUE,      
+        DETECTSTEPS,
+        TEST,
+        TEST2,  
+        RUNVELOCITY,
     };
 union MotorError {
     struct {
@@ -30,6 +32,16 @@ union MotorError {
     uint32_t errors;
 };
 
+class MotorStep{
+    public:
+    
+
+    MotorStep(){
+
+    }
+
+
+};
 
 class MotorController : public ITask, public IInternalInterface
 {
