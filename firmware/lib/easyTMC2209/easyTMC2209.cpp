@@ -571,14 +571,38 @@ void easyTMC2209::initialize(long serial_baud_rate,
                              SerialAddress serial_address)
 {
   serial_baud_rate_ = serial_baud_rate;
-  
+  getSettings();
   setOperationModeToSerial(serial_address);
-  setRegistersToDefaults();
+  
+  useInternalSenseResistors();
+  disableAnalogCurrentScaling();
 
-  //minimizeMotorCurrent();
-  //disable();
-  disableAutomaticCurrentScaling();
-  disableAutomaticGradientAdaptation();
+  chopper_config_.vsense = 1;
+
+  driver_current_.irun = 15;
+  driver_current_.ihold = 10;
+  driver_current_.iholddelay = 10;
+
+  write(ADDRESS_TPOWERDOWN, 100);
+
+  global_config_.enable_spread_cycle = 0;
+
+  pwm_config_.pwm_autoscale = 1;
+  pwm_config_.pwm_autograd = 1;
+  pwm_config_.pwm_freq = 0b11;
+
+  chopper_config_.toff = 5;
+  chopper_config_.tbl = 2;
+  chopper_config_.hstart = 4;
+  chopper_config_.hend = 0;
+
+  chopper_config_.mres = MRES_016;
+  
+  write(ADDRESS_TCOOLTHRS, 0xFFFFF);
+  writeStoredChopperConfig();
+  writeStoredDriverCurrent();
+  writeStoredGlobalConfig();
+  writeStoredPwmConfig();
 }
 
 int easyTMC2209::serialAvailable()
@@ -642,38 +666,51 @@ void easyTMC2209::setOperationModeToSerial(SerialAddress serial_address)
   global_config_.i_scale_analog = 0;
   global_config_.pdn_disable = 1;
   global_config_.mstep_reg_select = 1;
-  //global_config_.multistep_filt = 1;
+  global_config_.multistep_filt = 1;
 
   writeStoredGlobalConfig();
 }
 
 void easyTMC2209::setRegistersToDefaults()
 {
-  driver_current_.bytes = 0;
-  driver_current_.ihold = IHOLD_DEFAULT;
-  driver_current_.irun = IRUN_DEFAULT;
-  driver_current_.iholddelay = IHOLDDELAY_DEFAULT;
-  write(ADDRESS_IHOLD_IRUN, driver_current_.bytes);
+  readAndStoreRegisters();
+  
+  global_config_.pdn_disable = 1;
+  global_config_.mstep_reg_select = 0b0101;
+  global_config_.i_scale_analog = 1;
+  global_config_.internal_rsense = 0;
+  global_config_.enable_spread_cycle = 0;
+  global_config_.multistep_filt = 1;
 
-  chopper_config_.bytes = CHOPPER_CONFIG_DEFAULT;
-  chopper_config_.tbl = TBL_DEFAULT;
-  chopper_config_.hend = HEND_DEFAULT;
-  chopper_config_.hstart = HSTART_DEFAULT;
-  chopper_config_.toff = TOFF_DEFAULT;
-  write(ADDRESS_CHOPCONF, chopper_config_.bytes);
+  chopper_config_.interpolation = 1;
+  chopper_config_.toff = 3;
+  chopper_config_.tbl = 0;
+  chopper_config_.hstart = 0;
+  chopper_config_.hend = 0b0011;
+  
+  driver_current_.ihold = 50;
+  driver_current_.iholddelay = 10;
+  
+  write(ADDRESS_TPOWERDOWN, 20);
 
-  pwm_config_.bytes = PWM_CONFIG_DEFAULT;
-  write(ADDRESS_PWMCONF, pwm_config_.bytes);
+  write(ADDRESS_TPWMTHRS, 0);
 
-  cool_config_.bytes = COOLCONF_DEFAULT;
-  write(ADDRESS_COOLCONF, cool_config_.bytes);
+  pwm_config_.pwm_freq = 1;
+  pwm_config_.pwm_autograd = 1;
+  pwm_config_.pwm_grad = 14;
+  pwm_config_.pwm_lim = 12;
+  pwm_config_.pwm_offset = 36;
 
-  write(ADDRESS_TPOWERDOWN, TPOWERDOWN_DEFAULT);
-  write(ADDRESS_TPWMTHRS, TPWMTHRS_DEFAULT);
-  write(ADDRESS_VACTUAL, VACTUAL_DEFAULT);
-  write(ADDRESS_TCOOLTHRS, TCOOLTHRS_DEFAULT);
-  write(ADDRESS_SGTHRS, SGTHRS_DEFAULT);
-  write(ADDRESS_COOLCONF, COOLCONF_DEFAULT);
+  cool_config_.semin = 5;
+  cool_config_.seup = 0;
+  cool_config_.semax = 2;
+  cool_config_.sedn = 1;
+  cool_config_.seimin = 0;  
+
+  writeStoredChopperConfig();
+  writeStoredDriverCurrent();
+  writeStoredGlobalConfig();
+  writeStoredPwmConfig();
 }
 
 void easyTMC2209::readAndStoreRegisters()

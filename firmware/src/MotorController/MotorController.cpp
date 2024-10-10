@@ -58,15 +58,7 @@ void MotorController::OnStart()
   stepper.enableOutputs();
 
   driver.setup(serial_stream, 115200, TMC2209base::SerialAddress::SERIAL_ADDRESS_0);
-  driver.setMicrostepsPerStep(4);
-  driver.enableAutomaticCurrentScaling();
-  driver.enableStealthChop();
-  driver.useExternalSenseResistors();
-  //driver.enableAutomaticGradientAdaptation();
-  driver.setAllCurrentValues(1, 1, 100);
-  driver.enable();
-  // driver.getSettings();
-  stepper.enableOutputs();
+ 
   controlMode = ControlMode::MOTOR_OFF;
   start_millis = millis();
   target = 0;
@@ -88,18 +80,20 @@ void MotorController::OnRun()
     // }
     // stepper.setSpeed(-200);
     // start_millis = millis();
+
     // while((millis()-start_millis)<1000){
     //   stepper.runSpeed();
     // }
     // stepper.setSpeed(0);
     controlMode = TEST2;
     start_millis = millis();
-    stepper.setAcceleration(1000*driver.getMicrostepsPerStep());
-    stepper.setMaxSpeed(500*driver.getMicrostepsPerStep());
+    stepper.enableOutputs();
+    stepper.setAcceleration(800*16);
+    stepper.setMaxSpeed(600*16);
 
     if(target == 0)
     {
-      target = 500*driver.getMicrostepsPerStep();
+      target = 1000*16;
     }else{
       target = 0;
     }
@@ -127,15 +121,15 @@ void MotorController::OnRun()
     static uint8_t step = 0;
     static uint32_t start_time = millis();
     static float speed = 0;
-    static float speed_incr = 100*driver.getMicrostepsPerStep();
+    static float speed_incr = 100;
     static float pos_target = 0;
     switch (step)
     {
     case 0:
       stepper.setMaxSpeed(speed+=speed_incr);
-      stepper.setAcceleration(2000*driver.getMicrostepsPerStep());
+      stepper.setAcceleration(2000);
       if(pos_target==0){
-        pos_target = (1400*driver.getMicrostepsPerStep());
+        pos_target = (1400);
       }else{
         pos_target = 0;
       }
@@ -148,8 +142,8 @@ void MotorController::OnRun()
       stepper.run();
       if (stepper.distanceToGo() == 0)
       {
-        float error = encoder_ptr->GetPositionDegrees()*(200.0/360.0)*driver.getMicrostepsPerStep() - (float)stepper.currentPosition();
-        Serial.printf("%f, %f, %f ,%lu, %f\n", speed, encoder_ptr->GetPositionDegrees(), encoder_ptr->GetPositionDegrees()*(200.0/360.0)*driver.getMicrostepsPerStep(), stepper.currentPosition(), error);
+        float error = encoder_ptr->GetPositionDegrees()*(200.0/360.0) - (float)stepper.currentPosition();
+        Serial.printf("%f, %f, %f ,%lu, %f\n", speed, encoder_ptr->GetPositionDegrees(), encoder_ptr->GetPositionDegrees()*(200.0/360.0), stepper.currentPosition(), error);
         
         if(abs(error)<10){
           step=0;
@@ -200,6 +194,7 @@ void MotorController::OnRun()
     stepper.run();
     if(stepper.distanceToGo() == 0){
       controlMode = MOTOR_OFF;
+      stepper.disableOutputs();
     }
   }
   break;
@@ -243,7 +238,7 @@ void MotorController::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes
 
     *position = (int32_t)encoder_ptr->GetPositionDegrees();
     addrLedController.SetLedState(FLASH_ERROR);
-  ftr->checksum = 0;
+    ftr->checksum = 0;
 
     processor_interface_->SendMsg(&send_buffer[0], HEADER_SIZE + 4 + FOOTER_SIZE);
   }

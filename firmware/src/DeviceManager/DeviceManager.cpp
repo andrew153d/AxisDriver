@@ -30,6 +30,7 @@ void DeviceManager::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_s
     switch (header->message_type)
     {
     case MessageTypes::GetVersion:
+        {
         VersionMessage msg;
         msg.header.message_type = MessageTypes::GetVersion;
         msg.header.body_size = sizeof(msg.version);
@@ -37,6 +38,7 @@ void DeviceManager::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_s
         msg.footer.checksum = 0;
         SendMsg((uint8_t*)&msg, sizeof(VersionMessage));
         break;
+    }
     default:
         break;
     }

@@ -70,7 +70,7 @@ PACKEDSTRUCT GetVersionMessage{
 
 PACKEDSTRUCT VersionMessage{
     Header header;
-    char version[32];
+    char version[32] = {0};
     Footer footer;
 };
 
