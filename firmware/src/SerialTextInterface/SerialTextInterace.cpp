@@ -43,51 +43,24 @@ void SerialTextInterface::OnStop()
 void SerialTextInterface::OnRun()
 {
     int bytes_available = Serial.available();
-    int bytes_read = 0;
-    bytes_available = min(bytes_available, 256);
 
-    while(bytes_available){
-        bytes_read = Serial.readBytes(&char_buf[bytes_read], bytes_available);
-        bytes_available = Serial.available();
-        bytes_available = min(bytes_available, 256-bytes_read);
-    }
+    if(bytes_available == 0)
+    return;
 
-    if(bytes_read > 0){
-        HandleIncomingMsg((uint8_t*)&char_buf[0], bytes_read);
-        memset(&char_buf[0], 0, 256);
-    }
+    bytes_available = min(bytes_available, RECV_BUF_SIZE);
 
-    // if (bytes_available > 0) {
-    //     int bytes_to_read = min(bytes_available, 256); // Limit read to 256 bytes
-    //     int bytes_read = Serial.readBytes(char_buf, bytes_to_read);
-    //     if (bytes_read > 0) {
-    //         HandleIncomingMsg((uint8_t*)&char_buf[0], bytes_read);
-    //         memset(&char_buf[0], 0, 256);
-    //     }
-    // }
+    if(Serial.readBytes(&char_buf[0], bytes_available) == 0)
+    return;
+
+    HandleIncomingMsg((uint8_t*)&char_buf[0], bytes_available);
+    memset(&char_buf[0], 0, 256);
+    
 }
 
 void SerialTextInterface::HandleIncomingMsg(uint8_t* recv_bytes, uint32_t recv_bytes_size = 0)
 {
-    // if(recv_bytes_size%2){
-    //     Serial.println("Character not even");
-    //     Serial.println(recv_bytes_size);
-    //     Serial.println(char_buf);
-    //     return;
-    // }
-
-    if(recv_bytes[recv_bytes_size-1]==0x0A){
-        recv_bytes_size--;
-    }
-    if(recv_bytes[recv_bytes_size-1]==0x0D){
-        recv_bytes_size--;
-    }
-
-    uint16_t out_len = 0;
-    charArrayToByteArray((char*)recv_bytes, recv_buf, recv_bytes_size, &out_len);
-    
     if(processor_interface_!=nullptr){
-        processor_interface_->HandleIncomingMsg(&recv_buf[0], out_len);
+        processor_interface_->HandleIncomingMsg(recv_bytes, recv_bytes_size);
     }else{
         Serial.println("processor_interface is null");
     }

@@ -55,10 +55,12 @@ void MotorController::OnStart()
   stepper.setAcceleration(50000);
   stepper.setEnablePin(MOTOR_EN);
   stepper.setPinsInverted(true, false, true);
-  stepper.enableOutputs();
+  stepper.disableOutputs();
+  stepper.setAcceleration(800 * 64);
+  stepper.setMaxSpeed(2500 * 64);
 
   driver.setup(serial_stream, 115200, TMC2209base::SerialAddress::SERIAL_ADDRESS_0);
- 
+
   controlMode = ControlMode::MOTOR_OFF;
   start_millis = millis();
   target = 0;
@@ -73,28 +75,19 @@ void MotorController::OnRun()
 {
   if (controlMode == MOTOR_OFF && UserButtonPressed() && (millis() - start_millis > 500))
   {
-    // stepper.setSpeed(200);
-    // start_millis = millis();
-    // while((millis()-start_millis)<1000){
-    //   stepper.runSpeed();
-    // }
-    // stepper.setSpeed(-200);
-    // start_millis = millis();
-
-    // while((millis()-start_millis)<1000){
-    //   stepper.runSpeed();
-    // }
-    // stepper.setSpeed(0);
     controlMode = TEST2;
     start_millis = millis();
     stepper.enableOutputs();
-    stepper.setAcceleration(800*16);
-    stepper.setMaxSpeed(600*16);
+    uint16_t steps = 64;
 
-    if(target == 0)
+    
+
+    if (target == 0)
     {
-      target = 1000*16;
-    }else{
+      target = 1000 * steps;
+    }
+    else
+    {
       target = 0;
     }
     stepper.moveTo(target);
@@ -114,7 +107,7 @@ void MotorController::OnRun()
   switch (controlMode)
   {
   case MOTOR_OFF:
-    //stepper.setSpeed(0);
+    // stepper.setSpeed(0);
     break;
   case DETECTSTEPS:
   {
@@ -126,11 +119,14 @@ void MotorController::OnRun()
     switch (step)
     {
     case 0:
-      stepper.setMaxSpeed(speed+=speed_incr);
+      stepper.setMaxSpeed(speed += speed_incr);
       stepper.setAcceleration(2000);
-      if(pos_target==0){
+      if (pos_target == 0)
+      {
         pos_target = (1400);
-      }else{
+      }
+      else
+      {
         pos_target = 0;
       }
       stepper.moveTo(pos_target);
@@ -142,21 +138,22 @@ void MotorController::OnRun()
       stepper.run();
       if (stepper.distanceToGo() == 0)
       {
-        float error = encoder_ptr->GetPositionDegrees()*(200.0/360.0) - (float)stepper.currentPosition();
-        Serial.printf("%f, %f, %f ,%lu, %f\n", speed, encoder_ptr->GetPositionDegrees(), encoder_ptr->GetPositionDegrees()*(200.0/360.0), stepper.currentPosition(), error);
-        
-        if(abs(error)<10){
-          step=0;
+        float error = encoder_ptr->GetPositionDegrees() * (200.0 / 360.0) - (float)stepper.currentPosition();
+        Serial.printf("%f, %f, %f ,%lu, %f\n", speed, encoder_ptr->GetPositionDegrees(), encoder_ptr->GetPositionDegrees() * (200.0 / 360.0), stepper.currentPosition(), error);
+
+        if (abs(error) < 10)
+        {
+          step = 0;
           break;
         }
-        
+
         step = 2;
       }
       break;
     case 2:
-        step = 0;
-        controlMode = MOTOR_OFF;
-    break;
+      step = 0;
+      controlMode = MOTOR_OFF;
+      break;
     }
   }
   break;
@@ -184,6 +181,13 @@ void MotorController::OnRun()
     break;
   }
   case POSITION:
+    stepper.run();
+    if (stepper.distanceToGo() == 0)
+    {
+      Serial.println("At end");
+      controlMode = MOTOR_OFF;
+      stepper.disableOutputs();
+    }
     break;
   case VELOCITY:
     break;
@@ -192,7 +196,8 @@ void MotorController::OnRun()
   case TEST2:
   {
     stepper.run();
-    if(stepper.distanceToGo() == 0){
+    if (stepper.distanceToGo() == 0)
+    {
       controlMode = MOTOR_OFF;
       stepper.disableOutputs();
     }
@@ -212,6 +217,33 @@ void MotorController::OnRun()
 
 void MotorController::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size)
 {
+
+  //Serial.printf("Motor Controller received: %s\n", String((char *)recv_bytes));
+
+  StaticJsonDocument<256> doc;
+  DeserializationError error = deserializeJson(doc, recv_bytes, 256);
+  if (error)
+  {
+    Serial.println("Error parsing json in motor controller");
+    return;
+  }
+
+  switch(GetModeFromString(doc["mode"])){
+    case ControlMode::POSITION:
+    Serial.println("stepping");
+    target = doc["steps"];
+    stepper.move(target);
+    controlMode = ControlMode::POSITION;
+    stepper.enableOutputs();
+    break;
+    default:
+      Serial.println("Invalid Mode");
+    break;
+  }
+
+  //{"type": "MOVEMENT", "mode": "POSITION", "steps": 1000, "speed": 100, "stepmode": 64, "hold": 0}
+
+  return;
   if (recv_bytes_size < HEADER_SIZE + FOOTER_SIZE)
   {
     Serial.println("Size too small");
@@ -282,6 +314,14 @@ void MotorController::PrintErrorsToSerial()
   Serial.printf("reserved1: %u\n", stat.reserved1);
   Serial.printf("stealth_chop_mode: %u\n", stat.stealth_chop_mode);
   Serial.printf("standstill: %u\n", stat.standstill);
+}
+
+ControlMode MotorController::GetModeFromString(String mode)  
+{
+  if(mode == "POSITION")
+  return ControlMode::POSITION;
+
+  return ControlMode::MOTOR_OFF;
 }
 
 MotorController motorController(0);

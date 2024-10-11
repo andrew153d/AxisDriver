@@ -1,26 +1,30 @@
 import serial
- 
+import json
+import time
 
-data_to_send = [0x41, 0x03, 0x00, 0x11, 0x00, 0x00, 0x00, 0x00]
+# Configuration for the serial port
+SERIAL_PORT = 'COM4'  # Replace with your serial port (e.g., '/dev/ttyUSB0' on Linux)
+BAUD_RATE = 115200       # Set the appropriate baud rate
 
+# Create the JSON message
+message = json.dumps({
+    "type": "MOVEMENT",
+    "mode": "POSITION",
+    "steps": -91000,
+    "speed": 100,
+    "stepmode": 64,
+    "hold": 0
+}).encode('utf-8') + b'\n'  # Append newline for Arduino to detect end of message
+
+#print(message) #{"type": "MOVEMENT", "mode": "POSITION", "steps": 1000, "speed": 100, "stepmode": 64, "hold": 0}
 
 try:
-        # Open COM6 with baudrate 9600, you may need to adjust baudrate if different
-        ser = serial.Serial('COM6', 115200, timeout=1)
-        print(f"Opened {ser.name} successfully.")
-
-        # Convert data array to bytes
-        bytes_to_send = bytes(data_to_send)
-
-        # Send the bytes
-        for byte in bytes_to_send:
-            byte_hex = hex(byte)  # Convert byte to hexadecimal string
-            print(f"Sending byte: {byte_hex}")
-            ser.write(bytes([byte]))  # Send the byte
-        
-        # Close the serial port
-        ser.close()
-        print("Closed the port.")
-
+    # Open the serial port
+    with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2) as ser:
+        if(ser.is_open):
+            ser.write(message)  # Send the JSON message
+            print(f'Sent message: {message.decode()}')
 except serial.SerialException as e:
-    print(f"Error opening or writing to COM6: {e}")
+    print(f"Error: {e}")
+except Exception as e:
+    print(f"An error occurred: {e}")

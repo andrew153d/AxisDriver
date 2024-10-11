@@ -1,0 +1,16 @@
+# Axis Driver #
+
+
+# Json interface #
+
+- To run the motor:
+ ```
+ {
+  "type":"MOVEMENT",
+  "mode": "POSITION",
+  "steps": 1000,
+  "speed": 100, 
+  "stepmode": 64,
+  "hold": 0
+  }
+```

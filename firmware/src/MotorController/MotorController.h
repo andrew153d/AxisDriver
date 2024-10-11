@@ -68,6 +68,8 @@ private:
     void CheckForErrors();
 
     uint8_t send_buffer[1024];
+
+    ControlMode GetModeFromString(String mode);
 public:
 
     
