@@ -187,6 +187,11 @@ static const uint8_t ATN = PIN_ATN;
  */
 #define WIRE_INTERFACES_COUNT 2
 
+/*
+SDA should be on pad 0
+SCL should be on pad 1
+*/
+
 
 //External I2C
 #define PIN_WIRE_SDA         (SDA2)

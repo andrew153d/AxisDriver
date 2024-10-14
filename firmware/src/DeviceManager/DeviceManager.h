@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include "Task.h"
 #include "MessageProcessor/MessageProcessor.h"
-#include "Messages.h"
+#include "Messages.hpp"
 
 
 class DeviceManager : public ITask, public IInternalInterface {

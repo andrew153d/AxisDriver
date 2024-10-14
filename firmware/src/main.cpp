@@ -9,7 +9,7 @@
 #include "MotorController/MotorController.h"
 #include "EncoderController/EncoderController.h"
 #include "DeviceManager/DeviceManager.h"
-#include "Messages.h"
+#include "Messages.hpp"
 #include <cstdint>
 #include "Wire.h"
 #include "SPI.h"
@@ -90,9 +90,10 @@ void setup()
   Serial.begin(115200);
   Serial.println("Starting Axis");
   //  connect the SerialTextInterface to the Message Processor
-  //messageProcessor.AddControllerInterface(&addrLedController, "", MessageTypes::LedControlMessageTypeLowerBounds, MessageTypes::LedControlMessageTypeUpperBounds);
+  messageProcessor.AddControllerInterface(&addrLedController, JsonMessageTypes::Led, MessageTypes::LedControlMessageTypeLowerBounds, MessageTypes::LedControlMessageTypeUpperBounds);
   //messageProcessor.AddControllerInterface(&deviceManager, "", MessageTypes::DeviceInfoMessageTypeLowerBounds, MessageTypes::DeviceInfoMessageTypeUpperBounds);
-  messageProcessor.AddControllerInterface(&motorController, "MOVEMENT", MessageTypes::MotorControlMessageTypeLowerBounds, MessageTypes::MotorControlMessageTypeUpperBounds);
+  messageProcessor.AddControllerInterface(&motorController, JsonMessageTypes::Motor, MessageTypes::MotorControlMessageTypeLowerBounds, MessageTypes::MotorControlMessageTypeUpperBounds);
+  messageProcessor.AddControllerInterface(&encoderController, JsonMessageTypes::Encoder, MessageTypes::EncoderControlMessageTypeLowerBounds, MessageTypes::EncoderControlMessageTypeUpperBounds);
   messageProcessor.AddExternalInterface(&serialTextInterface);
   
   manager.AddTask(&serialTextInterface);

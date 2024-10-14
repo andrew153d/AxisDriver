@@ -1,16 +1,12 @@
 import serial
 import json
 import time
+import threading
 
 SERIAL_PORT = 'COM4'
 
 motor_port=serial.Serial()
-try:
-    motor_port = serial.Serial(SERIAL_PORT, 115200, timeout=1)
-except serial.SerialException as e:
-    print(f"Error: {e}")
-except Exception as e:
-    print(f"An error occurred: {e}")
+
 
 def hue_to_rgb(hue, brightness=1.0):
     """Convert hue (0-360) to RGB (0-255) with brightness (0.0-1.0)"""
@@ -43,6 +39,12 @@ def hue_to_rgb(hue, brightness=1.0):
 
     return r, g, b
 
+def listen_serial(ser):
+    while True:
+        if ser.in_waiting > 0:  # Check if there's data waiting
+            message = ser.readline().decode('utf-8').rstrip()  # Read and decode the message
+            print(f"{message}")
+
 def SetLedColor(r, g, b):
     message = json.dumps({
         "type": "Led", 
@@ -54,13 +56,23 @@ def SetLedColor(r, g, b):
 
     if(motor_port.is_open):
         motor_port.write(message)  # Send the JSON message
-        #print(f'Sent message: {message.decode()}')
+        print(f'{message.decode()}')
 
 def cycle_hues(brightness=1.0):
     for hue in range(0, 360, 1):  # Change the step for different speed
         r, g, b = hue_to_rgb(hue, brightness)
         SetLedColor(r, g, b)
         time.sleep(0.001)  # Adjust delay for how fast you want to cycle
+
+try:
+    motor_port = serial.Serial(SERIAL_PORT, 115200, timeout=1)
+except serial.SerialException as e:
+    print(f"Error: {e}")
+except Exception as e:
+    print(f"An error occurred: {e}")
+
+listener_thread = threading.Thread(target=listen_serial, args=(motor_port,), daemon=True)
+listener_thread.start()
 
 SetLedColor(100, 0, 0)
 time.sleep(1)

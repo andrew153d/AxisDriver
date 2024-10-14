@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "Messages.h"
+#include "Messages.hpp"
 #include <ArduinoJson.h>
 
 class IProcessorInterface
@@ -43,7 +43,7 @@ public:
 struct InterfaceLimits
 {
   IInternalInterface *interface;
-  String type;
+  JsonMessageTypes type;
   uint16_t lowLimit;
   uint16_t highLimit;
 };
@@ -67,7 +67,7 @@ public:
     new_interface->SetProcessorInterface(this);
   }
 
-  void AddControllerInterface(IInternalInterface *new_interface, String message_type, MessageTypes low, MessageTypes high)
+  void AddControllerInterface(IInternalInterface *new_interface, JsonMessageTypes message_type, MessageTypes low, MessageTypes high)
   {
     InterfaceLimits interface_to_add;
     interface_to_add.interface = new_interface;
@@ -97,16 +97,21 @@ public:
 
     if (recv_bytes[0] == '{')
     {
-      StaticJsonDocument<256> doc;
+      JsonDocument doc;
       DeserializationError error = deserializeJson(doc, recv_bytes, 256);
       if (error)
       {
         Serial.println("Error parsing json");
         return;
       }
+      String type;
+      if(!TryParseJson("type", &type, doc)){
+        Serial.println("Failed to find type");
+        return;
+      }
       for (InterfaceLimits interface : controllerInterfaces)
       {
-        if (interface.type == doc["type"])
+        if (interface.type == ToJsonMessageTypes(type))
         {
           interface.interface->HandleIncomingMsg(recv_bytes, recv_bytes_size);
         }

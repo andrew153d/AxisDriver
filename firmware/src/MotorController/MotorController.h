@@ -7,7 +7,7 @@
 #include "easyTMC2209.h"
 #include "wiring_private.h"
 #include "pid.h"
-#include "Messages.h"
+#include "Messages.hpp"
 
 #define SERIAL_PORT Serial1
 #define R_SENSE 0.12f
@@ -17,11 +17,9 @@ enum ControlMode{
         MOTOR_OFF,
         POSITION,
         VELOCITY,
-        TORQUE,      
-        DETECTSTEPS,
-        TEST,
-        TEST2,  
-        RUNVELOCITY,
+        TORQUE,
+        UNKNOWN,
+        IDLE,
     };
 union MotorError {
     struct {
@@ -52,10 +50,16 @@ private:
     AccelStepper stepper;
 
     ControlMode controlMode;
+    String modeString = "";
     //data that holds encoder data
     IEncoderInterface *encoder_ptr = nullptr;
     int step = 0;
-    float target = 0;
+    bool hold = false;
+    //targets and timers
+    int target_position = 0;
+    int target_velocity = 0;
+    uint32_t target_velocity_duration = 0;
+    uint32_t target_velocity_timer = 0;
     
     int error_flag;
     uint32_t start_millis;
@@ -68,7 +72,7 @@ private:
     void CheckForErrors();
 
     uint8_t send_buffer[1024];
-
+    JsonDocument received_json;
     ControlMode GetModeFromString(String mode);
 public:
 
@@ -86,7 +90,12 @@ public:
     void OnStart();
     void OnStop();
     void OnRun();
+    
+    //messageHandlers
     void HandleIncomingMsg(uint8_t* recv_bytes, uint32_t recv_bytes_size);
+    void HandleJsonMsg(uint8_t* recv_bytes, uint32_t recv_bytes_size);
+    void HandleByteMsg(uint8_t* recv_bytes, uint32_t recv_bytes_size);
+
     void setEncoderValueSource(IEncoderInterface *encoder_value);
     uint32_t GetErrors();
 

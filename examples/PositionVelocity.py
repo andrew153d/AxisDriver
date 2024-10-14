@@ -50,7 +50,7 @@ def SendMotorVelocity(speed, microsteps=64, duration = 0):
 
 SendMotorVelocity(-4000, duration=3000)
 time.sleep(3)
-SendMotorToPosition(200*64*1)
+SendMotorToPosition(200*64*1, speed = 3000)
 
 
 

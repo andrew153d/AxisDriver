@@ -141,7 +141,116 @@ void AddrLedController::SetLEDColor(CHSV color)
     FastLED.show();
 }
 
-void AddrLedController::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size = 0)
+void AddrLedController::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size)
+{
+  if (recv_bytes_size == 0)
+    return;
+
+  if ((char)recv_bytes[0] == '{')
+    HandleJsonMsg(recv_bytes, recv_bytes_size);
+  else
+    HandleByteMsg(recv_bytes, recv_bytes_size);
+}
+
+void AddrLedController::HandleJsonMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size)
+{
+  DeserializationError error = deserializeJson(received_json, recv_bytes, 256);
+  if (error)
+  {
+    Serial.println("Error parsing json in motor controller");
+    return;
+  }
+
+  if (received_json.containsKey("mode"))
+  {
+     String mode_string = received_json["mode"];
+     
+     if(mode_string=="Solid"){
+        leds[0] = CRGB(received_json["red"], received_json["green"], received_json["blue"]);
+        FastLED.show();
+        SetLedState(SOLID);
+     }
+  }
+
+//   switch (controlMode)
+//   {
+//   case ControlMode::POSITION:
+//   {
+//     int max_speed = 1000;
+//     int acceleration = 1000;
+//     int microsteps = 64;
+//     bool hold = false;
+
+//     if (received_json.containsKey("steps"))
+//     {
+//       target_position = received_json["steps"];
+//     }
+//     else
+//     {
+//       Serial.println("Failed to parse steps");
+//       return;
+//     }
+
+//     if (received_json.containsKey("max_speed"))
+//       max_speed = received_json["max_speed"];
+
+//     if (received_json.containsKey("acceleration"))
+//       acceleration = received_json["acceleration"];
+    
+//     if (driver.getMicrostepsPerStep() != microsteps)
+//       driver.setMicrostepsPerStep(microsteps);
+    
+//     stepper.move(target_position);
+//     stepper.setMaxSpeed(max_speed);
+//     stepper.setAcceleration(acceleration);
+//     stepper.enableOutputs();
+//     break;
+//   }
+//   case ControlMode::VELOCITY:
+//   {
+//     // long target_velocity = 0;
+//     // uint32_t target_velocity_duration = 0;
+//     // uint32_t target_velocity_timer = 0;
+//     int acceleration = 10000;
+//     int microsteps = 64;
+//     target_velocity_duration = 0;
+
+//     if (received_json.containsKey("speed"))
+//     {
+//       target_velocity = received_json["speed"];
+//     }
+//     else
+//     {
+//       Serial.println("Failed to parse speed");
+//       return;
+//     }
+
+//     if (received_json.containsKey("duration"))
+//       target_velocity_duration = received_json["duration"];
+    
+//     if (received_json.containsKey("acceleration"))
+//       acceleration = received_json["acceleration"];
+    
+
+//     if (received_json.containsKey("microsteps"))
+//       microsteps = received_json["microsteps"];
+
+//     if (driver.getMicrostepsPerStep() != microsteps)
+//       driver.setMicrostepsPerStep(microsteps);
+//     Serial.printf("Setting speed to %d\n", target_velocity);
+//     stepper.setSpeed(target_velocity);
+//     //stepper.setAcceleration(acceleration);
+//     stepper.enableOutputs();
+//     target_velocity_timer = millis();
+//     break;
+//   }
+//   default:
+//     Serial.println("Invalid Mode");
+//     break;
+//   }
+}
+
+void AddrLedController::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size = 0)
 {
     if (recv_bytes_size < HEADER_SIZE + FOOTER_SIZE)
     {

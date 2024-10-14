@@ -2,9 +2,9 @@
 #include <Arduino.h>
 #include "Task.h"
 #include <Tlv493d.h>
-#include "Messages.h"
-
-class EncoderController : public ITask, public IEncoderInterface
+#include "Messages.hpp"
+#include "MessageProcessor/MessageProcessor.h"
+class EncoderController : public ITask, public IEncoderInterface, public IInternalInterface
 {
 private:
 static const uint32_t device_address = 0x5E;
@@ -28,6 +28,14 @@ float raw_shaft_angle = 0;
 float smoothed_shaft_angle;
 Tlv493d Tlv493dMagnetic3DSensor = Tlv493d();
 
+JsonDocument recvd_json;
+
+//update rate tracking
+const uint32_t update_rate_poll_period = 2000;
+uint32_t update_rate_timer = 0;
+long update_rate_ticker = 0;
+float update_rate;
+
 public:
     EncoderController(uint32_t period)
     {
@@ -38,6 +46,11 @@ public:
     void OnStop();
     void OnRun();
 
+    //messageHandlers
+    void HandleIncomingMsg(uint8_t* recv_bytes, uint32_t recv_bytes_size);
+    void HandleJsonMsg(uint8_t* recv_bytes, uint32_t recv_bytes_size);
+    void HandleByteMsg(uint8_t* recv_bytes, uint32_t recv_bytes_size);
+
     float GetVelocityDegreesPerSecond();
     float GetPositionDegrees();
 
@@ -46,4 +59,7 @@ public:
     float GetSlidingWindowShaftAngle();
     float GetSpeedDegPerS();
     float* GetShaftAnglePtr();
-};
+
+    void SetPosition(float position);
+    float GetUpdateRate();
+    };

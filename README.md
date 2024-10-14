@@ -13,7 +13,7 @@
     {
       "type": "Encoder", 
       "mode": "GetPosition",
-      "position":0(optional-device will return with this value)
+      "position":0(optional float - device will return with this value)
     }
     ```
     - ```
@@ -21,6 +21,13 @@
       "type": "Encoder", 
       "mode": "SetPosition",
       "position":0
+    }
+    ```
+    - ```
+    {
+      "type": "Encoder", 
+      "mode": "GetUpdateRate",
+      "rate":0(optional float Hz- device will return with this value)
     }
     ```
   - Motor
