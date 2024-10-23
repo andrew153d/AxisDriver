@@ -12555,7 +12555,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "24AA02E-OT"
+		(property "Value" "24AA02T-I/OT"
 			(at 246.38 66.0399 0)
 			(effects
 				(font
@@ -16913,7 +16913,7 @@
 		(dnp no)
 		(uuid "bc713912-2622-4554-a09a-058d8c6d4b55")
 		(property "Reference" "C1"
-			(at 55.88 39.37 0)
+			(at 61.722 39.37 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16921,8 +16921,8 @@
 				(justify left)
 			)
 		)
-		(property "Value" "0.33u"
-			(at 55.88 41.91 0)
+		(property "Value" "1u"
+			(at 61.722 41.91 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19492,7 +19492,7 @@
 				)
 			)
 		)
-		(property "Value" "300"
+		(property "Value" "100"
 			(at 181.61 26.67 90)
 			(effects
 				(font
