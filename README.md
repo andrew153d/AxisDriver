@@ -19,6 +19,13 @@
     - ```
     {
       "type": "Encoder", 
+      "mode": "GetVelocity",
+      "position":0(optional float - device will return with this value)
+    }
+    ```
+    - ```
+    {
+      "type": "Encoder", 
       "mode": "SetPosition",
       "position":0
     }
