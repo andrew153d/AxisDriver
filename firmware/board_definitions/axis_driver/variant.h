@@ -173,9 +173,9 @@ static const uint8_t ATN = PIN_ATN;
 #define PIN_SPI_MISO         (MISO)
 #define PIN_SPI_MOSI         (MOSI)
 #define PIN_SPI_SCK          (SCK)
-#define PERIPH_SPI           sercom1
-#define PAD_SPI_TX           SPI_PAD_3_SCK_1
-#define PAD_SPI_RX           SERCOM_RX_PAD_0
+#define PERIPH_SPI           sercom5
+#define PAD_SPI_TX           SPI_PAD_0_SCK_1
+#define PAD_SPI_RX           SERCOM_RX_PAD_2
 
 // static const uint8_t SS	  = 9 ;	// SERCOM1 last PAD is present on d9 but HW SS isn't used. Set here only for reference.
 // static const uint8_t MOSI = PIN_SPI_MOSI ;
@@ -206,12 +206,12 @@ SCL should be on pad 1
 //Internal I2C
 #define PIN_WIRE1_SDA         (SDA1)
 #define PIN_WIRE1_SCL         (SCL1)
-#define PERIPH_WIRE1          sercom5
-#define WIRE1_IT_HANDLER      SERCOM5_Handler
-#define WIRE1_IT_HANDLER_0    SERCOM5_0_Handler
-#define WIRE1_IT_HANDLER_1    SERCOM5_1_Handler
-#define WIRE1_IT_HANDLER_2    SERCOM5_2_Handler
-#define WIRE1_IT_HANDLER_3    SERCOM5_3_Handler
+#define PERIPH_WIRE1          sercom3
+#define WIRE1_IT_HANDLER      SERCOM3_Handler
+#define WIRE1_IT_HANDLER_0    SERCOM3_0_Handler
+#define WIRE1_IT_HANDLER_1    SERCOM3_1_Handler
+#define WIRE1_IT_HANDLER_2    SERCOM3_2_Handler
+#define WIRE1_IT_HANDLER_3    SERCOM3_3_Handler
 
 
 /*
