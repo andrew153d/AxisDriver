@@ -594,7 +594,7 @@
       "plot": "manufacturing/",
       "pos_files": "",
       "specctra_dsn": "",
-      "step": "../../../../Downloads/Axis_Basic.step",
+      "step": "../../../../../Downloads/AxisAxis_Basic.step",
       "svg": "",
       "vrml": "../../../Downloads/Axis_Basic.wrl"
     },

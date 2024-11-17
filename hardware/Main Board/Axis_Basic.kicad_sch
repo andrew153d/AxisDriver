@@ -6844,10 +6844,6 @@
 		(uuid "4b7a5a36-2fd7-46d4-9827-db08abb07de9")
 	)
 	(no_connect
-		(at 87.63 180.34)
-		(uuid "673270e7-9913-4c99-8b60-c3bfa42b01af")
-	)
-	(no_connect
 		(at 146.05 138.43)
 		(uuid "8983e2f2-a4d1-4c24-8ea5-b53eb794966a")
 	)
@@ -7952,7 +7948,7 @@
 		)
 		(uuid "3dc737bf-b07d-49a2-a56d-98dcee6cb8cd")
 	)
-	(text "SAMD21"
+	(text "SAMD51"
 		(exclude_from_sim no)
 		(at 55.88 67.31 0)
 		(effects
@@ -9469,7 +9465,7 @@
 	)
 	(global_label "USR_LED"
 		(shape input)
-		(at 87.63 175.26 180)
+		(at 87.63 180.34 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -9479,7 +9475,7 @@
 		)
 		(uuid "aa99e8e2-4e45-4d46-94a8-1b1c18bdad22")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 76.4201 175.26 0)
+			(at 76.4201 180.34 0)
 			(effects
 				(font
 					(size 1.27 1.27)
