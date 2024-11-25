@@ -2,7 +2,7 @@ import serial
 import json
 import time
 
-SERIAL_PORT = 'COM4'
+SERIAL_PORT = 'COM6'
 
 motor_port=serial.Serial()
 try:
@@ -42,15 +42,9 @@ def SendMotorVelocity(speed, microsteps=64, duration = 0):
         motor_port.write(message)  # Send the JSON message
         print(f'{message.decode()}')
 
-#SendMotorToPosition(200*64*1, speed=5000, microsteps=64)
-#time.sleep(4)
-#SendMotorToPosition(200*64*-0.3, 1000, 2000)
-# SendMotorVelocity(8000, duration=2000)
-# time.sleep(3)
-
-SendMotorVelocity(-4000, duration=3000)
-time.sleep(3)
-SendMotorToPosition(200*64*1, speed = 3000)
+#SendMotorVelocity(500, duration=99000)
+#time.sleep(3)
+SendMotorToPosition(200*64*3, speed = 6000, accel=8000)
 
 
 

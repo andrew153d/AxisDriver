@@ -20,7 +20,7 @@ void AddrLedController::OnRun()
         switch (step_counter)
         {
         case 0:
-            leds[0] = CRGB::Red;
+            leds[0] = CRGB(0x500000);
             FastLED.show();
             break;
         case 1:
@@ -28,7 +28,7 @@ void AddrLedController::OnRun()
             FastLED.show();
             break;
         case 2:
-            leds[0] = CRGB::Red;
+            leds[0] = CRGB(0x500000);
             FastLED.show();
             break;
         case 3:
@@ -126,7 +126,7 @@ void AddrLedController::SetLedState(LedStates state)
         break;
     case RAINBOW:
         hue = (hue + 1) % 255;
-        leds[0] = CHSV(hue, 255, 100);
+        leds[0] = CHSV(hue, 255, 50);
         FastLED.show();
         executionPeriod = RAINBOW_EXEC_PERIOD;
         break;

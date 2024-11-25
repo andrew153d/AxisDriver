@@ -83,12 +83,12 @@ extern "C"
 //Axis Basic 
 
 //Auxiliary Port
-#define PA02 (0)
-#define PA03 (1)
-#define PB04 (2)
-#define PB05 (3)
-#define PB30 (4)
-#define PB31 (5)
+#define AUX3 (0)
+#define AUX4 (1)
+#define AUX5 (2)
+#define AUX6 (3)
+#define AUX1 (4)
+#define AUX2 (5)
 
 //LEDS
 #define NEOPIX (6)

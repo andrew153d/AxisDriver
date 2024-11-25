@@ -62,6 +62,8 @@ void MotorController::OnStart()
   controlMode = ControlMode::MOTOR_OFF;
   start_millis = millis();
   target_position = 0;
+
+  Serial.println(driver.getVersion());
 }
 
 void MotorController::OnStop()

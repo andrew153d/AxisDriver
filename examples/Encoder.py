@@ -3,7 +3,7 @@ import json
 import time
 import threading
 
-SERIAL_PORT = 'COM4'
+SERIAL_PORT = 'COM6'
 
 motor_port=serial.Serial()
 
@@ -55,10 +55,24 @@ except Exception as e:
 listener_thread = threading.Thread(target=listen_serial, args=(motor_port,), daemon=True)
 listener_thread.start()
 
+def SendMotorVelocity(speed, microsteps=64, duration = 0):
+    message = json.dumps({
+        "type": "Motor", 
+        "mode": "SetVelocity", 
+        "speed": speed,
+        "duration":duration,
+        "microsteps": microsteps
+    }).encode('utf-8') + "\r\n ".encode('utf-8')
+
+    if(motor_port.is_open): 
+        motor_port.write(message)  # Send the JSON message
+        print(f'{message.decode()}')
+
+#SendMotorVelocity(2000, duration=10000)
 GetUpdateRate()
-for i in range(0, 10):
+for i in range(0, 1000):
     GetEncoderPosition()
-    time.sleep(0.1)
+    time.sleep(0.01)
 time.sleep(1000)
 
 

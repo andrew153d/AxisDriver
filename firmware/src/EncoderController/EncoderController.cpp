@@ -13,8 +13,32 @@ float Wrap0to360(float input)
 void EncoderController::OnStart()
 {
 
+    return;
     Wire1.begin();
-    Wire.setClock(400000);
+    //Wire.setClock(400000);
+    Wire1.beginTransmission(device_address);
+    byte error = Wire1.endTransmission();
+    if(error)
+    {
+        Serial.println("Failed to find Endcoder");
+    }
+    else
+    {
+        Serial.println("Can communicate with Encoder");
+    }
+
+    Wire1.beginTransmission(0x50);
+    error = Wire1.endTransmission();
+    if(error)
+    {
+        Serial.println("Failed to find flash");
+    }
+    else
+    {
+        Serial.println("Can communicate with flash");
+    }
+
+
     Tlv493dMagnetic3DSensor.begin(Wire1);
     Tlv493dMagnetic3DSensor.setAccessMode(Tlv493d::AccessMode_e::FASTMODE);
     Tlv493dMagnetic3DSensor.disableTemp();
@@ -32,9 +56,10 @@ void EncoderController::OnRun()
     {
         executionPeriod = Tlv493dMagnetic3DSensor.getMeasurementDelay();
     }
+    
     Tlv493d_Error_t err = Tlv493dMagnetic3DSensor.updateData();
     if(err!=Tlv493d_Error_t::TLV493D_NO_ERROR){
-        Serial.printf("Error: %d\n", err);
+        Serial.printf("Encoder Error: %d\n", err);
     }
 
 
@@ -80,7 +105,7 @@ void EncoderController::OnRun()
     prev_sliding_window_center = sliding_window_center;
 
     shaft_velocity = (full_shaft_position - last_full_shaft_position) / ((float)executionPeriod / 1000);
-    // Serial.printf("%8.1f %8.1f %8.1f %8.1f %8.1f\n", sliding_window_center, delta, number_full_turns, full_shaft_position, shaft_velocity);
+    //Serial.printf("%8.1f %8.1f %8.1f %8.1f %8.1f\n", sliding_window_center, delta, number_full_turns, full_shaft_position, shaft_velocity);
 
     last_full_shaft_position = full_shaft_position;
     
@@ -214,3 +239,5 @@ void EncoderController::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_s
     //     break;
     //   }
 }
+
+EncoderController encoderController(500);
