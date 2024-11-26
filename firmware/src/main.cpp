@@ -226,6 +226,7 @@ void setup()
   AEthernet.Start();
 
   Serial.println(FlashStorage::GetMacAddressString());
+  Serial.println(FlashStorage::GetSerialNumberString());
 }
 
 void loop()
