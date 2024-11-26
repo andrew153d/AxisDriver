@@ -7,22 +7,100 @@ namespace FlashStorage
     bool has_read_mac_address = false;
     bool has_read_serial_number = false;
 
+    uint32_t last_write_time = 0;
+    static const uint32_t write_cycle_time = 5;
+
     uint8_t mac[MAC_ARRAY_LEN] = {0};
     uint8_t serial_number[SERIAL_ARRAY_LEN] = {0};
 
     static char macStr[18];
     static char snStr[32];
 
-    uint8_t readMAC(uint8_t r);
-    void writeRegister(uint8_t address, uint8_t data);
+    void WaitWriteCycle()
+    {
+        while (millis() - last_write_time < write_cycle_time)
+        {
+            yield();
+        }
+    }
+
+    void writeRegister(uint8_t address, uint8_t data)
+    {
+        WaitWriteCycle();
+        Wire1.beginTransmission(0b1010000);
+        Wire1.write(address);
+        Wire1.write(data);
+        last_write_time = millis();
+        Wire1.endTransmission();
+    }
+
+    uint8_t readRegister(uint8_t address)
+    {
+        WaitWriteCycle();
+        Wire1.beginTransmission(0b01010000);
+        Wire1.write(address);
+        last_write_time = millis();
+        Wire1.endTransmission(false);
+        Wire1.requestFrom(0b01010000, 1);
+        uint8_t data = Wire1.read();
+        return data;
+    }
+
+    void writePage(uint8_t address, uint8_t *data, uint8_t data_len)
+    {
+        if(data_len>16)
+        {
+            Serial.println("Attemptimg page write greater than 16 bytes");
+            return;
+        }
+        if(address%16!=0)
+        {
+            Serial.println("Invalide Page Write Address");
+            return;
+        }
+        WaitWriteCycle();
+        Wire1.beginTransmission(0b1010000);
+        Wire1.write(address);
+        for(int i = 0; i<data_len; i++)
+        {
+            Wire1.write(data[i]);
+        }
+        last_write_time = millis();
+        Wire1.endTransmission();
+    }
+
+    void readBytes(uint8_t address, uint8_t *data, uint8_t data_len)
+    {
+        if((uint16_t)address+(uint16_t)data_len > 256)
+        {
+            Serial.println("Address too high");
+            return;
+        }
+
+        WaitWriteCycle();
+        Wire1.beginTransmission(0b1010000);
+        Wire1.write(address);
+        last_write_time = millis();
+        Wire1.endTransmission(false);
+
+        Wire1.requestFrom(0b1010000, data_len);
+
+        for (int i = 0; i < data_len; i++)
+        {
+            data[i] = Wire1.read();
+        }
+
+    }
 
     uint8_t *GetMacAddress()
     {
         if (has_read_mac_address)
             return &mac[0];
 
+        WaitWriteCycle();
         Wire1.beginTransmission(MAC_DEVICE_ADDRESS);
         Wire1.write(MAC_REGISTER_ADDRESS);
+        last_write_time = millis();
         Wire1.endTransmission(false);
 
         Wire1.requestFrom(MAC_DEVICE_ADDRESS, 6); // Read a byte
@@ -46,10 +124,10 @@ namespace FlashStorage
         if (has_read_serial_number)
             return &serial_number[0];
 
-
-
+        WaitWriteCycle();
         Wire1.beginTransmission(SN_DEVICE_ADDRESS);
         Wire1.write(SN_REGISTER_ADDRESS);
+        last_write_time = millis();
         Wire1.endTransmission(false);
 
         Wire1.requestFrom(SN_DEVICE_ADDRESS, SERIAL_ARRAY_LEN); // Read a byte
@@ -67,14 +145,6 @@ namespace FlashStorage
 
         has_read_serial_number = true;
         return &serial_number[0];
-    }
-
-    void writeRegister(uint8_t address, uint8_t data)
-    {
-        Wire1.beginTransmission(FLASH_ADDRESS);
-        Wire1.write(address);
-        Wire1.write(data);
-        Wire1.endTransmission();
     }
 
     const char *GetMacAddressString()
