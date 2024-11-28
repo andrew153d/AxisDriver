@@ -6442,6 +6442,50 @@
 		)
 		(uuid "fc0f5bb5-9864-4cd1-90ac-966f4b060026")
 	)
+	(label "RD-"
+		(at 195.58 102.87 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "08949b36-06d7-4e36-8a29-2ea9e5dd8471")
+	)
+	(label "TD-"
+		(at 195.58 95.25 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "08dca66e-6912-43e8-b899-33665eda6536")
+	)
+	(label "RD+"
+		(at 195.58 97.79 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "4b69502d-9488-4d53-9765-0902179e11cc")
+	)
+	(label "TD+"
+		(at 195.58 90.17 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "8110478b-d8ca-411a-8e88-0c59752ab341")
+	)
 	(global_label "AUX2"
 		(shape input)
 		(at 135.89 95.25 180)
@@ -9226,6 +9270,110 @@
 		)
 	)
 	(symbol
+		(lib_id "Connector_Generic:Conn_01x14")
+		(at 101.6 30.48 270)
+		(mirror x)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "8ebf3206-6522-49d6-96e8-274f57badfc4")
+		(property "Reference" "J2"
+			(at 77.47 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "1-84952-4"
+			(at 80.01 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Connector_FFC-FPC:TE_1-84952-4_1x14-1MP_P1.0mm_Horizontal"
+			(at 101.6 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 101.6 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 101.6 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "5b28583a-283f-4fc6-9022-73786590c54b")
+		)
+		(pin "10"
+			(uuid "5c018eec-01f6-4512-bf06-8d535310b601")
+		)
+		(pin "11"
+			(uuid "b4b1252f-a49e-4cb2-bc6c-afa2f4f78694")
+		)
+		(pin "12"
+			(uuid "49b5d01d-499b-421c-ac70-66ddeb2b3de2")
+		)
+		(pin "13"
+			(uuid "00ee6ad1-2b89-4bd5-92bf-9dced9e73d86")
+		)
+		(pin "14"
+			(uuid "b0b179ea-36a4-4746-ad59-43c836d20ebd")
+		)
+		(pin "2"
+			(uuid "1c3bfaac-ed55-45f5-9395-31f1c765a435")
+		)
+		(pin "3"
+			(uuid "02e35ffa-7e4a-45e7-8ea5-701a442bbd08")
+		)
+		(pin "4"
+			(uuid "d87a7690-6492-496f-ba3d-8b057baff011")
+		)
+		(pin "5"
+			(uuid "15b2133d-e10a-469e-9733-0e1c670a9aa0")
+		)
+		(pin "6"
+			(uuid "47f053bc-2235-434e-9674-aeeaf9c2a77c")
+		)
+		(pin "7"
+			(uuid "d38e1590-cb42-46d3-b2a2-1fc9a359bf6d")
+		)
+		(pin "8"
+			(uuid "e12eb80b-5c15-458a-86de-a2ec7435db60")
+		)
+		(pin "9"
+			(uuid "422497af-8b5c-42dd-a48c-29fa4bae3b6f")
+		)
+		(instances
+			(project "Ethernet HAT"
+				(path "/1cdb6be3-d362-4785-b31f-3c60d49134ff"
+					(reference "J2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:C_Small")
 		(at 181.61 128.27 0)
 		(unit 1)
@@ -11188,110 +11336,6 @@
 			(project ""
 				(path "/1cdb6be3-d362-4785-b31f-3c60d49134ff"
 					(reference "#PWR018")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Connector_Generic:Conn_01x14")
-		(at 99.06 30.48 90)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "ed9340eb-bfc8-497c-88a6-fca57912d505")
-		(property "Reference" "J2"
-			(at 123.19 30.48 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "1-84952-4"
-			(at 120.65 30.48 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Connector_FFC-FPC:TE_1-84952-4_1x14-1MP_P1.0mm_Horizontal"
-			(at 99.06 30.48 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 99.06 30.48 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 99.06 30.48 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "8c1e2971-82c0-4fbd-b560-537e2b340acd")
-		)
-		(pin "10"
-			(uuid "1197ed64-956f-486b-a6be-2ae56ce01f59")
-		)
-		(pin "11"
-			(uuid "89f72340-5cb2-447a-a45c-f9fd997b254e")
-		)
-		(pin "12"
-			(uuid "3e7687c2-1006-4251-914d-664d6e30f056")
-		)
-		(pin "13"
-			(uuid "c8367f7b-803c-41e9-a5d3-18b5c536637f")
-		)
-		(pin "14"
-			(uuid "260b1fc4-3948-4231-a3d4-388e86410d9b")
-		)
-		(pin "2"
-			(uuid "f65e53c9-eedd-4c34-bd2b-ddefc51af208")
-		)
-		(pin "3"
-			(uuid "19069897-8185-4ce6-9133-23c6ab575ea0")
-		)
-		(pin "4"
-			(uuid "0676077e-52c5-4ff9-bc60-787c19351ec2")
-		)
-		(pin "5"
-			(uuid "982f89d5-df26-4204-ba0a-ad459a80e04c")
-		)
-		(pin "6"
-			(uuid "a4290a36-8489-4282-8ccb-c4d3fc9f3c58")
-		)
-		(pin "7"
-			(uuid "a1f16a49-a9e1-4867-b31f-97f85c6b65d3")
-		)
-		(pin "8"
-			(uuid "74abd48f-69f1-4aeb-8bd7-12bc70ee85bc")
-		)
-		(pin "9"
-			(uuid "8eb33caf-50a1-4823-b22d-ad8739d7016b")
-		)
-		(instances
-			(project "Ethernet HAT"
-				(path "/1cdb6be3-d362-4785-b31f-3c60d49134ff"
-					(reference "J2")
 					(unit 1)
 				)
 			)
