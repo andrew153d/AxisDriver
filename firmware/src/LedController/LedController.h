@@ -2,14 +2,10 @@
 
 #include <cstdint>
 #include <Arduino.h>
-#include "Task.h"
+#include "Task/Task.h"
 #include "FastLED.h"
 #include "MessageProcessor/MessageProcessor.h"
 #include "Messages.hpp"
-
-// #if !defined(FASTLED_FORCE_SOFTWARE_PINS) 
-// #error "FASTLED_FORCE_SOFTWARE_PINS needs to be defined in fastled_config.h". 
-// #endif 
 
 #define FLASH_ERROR_EXEC_PERIOD 500
 #define ERROR_EXEC_PERIOD 500
@@ -67,6 +63,7 @@ public:
     void SetLedState(LedStates state);
 
     void SetLEDColor(CHSV color);
+    void SetLEDColor(CRGB color);
 
 };
 

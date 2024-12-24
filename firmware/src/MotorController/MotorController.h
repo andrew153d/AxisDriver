@@ -1,13 +1,14 @@
 #pragma once
 #include <Arduino.h>
-#include "Task.h"
+#include "Task/Task.h"
 #include <AccelStepper.h>
-#include "../LedController/LedController.h"
+#include "LedController/LedController.h"
 #include "MessageProcessor/MessageProcessor.h"
 #include "easyTMC2209.h"
 #include "wiring_private.h"
 #include "pid.h"
 #include "Messages.hpp"
+#include "DebugPrinter.h"
 
 #define SERIAL_PORT Serial1
 #define R_SENSE 0.12f

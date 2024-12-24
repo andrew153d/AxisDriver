@@ -20,7 +20,7 @@ void AddrLedController::OnRun()
         switch (step_counter)
         {
         case 0:
-            leds[0] = CRGB(0x500000);
+            leds[0] = CRGB(0x100000);
             FastLED.show();
             break;
         case 1:
@@ -28,7 +28,7 @@ void AddrLedController::OnRun()
             FastLED.show();
             break;
         case 2:
-            leds[0] = CRGB(0x500000);
+            leds[0] = CRGB(0x100000);
             FastLED.show();
             break;
         case 3:
@@ -36,7 +36,7 @@ void AddrLedController::OnRun()
             FastLED.show();
             break;
         case 4:
-            SetLedState(prevState);
+            //SetLedState(prevState);
             break;
         }
         step_counter++;
@@ -60,7 +60,7 @@ void AddrLedController::OnRun()
         switch (step_counter)
         {
         case 0:
-            leds[0] = CRGB::Blue;
+            leds[0] = CRGB(0x110000);
             FastLED.show();
             break;
         case 1:
@@ -68,7 +68,7 @@ void AddrLedController::OnRun()
             FastLED.show();
             break;
         case 2:
-            leds[0] = CRGB::Red;
+            leds[0] = CRGB(0x001100);
             FastLED.show();
             break;
         case 3:
@@ -76,7 +76,7 @@ void AddrLedController::OnRun()
             FastLED.show();
             break;
         case 4:
-            leds[0] = CRGB::Green;
+            leds[0] = CRGB(0x000011);
             FastLED.show();
             break;
         case 5:
@@ -84,7 +84,7 @@ void AddrLedController::OnRun()
             FastLED.show();
             break;
         case 6:
-            SetLedState(prevState);
+            //SetLedState(prevState);
             break;
         }
         step_counter++;
@@ -136,6 +136,12 @@ void AddrLedController::SetLedState(LedStates state)
 }
 
 void AddrLedController::SetLEDColor(CHSV color)
+{
+    leds[0] = color;
+    FastLED.show();
+}
+
+void AddrLedController::SetLEDColor(CRGB color)
 {
     leds[0] = color;
     FastLED.show();

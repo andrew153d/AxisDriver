@@ -27,7 +27,7 @@ void MotorController::CheckForErrors()
   if (previousErrors.errors == 0 && motorErrors.errors > 0)
   {
     // stepper.disableOutputs();
-    // Serial.printf("Motor Error Present: %4x\n", motorErrors.errors);
+    // DEBUG_PRINTF("Motor Error Present: %4x\n", motorErrors.errors);
     // addrLedController.SetLedState(FLASH_ERROR);
     // controlMode = ControlMode::MOTOR_OFF;
   }
@@ -63,7 +63,7 @@ void MotorController::OnStart()
   start_millis = millis();
   target_position = 0;
 
-  Serial.println(driver.getVersion());
+  DEBUG_PRINTF("TMC2209 Version: %d\n", driver.getVersion());
 }
 
 void MotorController::OnStop()
@@ -84,7 +84,7 @@ void MotorController::OnRun()
   case MOTOR_OFF:
     stepper.disableOutputs();
     controlMode = IDLE;
-    Serial.println("Turning off motor");
+    DEBUG_PRINTLN("Turning off motor");
     break;
   case POSITION:
     stepper.run();
@@ -128,7 +128,7 @@ void MotorController::HandleJsonMsg(uint8_t *recv_bytes, uint32_t recv_bytes_siz
  
   if (!TryParseJson<String>("mode", &modeString, received_json))
   {
-    Serial.println("Failed to parse mode");
+    DEBUG_PRINTLN("Failed to parse mode");
     return;
   }
   
@@ -200,7 +200,7 @@ void MotorController::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_siz
   Header *header = (Header *)recv_bytes;
   if (recv_bytes_size < HEADER_SIZE + header->body_size + FOOTER_SIZE)
   {
-    Serial.printf("Invalid body size: recv_bytes:%d, header_size:%d, body_size:%d, footer_size:%d\n", recv_bytes_size, HEADER_SIZE, header->body_size, FOOTER_SIZE);
+    DEBUG_PRINTF("Invalid body size: recv_bytes:%d, header_size:%d, body_size:%d, footer_size:%d\n", recv_bytes_size, HEADER_SIZE, header->body_size, FOOTER_SIZE);
     return;
   }
 
@@ -242,26 +242,26 @@ void MotorController::PrintErrorsToSerial()
 {
   auto stat = driver.getStatus();
   auto gstat = driver.getGlobalStatus();
-  Serial.printf("reset: %u\n", gstat.reset);
-  Serial.printf("drv_error: %u\n", gstat.drv_err);
-  Serial.printf("uv_cp: %u\n", gstat.uv_cp);
-  Serial.printf("over_temperature_warning: %u\n", stat.over_temperature_warning);
-  Serial.printf("over_temperature_shutdown: %u\n", stat.over_temperature_shutdown);
-  Serial.printf("short_to_ground_a: %u\n", stat.short_to_ground_a);
-  Serial.printf("short_to_ground_b: %u\n", stat.short_to_ground_b);
-  Serial.printf("low_side_short_a: %u\n", stat.low_side_short_a);
-  Serial.printf("low_side_short_b: %u\n", stat.low_side_short_b);
-  Serial.printf("open_load_a: %u\n", stat.open_load_a);
-  Serial.printf("open_load_b: %u\n", stat.open_load_b);
-  Serial.printf("over_temperature_120c: %u\n", stat.over_temperature_120c);
-  Serial.printf("over_temperature_143c: %u\n", stat.over_temperature_143c);
-  Serial.printf("over_temperature_150c: %u\n", stat.over_temperature_150c);
-  Serial.printf("over_temperature_157c: %u\n", stat.over_temperature_157c);
-  Serial.printf("reserved0: %u\n", stat.reserved0);
-  Serial.printf("current_scaling: %u\n", stat.current_scaling);
-  Serial.printf("reserved1: %u\n", stat.reserved1);
-  Serial.printf("stealth_chop_mode: %u\n", stat.stealth_chop_mode);
-  Serial.printf("standstill: %u\n", stat.standstill);
+  DEBUG_PRINTF("reset: %u\n", gstat.reset);
+  DEBUG_PRINTF("drv_error: %u\n", gstat.drv_err);
+  DEBUG_PRINTF("uv_cp: %u\n", gstat.uv_cp);
+  DEBUG_PRINTF("over_temperature_warning: %u\n", stat.over_temperature_warning);
+  DEBUG_PRINTF("over_temperature_shutdown: %u\n", stat.over_temperature_shutdown);
+  DEBUG_PRINTF("short_to_ground_a: %u\n", stat.short_to_ground_a);
+  DEBUG_PRINTF("short_to_ground_b: %u\n", stat.short_to_ground_b);
+  DEBUG_PRINTF("low_side_short_a: %u\n", stat.low_side_short_a);
+  DEBUG_PRINTF("low_side_short_b: %u\n", stat.low_side_short_b);
+  DEBUG_PRINTF("open_load_a: %u\n", stat.open_load_a);
+  DEBUG_PRINTF("open_load_b: %u\n", stat.open_load_b);
+  DEBUG_PRINTF("over_temperature_120c: %u\n", stat.over_temperature_120c);
+  DEBUG_PRINTF("over_temperature_143c: %u\n", stat.over_temperature_143c);
+  DEBUG_PRINTF("over_temperature_150c: %u\n", stat.over_temperature_150c);
+  DEBUG_PRINTF("over_temperature_157c: %u\n", stat.over_temperature_157c);
+  DEBUG_PRINTF("reserved0: %u\n", stat.reserved0);
+  DEBUG_PRINTF("current_scaling: %u\n", stat.current_scaling);
+  DEBUG_PRINTF("reserved1: %u\n", stat.reserved1);
+  DEBUG_PRINTF("stealth_chop_mode: %u\n", stat.stealth_chop_mode);
+  DEBUG_PRINTF("standstill: %u\n", stat.standstill);
 }
 
 ControlMode MotorController::GetModeFromString(String mode)

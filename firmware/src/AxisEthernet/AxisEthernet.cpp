@@ -5,9 +5,18 @@
 #include "../LedController/LedController.h"
 void HandleInturrupts();
 
-
 void AxisEthernet::OnStart()
 {
+    pinMode(nRST, OUTPUT);
+    digitalWrite(nRST, LOW);
+    delay(500); //increase this if issues with link
+    digitalWrite(nRST, HIGH);
+    
+    pinMode(nINT, INPUT);
+    pinMode(nCS, OUTPUT);
+    digitalWrite(nCS, LOW);
+
+    //set mode
     pinMode(PMODE0, OUTPUT);
     pinMode(PMODE1, OUTPUT);
     pinMode(PMODE2, OUTPUT);
@@ -15,97 +24,65 @@ void AxisEthernet::OnStart()
     digitalWrite(PMODE1, HIGH);
     digitalWrite(PMODE2, HIGH);
 
-    pinMode(nRST, OUTPUT);
-    digitalWrite(nRST, HIGH);
+    DEBUG_PRINTLN("initting");
+    Ethernet.init(nCS);
+    DEBUG_PRINTLN("begind");
 
-    pinMode(nINT, INPUT);
 
-    pinMode(nCS, OUTPUT);
-    digitalWrite(nCS, LOW);
+    DEBUG_PRINTF("MAC: %s, IP: %x", FlashStorage::GetMacAddressString(), FlashStorage::GetEthernetSettings()->ip_address);  
 
-    Ethernet.init();
-    Ethernet.begin(mac, ip);
-
-    //Serial.println(W5100.readSIR());
-    //W5100.writeSIR(0x00); // clear inturrupts
-    ///W5100.writeSIMR(0xFF);
-
+    Ethernet.begin(FlashStorage::GetMacAddress(), IPAddress(FlashStorage::GetEthernetSettings()->ip_address));
+    
+    DEBUG_PRINTF("Mac Address: %s\n", FlashStorage::GetMacAddressString());
+    DEBUG_PRINTF("IP address from flash: 0x%x\n", FlashStorage::GetEthernetSettings()->ip_address);
     // Check for Ethernet hardware present
     if (Ethernet.hardwareStatus() == EthernetNoHardware)
     {
-        Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
-        // while (true)
-        // {
-        //     delay(1); // do nothing, no point running without Ethernet hardware
-        // }
+        DEBUG_PRINTLN("Ethernet shield not found");
     }
-    else{
-    }
-    return;
-    if (Ethernet.linkStatus() == LinkOFF)
+    else
     {
-        Serial.println("Ethernet cable is not connected.");
+        DEBUG_PRINTLN("Found Ethernet Hat");
+        device_found = true;
     }
 
-    // start the server
-    server.begin();
-    Serial.print("server is at ");
-    Serial.println(Ethernet.localIP());
-    //interrupts();
+    // if (Ethernet.linkStatus() == LinkOFF)
+    // {
+    //     // Serial.println("Ethernet cable is not connected");
+    // }
+    // else
+    // {
+    //     // Serial.println("Detected Ethernet cable");
+    // }
+    Udp.begin(FlashStorage::GetEthernetSettings()->port);
+
+    DEBUG_PRINT("Ip Address: ");
+    DEBUG_PRINTLN(Ethernet.localIP());
+    // interrupts();
     attachInterrupt(AUX4, HandleInturrupts, RISING);
+    
 }
 
 void AxisEthernet::HandleInturrupt()
 {
-
     Serial.println("int");
     return;
 }
 
 void HandleInturrupts()
 {
-    AEthernet.HandleInturrupt();
+    // if(AEthernet!=nullptr)
+    //     AEthernet->HandleInturrupt();
 }
 void AxisEthernet::OnRun()
 {
-    EthernetClient client = server.available();
-    if (client) {
-    String request = "";
-    
-    // Read the HTTP request from the client
-    while (client.available()) {
-      char c = client.read();
-      request += c;
-    }
-    
-    // Debugging: Print the request to Serial Monitor
-    //Serial.println(request);
-    
-    // If the client requests the root URL ("/"), send the HTML page
-    if (request.indexOf("GET / ") >= 0) {
-      client.println("HTTP/1.1 200 OK");
-      client.println("Content-Type: text/html");
-      client.println("Connection: close");
-      client.println();
-      client.println(html_page);
-    }
-    
-    // If the client requests the "/get-number" endpoint, return a random number
-    else if (request.indexOf("GET /get-number") >= 0) {
-      int randomNumber = random(1, 101);  // Random number between 1 and 100
-      client.println("HTTP/1.1 200 OK");
-      client.println("Content-Type: text/plain");
-      client.println("Connection: close");
-      client.println();
-      client.println(encoderController.GetPositionDegrees());
-    }
+    uint16_t packetSize = Udp.parsePacket();
+    if(packetSize == 0)
+        return;
 
-    // Close the client connection after handling the request
-    delay(1);
-    client.stop();
-  }
+    Udp.read(buffer, packetSize); 
+    DEBUG_PRINT((char*)&buffer[0]);
 }
-
 
 void AxisEthernet::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size)
 {
@@ -200,7 +177,4 @@ void AxisEthernet::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size)
 
 void AxisEthernet::OnStop()
 {
-
 }
-
-AxisEthernet AEthernet(10);

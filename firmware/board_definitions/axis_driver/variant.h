@@ -93,6 +93,7 @@ extern "C"
 //LEDS
 #define NEOPIX (6)
 #define STAT_LED (7)
+#define LED_BUILTIN STAT_LED
 
 //INPUT
 #define USR_INPUT (30)

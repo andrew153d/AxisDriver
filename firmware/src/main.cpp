@@ -2,48 +2,20 @@
 #include "wiring_private.h" // pinPeripheral() function
 #include <AccelStepper.h>
 #include <TMCStepper.h>
-#include "Task.h"
+#include "Task/Task.h"
 #include "MessageProcessor/MessageProcessor.h"
 #include "LedController/LedController.h"
 #include "SerialTextInterface/SerialTextInterface.h"
 #include "MotorController/MotorController.h"
 #include "EncoderController/EncoderController.h"
 #include "DeviceManager/DeviceManager.h"
-#include "FlashStorage.h"
+#include "FlashStorage/FlashStorage.h"
 #include "AxisEthernet/AxisEthernet.h"
 #include "Messages.hpp"
 #include <cstdint>
 #include "Wire.h"
 #include "SPI.h"
-
-/*
-TaskManager
-  Handles tasking
-  Calls all registered tasks
-
-IControlInterface
-  Inhereted by classes that manage an external interface (Serial, Wifi, I2c, Uart)
-  Passes bytes down to MessageProcessor
-  Receives Bytes from MessageProcessor to send to send out of interface
-  Each interface will have a buffer whose pointer gets passed down
-
-MessageProcessor
-  Maintains a list of Controller classes
-  Maintains a list of pointers to a control interfaces
-  Calls various control functions based on what functionality they control
-  Allows functionControllers to send data back to interface
-
-*/
-
-/*
-External Interfaces
-  need a pointer to MessageProcessor to call HandleIncomingMessage
-  need to implement a send interface that can be called by message processor
-
-Message processor
-  every internal recevier will need a pointer to call SendUp
-
-*/
+#include "DebugPrinter.h"
 
 class StatusLedDriver : public ITask
 {
@@ -76,8 +48,9 @@ enum class HATType
 {
   NONE,
   ETHERNET,
-
 };
+
+void EvaluateHatType();
 
 TaskManager manager;
 MessageProcessor messageProcessor(0);
@@ -86,22 +59,40 @@ SerialTextInterface serialTextInterface(0);
 
 // internal devices
 StatusLedDriver statusLight(1000);
-//EncoderController encoderController(500);
 
 DeviceManager deviceManager(0xFFFFFFFF);
 void setup()
 {
-  delay(100);
-  Serial.begin(115200);
+  DEBUG_BEGIN(115200);
+  
   Wire1.begin();
-  pinMode(USR_INPUT, INPUT);
-
-  Serial.println("Starting Axis");
   Wire1.setClock(400000);
 
-  while(!Serial);
+  FlashStorage::Init();
 
-  // Serial.println(FlashStorage::GetMacAddressString());
+  pinMode(USR_INPUT, INPUT);
+  addrLedController.Start();
+  addrLedController.SetLedState(SOLID);
+  addrLedController.SetLEDColor(CRGB(0x001100));
+  uint32_t start_time = millis();
+  while(digitalRead(USR_INPUT) && (millis()-start_time)<1500){delay(10);}
+  if (!digitalRead(USR_INPUT))
+  {
+    while (!Serial)
+    {
+      addrLedController.Start();
+      addrLedController.SetLedState(LedStates::SOLID);
+      digitalWrite(STAT_LED, LOW);
+      addrLedController.SetLEDColor(CRGB(0x000010));
+      delay(80);
+      digitalWrite(STAT_LED, HIGH);
+      addrLedController.SetLEDColor(CRGB(0x000000));
+      delay(80);
+    }
+  }
+
+  addrLedController.SetLEDColor(CRGB(0x000000));
+
   //   connect the SerialTextInterface to the Message Processor
   messageProcessor.AddControllerInterface(&addrLedController, JsonMessageTypes::Led, MessageTypes::LedControlMessageTypeLowerBounds, MessageTypes::LedControlMessageTypeUpperBounds);
   // messageProcessor.AddControllerInterface(&deviceManager, "", MessageTypes::DeviceInfoMessageTypeLowerBounds, MessageTypes::DeviceInfoMessageTypeUpperBounds);
@@ -113,9 +104,8 @@ void setup()
   manager.AddTask(&messageProcessor);
   manager.AddTask(&statusLight);
   manager.AddTask(&addrLedController);
-  //manager.AddTask(&encoderController);
   manager.AddTask(&motorController);
-  manager.AddTask(&AEthernet);
+  
   //  start the interfaces
   serialTextInterface.Start();
 
@@ -123,7 +113,6 @@ void setup()
   messageProcessor.Start();
   addrLedController.Start();
   addrLedController.SetRainbowBrightness(100);
-  addrLedController.SetLedState(SOLID);
   addrLedController.SetLedState(BOOTUP);
 
   statusLight.Start();
@@ -132,7 +121,30 @@ void setup()
   motorController.Start();
   motorController.setEncoderValueSource(&encoderController);
 
-  AEthernet.Start();
+  EthernetSettingsStruct* s = FlashStorage::GetEthernetSettings();
+  s->port = 12001;
+  s->ip_address = 0x6F0CA8C0;
+  FlashStorage::WriteFlash();
+  EvaluateHatType();
+  
+}
+
+void EvaluateHatType()
+{
+  // check for the the ethernet hat
+  AxisEthernet *AEthernet = new AxisEthernet(10);
+  if (AEthernet != nullptr)
+    AEthernet->Start();
+
+  if (AEthernet->IsPresent())
+  {
+    manager.AddTask(AEthernet);
+  }
+  else
+  {
+    //delete AEthernet;
+    //AEthernet = nullptr;
+  }
 }
 
 void loop()
