@@ -69,8 +69,16 @@ executionPeriod = period;
       case MessageTypes::SetLedColor:
       {
         SetLedColorMessage* msg = (SetLedColorMessage*)recv_bytes;
-        addrLedController.SetLedState(LedStates::SOLID);
+        DEBUG_PRINTF("Setting LED color to: R=%d, G=%d, B=%d\n", msg->ledColor.r, msg->ledColor.g, msg->ledColor.b);
         addrLedController.SetLEDColor(CRGB(msg->ledColor.r, msg->ledColor.g, msg->ledColor.b));
+      break;
+      }
+
+      case MessageTypes::SetLedState:
+      {
+        SetLedStateMessage* msg = (SetLedStateMessage*)recv_bytes;
+        DEBUG_PRINTF("Setting LED state to: %d\n", msg->ledState);
+        addrLedController.SetLedState(msg->ledState);
       break;
       }
       default:

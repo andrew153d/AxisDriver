@@ -81,7 +81,7 @@ enum class MessageTypes : uint16_t
 {
     // General Device Info
     DeviceInfoMessageTypeLowerBounds = 0x0001,
-    GetVersion,
+    GetVersion = 0x0002,
     DeviceInfoMessageTypeUpperBounds = 0x00FF,
 
     // Device Settings
@@ -91,27 +91,27 @@ enum class MessageTypes : uint16_t
     // LED control
     LedControlMessageTypeLowerBounds = 0x3000,
     SetLedColor = 0x3001,
-    GetLedColor,
-    SetLedState,
+    GetLedColor = 0x3002,
+    SetLedState = 0x3003,
     LedControlMessageTypeUpperBounds = 0x30FF,
 
     // Drive Configuration
 
     // Motor Driving
     MotorControlMessageTypeLowerBounds = 0x5000,
-    GetMotorPosition,
-    GetMotorVelocity,
-    GetMotorCurrent,
+    GetMotorPosition = 0x5001,
+    GetMotorVelocity = 0x5002,
+    GetMotorCurrent = 0x5003,
 
-    SetMotorPosition,
-    SetMotorVelocity,
-    SetMotorCurrent,
+    SetMotorPosition = 0x5004,
+    SetMotorVelocity = 0x5005,
+    SetMotorCurrent = 0x5006,
 
-    SetControlMode,
-    GetControlMode,
+    SetControlMode = 0x5007,
+    GetControlMode = 0x5008,
 
-    GetMotorStatus,
-    StartMotor,
+    GetMotorStatus = 0x5009,
+    StartMotor = 0x500A,
     MotorControlMessageTypeUpperBounds = 0x5FFF,
 
     // Encoder Messages
@@ -183,6 +183,23 @@ PACKEDSTRUCT SetLedColorMessage
 {
     Header header;
     LedColors ledColor;
+    Footer footer;
+};
+
+
+enum LedStates : uint8_t{
+  OFF,
+  FLASH_ERROR,
+  ERROR,
+  BOOTUP,
+  RAINBOW,
+  SOLID,
+};
+
+PACKEDSTRUCT SetLedStateMessage
+{
+    Header header;
+    LedStates ledState;
     Footer footer;
 };
 

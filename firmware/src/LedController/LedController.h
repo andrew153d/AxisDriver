@@ -16,14 +16,6 @@
 #define RED_HUE 0
 #define BLUE_HUE 170
 
-enum LedStates{
-  OFF,
-  FLASH_ERROR,
-  ERROR,
-  BOOTUP,
-  RAINBOW,
-  SOLID,
-};
 
 class AddrLedController : public ITask, public IInternalInterface {
 private:

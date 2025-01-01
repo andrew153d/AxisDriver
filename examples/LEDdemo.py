@@ -2,6 +2,7 @@ import serial
 import json
 import time
 import threading
+from messages import *
 
 SERIAL_PORT = '/dev/ttyACM0'
 
@@ -45,6 +46,12 @@ def listen_serial(ser):
             message = ser.readline().decode('utf-8').rstrip()  # Read and decode the message
             print(f"{message}")
 
+def SendMessage(msg):
+    if motor_port.is_open:
+        motor_port.write(msg.pack())
+
+
+
 def SetLedColorJson(r, g, b):
     message = json.dumps({
         "type": "Led", 
@@ -61,18 +68,18 @@ def SetLedColorJson(r, g, b):
 def SetLedColor(r, g, b):
     message_type = bytearray([0x01, 0x30])  # Example message type
     body = bytearray([r, g, b])
-    body_size = len(body).to_bytes(2, 'big')
-    checksum = (sum(body) % 256).to_bytes(1, 'big')
+    body_size = (3).to_bytes(2, 'big')
+    checksum = (sum(body) & 0xFF).to_bytes(1, 'big')
     message = message_type + body_size + body + checksum
 
     if motor_port.is_open:
         motor_port.write(message)
-        print(f'Sent bytes: {message}')
+        print(f'Sent bytes: {[f"0x{byte:02x}" for byte in message]}')
 
 def cycle_hues(brightness=1.0):
     for hue in range(0, 360, 1):  # Change the step for different speed
         r, g, b = hue_to_rgb(hue, brightness)
-        SetLedColor(r, g, b)
+        SendMessage(create_set_led_color_message(r, g, b))
         time.sleep(0.001)  # Adjust delay for how fast you want to cycle
 
 try:
@@ -86,14 +93,15 @@ listener_thread = threading.Thread(target=listen_serial, args=(motor_port,), dae
 listener_thread.start()
 
 
+SendMessage(create_led_state_message(LedStates.SOLID))
 
-SetLedColor(100, 0, 0)
+SendMessage(create_set_led_color_message(100, 0, 0))
 time.sleep(1)
-SetLedColor(0, 100, 0)
+SendMessage(create_set_led_color_message(0, 100, 0))
 time.sleep(1)
-SetLedColor(0, 0, 100)
+SendMessage(create_set_led_color_message(0, 0, 100))
 time.sleep(1)
 cycle_hues()
 cycle_hues()
 cycle_hues()
-SetLedColor(0, 0, 0)
+SendMessage(create_set_led_color_message(0, 0, 0))
