@@ -3,7 +3,7 @@
 #include "Task/Task.h"
 #include <AccelStepper.h>
 #include "LedController/LedController.h"
-#include "MessageProcessor/MessageProcessor.h"
+#include "MessageProcessor/MessageProcessor.hpp"
 #include "easyTMC2209.h"
 #include "wiring_private.h"
 #include "pid.h"

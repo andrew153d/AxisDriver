@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <Arduino.h>
 #include "Task/Task.h"
-#include "MessageProcessor/MessageProcessor.h"
+#include "MessageProcessor/MessageProcessor.hpp"
 #include "Messages.hpp"
 
 

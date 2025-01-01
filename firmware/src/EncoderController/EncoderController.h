@@ -3,7 +3,7 @@
 #include "Task/Task.h"
 #include <Tlv493d.h>
 #include "Messages.hpp"
-#include "MessageProcessor/MessageProcessor.h"
+#include "MessageProcessor/MessageProcessor.hpp"
 class EncoderController : public ITask, public IEncoderInterface, public IInternalInterface
 {
 private:

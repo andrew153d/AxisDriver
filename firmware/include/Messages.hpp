@@ -146,6 +146,13 @@ PACKEDSTRUCT VersionMessage
     Footer footer;
 };
 
+PACKEDSTRUCT SetIpAddressMessage
+{
+    Header header;
+    uint32_t ip_address;
+    Footer footer;
+};
+
 PACKEDSTRUCT LedColors
 {
     union

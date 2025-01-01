@@ -41,11 +41,11 @@ namespace FlashStorage
         }
         memcpy(&current_settings_buffer[0], &saved_settings_buffer[0], EEPROM_SIZE_BYTES);
         
-        PrintBuffer(&saved_settings_buffer[0]);
-        DEBUG_PRINTF("Mac Address: %s\n", GetMacAddressString());
-        DEBUG_PRINTF("Serial Number: %s\n", GetSerialNumberString());
-        DEBUG_PRINTF("Port: %x\n", GetEthernetSettings()->port);
-        DEBUG_PRINTF("ip from flash %x\n", GetEthernetSettings()->ip_address);
+        //PrintBuffer(&saved_settings_buffer[0]);
+        //DEBUG_PRINTF("Mac Address: %s\n", GetMacAddressString());
+        //DEBUG_PRINTF("Serial Number: %s\n", GetSerialNumberString());
+        //DEBUG_PRINTF("Port: %x\n", GetEthernetSettings()->port);
+        //DEBUG_PRINTF("Ip from flash %x\n", GetEthernetSettings()->ip_address);
     }
 
     void WaitWriteCycle()

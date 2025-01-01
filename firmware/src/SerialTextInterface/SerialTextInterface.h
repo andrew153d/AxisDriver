@@ -3,9 +3,10 @@
 #include <cstdint>
 #include <Arduino.h>
 #include "Task/Task.h"
-#include "MessageProcessor/MessageProcessor.h"
+#include "MessageProcessor/MessageProcessor.hpp"
 #include <stdlib.h>
 #include <ArduinoJson.h>
+#include "DebugPrinter.h"
 
 #define CR 0x0D
 #define LR 0x0A

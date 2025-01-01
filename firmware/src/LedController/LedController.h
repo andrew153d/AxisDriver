@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include "Task/Task.h"
 #include "FastLED.h"
-#include "MessageProcessor/MessageProcessor.h"
+#include "MessageProcessor/MessageProcessor.hpp"
 #include "Messages.hpp"
 
 #define FLASH_ERROR_EXEC_PERIOD 500

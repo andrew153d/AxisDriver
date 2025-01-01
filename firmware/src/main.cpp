@@ -3,7 +3,7 @@
 #include <AccelStepper.h>
 #include <TMCStepper.h>
 #include "Task/Task.h"
-#include "MessageProcessor/MessageProcessor.h"
+#include "MessageProcessor/MessageProcessor.hpp"
 #include "LedController/LedController.h"
 #include "SerialTextInterface/SerialTextInterface.h"
 #include "MotorController/MotorController.h"

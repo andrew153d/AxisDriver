@@ -3,7 +3,7 @@
 #include <SPI.h>
 #include <Ethernet.h>
 #include "Task/Task.h"
-#include "MessageProcessor/MessageProcessor.h"
+#include "MessageProcessor/MessageProcessor.hpp"
 #include "FlashStorage/FlashStorage.h"
 #include "DebugPrinter.h"
 #include <EthernetUdp.h> 
