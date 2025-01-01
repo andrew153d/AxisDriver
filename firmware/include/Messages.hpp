@@ -178,3 +178,4 @@ PACKEDSTRUCT SetLedColorMessage
     LedColors ledColor;
     Footer footer;
 };
+

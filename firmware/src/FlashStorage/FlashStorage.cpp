@@ -8,7 +8,7 @@ namespace FlashStorage
     bool has_read_serial_number = false;
 
     uint32_t last_write_time = 0;
-    static const uint32_t write_cycle_time = 5;
+    static const uint32_t write_cycle_time = 8;
 
     uint8_t mac[MAC_ARRAY_LEN] = {0};
     uint8_t serial_number[SERIAL_ARRAY_LEN] = {0};
@@ -21,14 +21,31 @@ namespace FlashStorage
 
     static char macStr[18];
     static char snStr[32];
+    
+    void PrintBuffer(uint8_t* buf)
+    {
+     for (int i = 0; i < EEPROM_SIZE_BYTES; i ++)
+        {
+            if(i%16 == 0)
+                DEBUG_PRINTLN();
+            DEBUG_PRINTF("%2x ", buf[i]);            
+        }
+        DEBUG_PRINTLN("");
+    }
 
     void Init()
     {
         for (int i = 0; i < EEPROM_SIZE_BYTES; i += 16)
         {
-            FlashStorage::readBytes(i, &saved_settings_buffer[0], 16);
+            FlashStorage::readBytes(i, &saved_settings_buffer[i], 16);
         }
         memcpy(&current_settings_buffer[0], &saved_settings_buffer[0], EEPROM_SIZE_BYTES);
+        
+        PrintBuffer(&saved_settings_buffer[0]);
+        DEBUG_PRINTF("Mac Address: %s\n", GetMacAddressString());
+        DEBUG_PRINTF("Serial Number: %s\n", GetSerialNumberString());
+        DEBUG_PRINTF("Port: %x\n", GetEthernetSettings()->port);
+        DEBUG_PRINTF("ip from flash %x\n", GetEthernetSettings()->ip_address);
     }
 
     void WaitWriteCycle()
@@ -204,6 +221,7 @@ namespace FlashStorage
         {
             if ((pages_write_mask >> i) & 0x1 > 0)
             {
+                DEBUG_PRINTF("Writing page %d\n", i);
                 FlashStorage::writePage(i * 16, &current_settings_buffer[i * 16], 16);
                 FlashStorage::readBytes(i * 16, &saved_settings_buffer[i * 16], 16);
             }

@@ -2,7 +2,14 @@ import json
 import time
 import threading
 import socket
+import struct
 
+# Assuming MessageTypes is just a byte value (could be a simple enum-like type)
+MessageType = 1  # Example: 1 for a specific message type
+
+# Example Header and Footer structures
+HeaderFormat = "B H"  # MessageType (1 byte), body_size (2 bytes)
+FooterFormat = "H"    # checksum (2 bytes)
 # Network details
 SERVER_IP = '192.168.12.111'
 SERVER_PORT = 12001
@@ -10,6 +17,30 @@ BUFFER_SIZE = 1024
 
 # Create a UDP socket
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+def create_led_color_message(red=None, green=None, blue=None, raw=None):
+    led_color = struct.pack("BBB", red, green, blue)
+    
+    # Create the body (led_color)
+    body_data = led_color
+    
+    # Calculate body size (excluding header and footer)
+    body_size = len(body_data)
+    
+    # Pack the header with message type and body size
+    header = struct.pack(HeaderFormat, MessageType, body_size)
+    
+    # Calculate checksum (header + body + footer)
+    message_without_footer = header + body_data
+    checksum = calculate_checksum(message_without_footer)
+    
+    # Pack the footer with the checksum
+    footer = struct.pack(FooterFormat, checksum)
+    
+    # Combine header, body, and footer to form the complete message
+    message = header + body_data + footer
+    
+    return message
 
 def hue_to_rgb(hue, brightness=1.0):
     """Convert hue (0-360) to RGB (0-255) with brightness (0.0-1.0)"""

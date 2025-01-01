@@ -24,17 +24,10 @@ void AxisEthernet::OnStart()
     digitalWrite(PMODE1, HIGH);
     digitalWrite(PMODE2, HIGH);
 
-    DEBUG_PRINTLN("initting");
     Ethernet.init(nCS);
-    DEBUG_PRINTLN("begind");
-
-
-    DEBUG_PRINTF("MAC: %s, IP: %x", FlashStorage::GetMacAddressString(), FlashStorage::GetEthernetSettings()->ip_address);  
 
     Ethernet.begin(FlashStorage::GetMacAddress(), IPAddress(FlashStorage::GetEthernetSettings()->ip_address));
-    
-    DEBUG_PRINTF("Mac Address: %s\n", FlashStorage::GetMacAddressString());
-    DEBUG_PRINTF("IP address from flash: 0x%x\n", FlashStorage::GetEthernetSettings()->ip_address);
+
     // Check for Ethernet hardware present
     if (Ethernet.hardwareStatus() == EthernetNoHardware)
     {
@@ -56,16 +49,16 @@ void AxisEthernet::OnStart()
     // }
     Udp.begin(FlashStorage::GetEthernetSettings()->port);
 
-    DEBUG_PRINT("Ip Address: ");
-    DEBUG_PRINTLN(Ethernet.localIP());
-    // interrupts();
-    attachInterrupt(AUX4, HandleInturrupts, RISING);
+    DEBUG_PRINTF("Ip Address: %X, Port: %X\n", Ethernet.localIP(), Udp.localPort());
+    //DEBUG_PRINTLN(Ethernet.localIP());
+    //interrupts();
+    //attachInterrupt(AUX4, HandleInturrupts, RISING);
     
 }
 
 void AxisEthernet::HandleInturrupt()
 {
-    Serial.println("int");
+    //Serial.println("int");
     return;
 }
 

@@ -68,8 +68,6 @@ void setup()
   Wire1.begin();
   Wire1.setClock(400000);
 
-  FlashStorage::Init();
-
   pinMode(USR_INPUT, INPUT);
   addrLedController.Start();
   addrLedController.SetLedState(SOLID);
@@ -83,13 +81,15 @@ void setup()
       addrLedController.Start();
       addrLedController.SetLedState(LedStates::SOLID);
       digitalWrite(STAT_LED, LOW);
-      addrLedController.SetLEDColor(CRGB(0x000010));
+      addrLedController.SetLEDColor(CRGB(0x0000F0));
       delay(80);
       digitalWrite(STAT_LED, HIGH);
       addrLedController.SetLEDColor(CRGB(0x000000));
       delay(80);
     }
   }
+
+  FlashStorage::Init();
 
   addrLedController.SetLEDColor(CRGB(0x000000));
 
@@ -121,12 +121,19 @@ void setup()
   motorController.Start();
   motorController.setEncoderValueSource(&encoderController);
 
+  // uint8_t b = 0;
+  // FlashStorage::readBytes(0x11, &b, 1);
+  // b++;
+  // FlashStorage::writeRegister(0x11, b);
+  // DEBUG_PRINTLN(b);
+
   EthernetSettingsStruct* s = FlashStorage::GetEthernetSettings();
-  s->port = 12001;
-  s->ip_address = 0x6F0CA8C0;
-  FlashStorage::WriteFlash();
+  //DEBUG_PRINTF("%x, %x", s->ip_address, s->port);  
+  //s->port = 0x2ee1; //12001;
+  //s->ip_address = 0x6F0CA8C0;
+  //FlashStorage::WriteFlash();
+  //DEBUG_PRINTF("ip: %x\n", s->ip_address);
   EvaluateHatType();
-  
 }
 
 void EvaluateHatType()
