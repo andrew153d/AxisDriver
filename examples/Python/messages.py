@@ -18,6 +18,10 @@ class MessageTypes(Enum):
     GetLedColor = 0x3002
     SetLedState = 0x3003
     LedControlMessageTypeUpperBounds = 0x30FF
+    
+    # Ethernet Configuration
+    SetEthernetAddress = 0x4000
+    SetEthernetPort = 0x4001
 
     # Drive Configuration
 
@@ -36,8 +40,7 @@ class MessageTypes(Enum):
     MotorControlMessageTypeUpperBounds = 0x5FFF
 
     # Encoder Messages
-    EncoderControlMessageTypeLowerBounds = 0x06000
-    EncoderControlMessageTypeUpperBounds = 0x6FFF
+
 
 class Header:
     def __init__(self, message_type, body_size):
