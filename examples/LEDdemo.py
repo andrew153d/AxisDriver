@@ -1,15 +1,12 @@
+import serial
 import json
 import time
 import threading
-import socket
 
-# Network details
-SERVER_IP = '192.168.12.111'
-SERVER_PORT = 12001
-BUFFER_SIZE = 1024
+SERIAL_PORT = 'COM4'
 
-# Create a UDP socket
-client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+motor_port=serial.Serial()
+
 
 def hue_to_rgb(hue, brightness=1.0):
     """Convert hue (0-360) to RGB (0-255) with brightness (0.0-1.0)"""
@@ -42,53 +39,48 @@ def hue_to_rgb(hue, brightness=1.0):
 
     return r, g, b
 
-def send_to_server(message):
-    """Send message to the server via UDP"""
-    try:
-        # Send the message as a UDP packet to the specified IP and port
-        client_socket.sendto(message.encode('utf-8'), (SERVER_IP, SERVER_PORT))
-        print(f"Sent: {message}")
-    except Exception as e:
-        print(f"Error sending message: {e}")
+def listen_serial(ser):
+    while True:
+        if ser.in_waiting > 0:  # Check if there's data waiting
+            message = ser.readline().decode('utf-8').rstrip()  # Read and decode the message
+            print(f"{message}")
 
 def SetLedColor(r, g, b):
-    """Send LED color data to the server"""
     message = json.dumps({
         "type": "Led", 
         "mode": "Solid",
-        "red": r,
-        "green": g,
-        "blue": b
-    }) + "\r\n"
-    
-    send_to_server(message)
+        "red":r,
+        "green":g,
+        "blue":b
+    }).encode('utf-8') + "\r\n ".encode('utf-8')
+
+    if(motor_port.is_open):
+        motor_port.write(message)  # Send the JSON message
+        print(f'{message.decode()}')
 
 def cycle_hues(brightness=1.0):
-    """Cycle through hues and send the corresponding RGB values"""
     for hue in range(0, 360, 1):  # Change the step for different speed
         r, g, b = hue_to_rgb(hue, brightness)
         SetLedColor(r, g, b)
         time.sleep(0.001)  # Adjust delay for how fast you want to cycle
 
-# Main execution
 try:
-    # Example color changes
-    SetLedColor(100, 0, 0)
-    time.sleep(1)
-    SetLedColor(0, 100, 0)
-    time.sleep(1)
-    SetLedColor(0, 0, 100)
-    time.sleep(1)
+    motor_port = serial.Serial(SERIAL_PORT, 115200, timeout=1)
+except serial.SerialException as e:
+    print(f"Error: {e}")
+except Exception as e:
+    print(f"An error occurred: {e}")
 
-    # Cycle through hues multiple times
-    cycle_hues()
-    cycle_hues()
-    cycle_hues()
+listener_thread = threading.Thread(target=listen_serial, args=(motor_port,), daemon=True)
+listener_thread.start()
 
-    # Turn off the LED at the end
-    SetLedColor(0, 0, 0)
-
-finally:
-    # Close the socket when done
-    client_socket.close()
-    print("Connection closed.")
+SetLedColor(100, 0, 0)
+time.sleep(1)
+SetLedColor(0, 100, 0)
+time.sleep(1)
+SetLedColor(0, 0, 100)
+time.sleep(1)
+cycle_hues()
+cycle_hues()
+cycle_hues()
+SetLedColor(0, 0, 0)
