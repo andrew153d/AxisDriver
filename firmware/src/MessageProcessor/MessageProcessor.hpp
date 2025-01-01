@@ -60,16 +60,14 @@ public:
   MessageProcessor(uint32_t period);
 
   void AddExternalInterface(IExternalInterface *new_interface);
-
   void AddControllerInterface(IInternalInterface *new_interface, JsonMessageTypes message_type, MessageTypes low, MessageTypes high);
 
   void OnStart() override;
-
   void OnStop() override;
-
   void OnRun() override;
 
-  //void HandleJsonMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size);
+  void HandleJsonMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size);
+  void HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size);
 
   void HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size = 0);
 

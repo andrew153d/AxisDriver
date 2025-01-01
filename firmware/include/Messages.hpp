@@ -90,7 +90,7 @@ enum class MessageTypes : uint16_t
 
     // LED control
     LedControlMessageTypeLowerBounds = 0x3000,
-    SetLedColor,
+    SetLedColor = 0x3001,
     GetLedColor,
     SetLedState,
     LedControlMessageTypeUpperBounds = 0x30FF,

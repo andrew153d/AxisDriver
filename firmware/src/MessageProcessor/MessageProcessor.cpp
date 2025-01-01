@@ -1,7 +1,6 @@
 #include "MessageProcessor.hpp"
-
-// #include "Messages.hpp"
-// #include <ArduinoJson.h>
+#include "DebugPrinter.h"
+#include "LedController/LedController.h"
 
 MessageProcessor::MessageProcessor(uint32_t period)
 {
@@ -37,7 +36,49 @@ executionPeriod = period;
   {
   }
 
-  //void HandleJsonMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size);
+  void MessageProcessor::HandleJsonMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size)
+  {
+    // DeserializationError error = deserializeJson(received_json, recv_bytes, 256);
+    // if (error)
+    // {
+    //     Serial.println("Error parsing json in motor controller");
+    //     return;
+    // }
+
+    // if (received_json.containsKey("mode"))
+    // {
+    //     String mode_string = received_json["mode"];
+
+    //     if (mode_string == "Solid")
+    //     {
+    //     }
+    // }
+  }
+
+
+  void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size)
+  {
+    Header *hdr = (Header *)&recv_bytes[0];
+
+    //TODO: check for checksum
+
+    DEBUG_PRINTF("Received message type: %x\n", hdr->message_type);
+    
+    switch(hdr->message_type)
+    {
+      case MessageTypes::SetLedColor:
+      {
+        SetLedColorMessage* msg = (SetLedColorMessage*)recv_bytes;
+        addrLedController.SetLedState(LedStates::SOLID);
+        addrLedController.SetLEDColor(CRGB(msg->ledColor.r, msg->ledColor.g, msg->ledColor.b));
+      break;
+      }
+      default:
+      DEBUG_PRINTLN("Unable to handle message type");
+      break;
+    }
+
+  }
 
   void MessageProcessor::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size)
   {
@@ -46,37 +87,40 @@ executionPeriod = period;
 
     if (recv_bytes[0] == '{')
     {
-      JsonDocument doc;
-      DeserializationError error = deserializeJson(doc, recv_bytes, 256);
-      if (error)
-      {
-        Serial.println("Error parsing json");
-        return;
-      }
-      String type;
-      if(!TryParseJson("type", &type, doc)){
-        Serial.println("Failed to find type");
-        return;
-      }
-      for (InterfaceLimits interface : controllerInterfaces)
-      {
-        if (interface.type == ToJsonMessageTypes(type))
-        {
-          interface.interface->HandleIncomingMsg(recv_bytes, recv_bytes_size);
-        }
-      }
+      HandleJsonMsg(recv_bytes, recv_bytes_size);
+      // JsonDocument doc;
+      // DeserializationError error = deserializeJson(doc, recv_bytes, 256);
+      // if (error)
+      // {
+      //   Serial.println("Error parsing json");
+      //   return;
+      // }
+      // String type;
+      // if(!TryParseJson("type", &type, doc)){
+      //   Serial.println("Failed to find type");
+      //   return;
+      // }
+      // for (InterfaceLimits interface : controllerInterfaces)
+      // {
+      //   if (interface.type == ToJsonMessageTypes(type))
+      //   {
+      //     interface.interface->HandleIncomingMsg(recv_bytes, recv_bytes_size);
+      //   }
+      // }
     }
     else
     {
-      Header *hdr = (Header *)&recv_bytes[0];
+      HandleByteMsg(recv_bytes, recv_bytes_size);
 
-      for (InterfaceLimits interface : controllerInterfaces)
-      {
-        if ((uint16_t)hdr->message_type > interface.lowLimit && (uint16_t)hdr->message_type < interface.highLimit)
-        {
-          interface.interface->HandleIncomingMsg(recv_bytes, recv_bytes_size);
-        }
-      }
+      // Header *hdr = (Header *)&recv_bytes[0];
+
+      // for (InterfaceLimits interface : controllerInterfaces)
+      // {
+      //   if ((uint16_t)hdr->message_type > interface.lowLimit && (uint16_t)hdr->message_type < interface.highLimit)
+      //   {
+      //     interface.interface->HandleIncomingMsg(recv_bytes, recv_bytes_size);
+      //   }
+      // }
     }
   }
 

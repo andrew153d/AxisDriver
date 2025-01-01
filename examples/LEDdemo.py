@@ -3,7 +3,7 @@ import json
 import time
 import threading
 
-SERIAL_PORT = 'COM4'
+SERIAL_PORT = '/dev/ttyACM0'
 
 motor_port=serial.Serial()
 
@@ -45,7 +45,7 @@ def listen_serial(ser):
             message = ser.readline().decode('utf-8').rstrip()  # Read and decode the message
             print(f"{message}")
 
-def SetLedColor(r, g, b):
+def SetLedColorJson(r, g, b):
     message = json.dumps({
         "type": "Led", 
         "mode": "Solid",
@@ -57,6 +57,17 @@ def SetLedColor(r, g, b):
     if(motor_port.is_open):
         motor_port.write(message)  # Send the JSON message
         print(f'{message.decode()}')
+
+def SetLedColor(r, g, b):
+    message_type = bytearray([0x01, 0x30])  # Example message type
+    body = bytearray([r, g, b])
+    body_size = len(body).to_bytes(2, 'big')
+    checksum = (sum(body) % 256).to_bytes(1, 'big')
+    message = message_type + body_size + body + checksum
+
+    if motor_port.is_open:
+        motor_port.write(message)
+        print(f'Sent bytes: {message}')
 
 def cycle_hues(brightness=1.0):
     for hue in range(0, 360, 1):  # Change the step for different speed
@@ -73,6 +84,8 @@ except Exception as e:
 
 listener_thread = threading.Thread(target=listen_serial, args=(motor_port,), daemon=True)
 listener_thread.start()
+
+
 
 SetLedColor(100, 0, 0)
 time.sleep(1)
