@@ -6,6 +6,7 @@
 
 # Messaging #
 
+- The Axis Driver allows for two message sets to be used. On all interfaces, both the json and binary messages may be used interchangebly. The JSON messages allow for faster development and ease of use while the binary messages provide a high speed and effecient method of data transmission.
 - All binary messages are made up of a header, body, and footer. All json messages have a header and body.
 
 ## Generic Messages ##
@@ -29,7 +30,7 @@ uint16_t body_size
 </td>
 <td>
 
-```json
+```
 {
     "MessageType": <MessageTypeString>,
 }
@@ -71,7 +72,7 @@ Footer
 </td>
 <td>
 
-```json
+```
 {
     "MessageType": <MessageTypeString>,
     "Value": <mode>
@@ -95,7 +96,7 @@ Footer
 </td>
 <td>
 
-```json
+```
 {
     "MessageType": <MessageTypeString>,
     "Value": <value>
@@ -119,7 +120,7 @@ Footer
 </td>
 <td>
 
-```json
+```
 {
     "MessageType": <MessageTypeString>,
     "Value": <value>
@@ -144,7 +145,7 @@ Footer
 </td>
 <td>
 
-```json
+```
 {
     "MessageType": <MessageTypeString>,
     "Value": <value>
@@ -169,7 +170,7 @@ Footer
 </td>
 <td>
 
-```json
+```
 {
     "MessageType": <MessageTypeString>,
     "Value": <value>
@@ -194,7 +195,7 @@ Footer
 </td>
 <td>
 
-```json
+```
 {
     "MessageType": <MessageTypeString>,
     "Value": <value>
@@ -269,7 +270,7 @@ Footer
 </td>
 <td>
 
-```json
+```
 {
   "MessageType": <MessageTypeString>,
   "Red": <value>,
@@ -304,7 +305,7 @@ Footer
 </td>
 <td>
 
-```json
+```
 {
   "MessageType": <MessageTypeString>,
   "Red": <value>,
