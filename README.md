@@ -3,6 +3,7 @@
 # Interfaces #
 - USB
 - I2C
+- Ethernet
 
 # Messaging #
 
@@ -209,6 +210,76 @@ Footer
 </table>
 
 ## Device Specific Messages ##
+
+### Settings and Configuration
+---
+#### Set Device Version
+- Message Structure: uin32_t
+- MessageType: 0x0111
+- MessageTypeString: "GetVersion"
+---
+#### Set I2C Address
+- Message Structure: uin8_t
+- MessageType: 0x0500
+- MessageTypeString: "SetI2CAddress"
+---
+#### Get I2C Address
+- Message Structure: uint8_t
+- MessageType: 0x0501
+- MessageTypeString: "GetI2CAddress"
+---
+#### Set IP Address
+- Message Structure: uint32_t
+- MessageType: 0x0502
+- MessageTypeString: "SetIPAddress"
+---
+#### Get IP Address
+- Message Structure: uint32_t
+- MessageType: 0x0503
+- MessageTypeString: "GetIPAddress"
+---
+#### Set UDP Port
+- Message Structure: uint32_t
+- MessageType: 0x0504
+- MessageTypeString: "SetUDPPort"
+- **Values higher than 65535 are invalid**
+---
+#### Get UDP Port
+- Message Structure: uint32_t
+- MessageType: 0x0505
+- MessageTypeString: "GetUDPPort"
+---
+#### Get MAC Address
+
+- MessageType: 0x0506
+- MessageTypeString: "GetMacAddress"
+
+<table>
+<tr>
+<td>
+
+```
+Header
+uint8_t[6]
+Footer
+```
+
+</td>
+<td>
+
+```
+{
+  "MessageType": <MessageTypeString>,
+  "Value": <mac address>
+}
+```
+
+</td>
+</tr>
+</table>
+
+
+
 ### Led ###
 ---
 
