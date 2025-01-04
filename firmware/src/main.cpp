@@ -11,7 +11,7 @@
 #include "DeviceManager/DeviceManager.h"
 #include "FlashStorage/FlashStorage.h"
 #include "AxisEthernet/AxisEthernet.h"
-#include "Messages.hpp"
+#include "Messages.h"
 #include <cstdint>
 #include "Wire.h"
 #include "SPI.h"
@@ -94,10 +94,10 @@ void setup()
   addrLedController.SetLEDColor(CRGB(0x000000));
 
   //   connect the SerialTextInterface to the Message Processor
-  messageProcessor.AddControllerInterface(&addrLedController, JsonMessageTypes::Led, MessageTypes::LedControlMessageTypeLowerBounds, MessageTypes::LedControlMessageTypeUpperBounds);
+  //messageProcessor.AddControllerInterface(&addrLedController, JsonMessageTypes::Led, MessageTypes::LedControlMessageTypeLowerBounds, MessageTypes::LedControlMessageTypeUpperBounds);
   // messageProcessor.AddControllerInterface(&deviceManager, "", MessageTypes::DeviceInfoMessageTypeLowerBounds, MessageTypes::DeviceInfoMessageTypeUpperBounds);
-  messageProcessor.AddControllerInterface(&motorController, JsonMessageTypes::Motor, MessageTypes::MotorControlMessageTypeLowerBounds, MessageTypes::MotorControlMessageTypeUpperBounds);
-  messageProcessor.AddControllerInterface(&encoderController, JsonMessageTypes::Encoder, MessageTypes::EncoderControlMessageTypeLowerBounds, MessageTypes::EncoderControlMessageTypeUpperBounds);
+  //messageProcessor.AddControllerInterface(&motorController, JsonMessageTypes::Motor, MessageTypes::MotorControlMessageTypeLowerBounds, MessageTypes::MotorControlMessageTypeUpperBounds);
+  //messageProcessor.AddControllerInterface(&encoderController, JsonMessageTypes::Encoder, MessageTypes::EncoderControlMessageTypeLowerBounds, MessageTypes::EncoderControlMessageTypeUpperBounds);
   messageProcessor.AddExternalInterface(&serialTextInterface);
 
   manager.AddTask(&serialTextInterface);

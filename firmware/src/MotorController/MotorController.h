@@ -7,7 +7,7 @@
 #include "easyTMC2209.h"
 #include "wiring_private.h"
 #include "pid.h"
-#include "Messages.hpp"
+#include "Messages.h"
 #include "DebugPrinter.h"
 
 #define SERIAL_PORT Serial1
@@ -42,7 +42,7 @@ class MotorStep{
 
 };
 
-class MotorController : public ITask, public IInternalInterface
+class MotorController : public ITask
 {
 private:
     HardwareSerial &serial_stream;
@@ -92,11 +92,6 @@ public:
     void OnStop();
     void OnRun();
     
-    //messageHandlers
-    void HandleIncomingMsg(uint8_t* recv_bytes, uint32_t recv_bytes_size);
-    void HandleJsonMsg(uint8_t* recv_bytes, uint32_t recv_bytes_size);
-    void HandleByteMsg(uint8_t* recv_bytes, uint32_t recv_bytes_size);
-
     void setEncoderValueSource(IEncoderInterface *encoder_value);
     uint32_t GetErrors();
 

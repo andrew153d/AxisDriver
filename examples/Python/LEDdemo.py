@@ -2,7 +2,6 @@ import serial
 import json
 import time
 import threading
-from messages import *
 
 SERIAL_PORT = '/dev/ttyACM0'
 
@@ -38,35 +37,16 @@ def hue_to_rgb(hue, brightness=1.0):
     g = int(g)
     b = int(b)
 
-    return r, g, b
+    return r, g, bf
 
 def listen_serial(ser):
     while True:
         if ser.in_waiting > 0:  # Check if there's data waiting
             message = ser.readline().decode('utf-8').rstrip()  # Read and decode the message
-            print(f"{message}")
+            print(f"COMMPORT: {message}")
 
-def SendMessage(msg):
-    if motor_port.is_open:
-        motor_port.write(msg.pack())
-
-
-
-def SetLedColorJson(r, g, b):
-    message = json.dumps({
-        "type": "Led", 
-        "mode": "Solid",
-        "red":r,
-        "green":g,
-        "blue":b
-    }).encode('utf-8') + "\r\n ".encode('utf-8')
-
-    if(motor_port.is_open):
-        motor_port.write(message)  # Send the JSON message
-        print(f'{message.decode()}')
-
-def SetLedColor(r, g, b):
-    message_type = bytearray([0x01, 0x30])  # Example message type
+def SetLedColor(msg_id, r, g, b):
+    message_type = msg_id.to_bytes(2, 'little')
     body = bytearray([r, g, b])
     body_size = (3).to_bytes(2, 'big')
     checksum = (sum(body) & 0xFF).to_bytes(1, 'big')
@@ -74,13 +54,29 @@ def SetLedColor(r, g, b):
 
     if motor_port.is_open:
         motor_port.write(message)
-        print(f'Sent bytes: {[f"0x{byte:02x}" for byte in message]}')
+        #print(f'Sent bytes: {[f"0x{byte:02x}" for byte in message]}')
 
-def cycle_hues(brightness=1.0):
-    for hue in range(0, 360, 1):  # Change the step for different speed
-        r, g, b = hue_to_rgb(hue, brightness)
-        SendMessage(create_set_led_color_message(r, g, b))
-        time.sleep(0.001)  # Adjust delay for how fast you want to cycle
+def GetLedColor(msg_id):
+    message_type = msg_id.to_bytes(2, 'little')
+    body = bytearray([0, 0, 0])
+    body_size = (3).to_bytes(2, 'big')
+    checksum = (sum(body) & 0xFF).to_bytes(1, 'big')
+    message = message_type + body_size + body + checksum
+
+    if motor_port.is_open:
+        motor_port.write(message)
+        #print(f'Sent bytes: {[f"0x{byte:02x}" for byte in message]}')
+
+def SetLedState(msg_id, s):
+    message_type = msg_id.to_bytes(2, 'little')
+    body = bytearray([s])
+    body_size = (len(body)).to_bytes(2, 'big')
+    checksum = (sum(body) & 0xFF).to_bytes(1, 'big')
+    message = message_type + body_size + body + checksum
+
+    if motor_port.is_open:
+        motor_port.write(message)
+        #print(f'Sent bytes: {[f"0x{byte:02x}" for byte in message]}')
 
 try:
     motor_port = serial.Serial(SERIAL_PORT, 115200, timeout=1)
@@ -92,16 +88,18 @@ except Exception as e:
 listener_thread = threading.Thread(target=listen_serial, args=(motor_port,), daemon=True)
 listener_thread.start()
 
+print("Flashing Error")
+SetLedState(0x3001, 1)
+time.sleep(2)
+print("Setting LED state to solid")
+SetLedState(0x3001, 5)
+print("Setting LED state to blue")
+SetLedColor(0x3002, 0, 0, 255)
+time.sleep(2)
+GetLedColor(0x3003)
+time.sleep(2)
+print("Setting LED state to off")
+SetLedState(0x3002, 0)
 
-SendMessage(create_led_state_message(LedStates.SOLID))
 
-SendMessage(create_set_led_color_message(100, 0, 0))
-time.sleep(1)
-SendMessage(create_set_led_color_message(0, 100, 0))
-time.sleep(1)
-SendMessage(create_set_led_color_message(0, 0, 100))
-time.sleep(1)
-cycle_hues()
-cycle_hues()
-cycle_hues()
-SendMessage(create_set_led_color_message(0, 0, 0))
+time.sleep(2)

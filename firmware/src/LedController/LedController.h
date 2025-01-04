@@ -5,7 +5,7 @@
 #include "Task/Task.h"
 #include "FastLED.h"
 #include "MessageProcessor/MessageProcessor.hpp"
-#include "Messages.hpp"
+#include "Messages.h"
 
 #define FLASH_ERROR_EXEC_PERIOD 500
 #define ERROR_EXEC_PERIOD 500
@@ -17,7 +17,8 @@
 #define BLUE_HUE 170
 
 
-class AddrLedController : public ITask, public IInternalInterface {
+class AddrLedController : public ITask
+{
 private:
   uint16_t colorWheelAngle = 0;
   CRGB leds[1];
@@ -44,18 +45,14 @@ public:
     void SetRainbowBrightness(uint8_t brightness){
       ledConfig.rainbow_brightness = brightness;
     }
-
-    //messageHandlers
-    void HandleIncomingMsg(uint8_t* recv_bytes, uint32_t recv_bytes_size);
-    void HandleJsonMsg(uint8_t* recv_bytes, uint32_t recv_bytes_size);
-    void HandleByteMsg(uint8_t* recv_bytes, uint32_t recv_bytes_size);
-    
+  
     void SendMsg(uint8_t* send_bytes, uint32_t send_bytes_size);
 
     void SetLedState(LedStates state);
 
     void SetLEDColor(CHSV color);
     void SetLEDColor(CRGB color);
+    CRGB GetLedColor();
 
 };
 

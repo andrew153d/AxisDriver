@@ -13,17 +13,6 @@ executionPeriod = period;
     new_interface->SetProcessorInterface(this);
   }
 
-  void MessageProcessor::AddControllerInterface(IInternalInterface *new_interface, JsonMessageTypes message_type, MessageTypes low, MessageTypes high)
-  {
-    InterfaceLimits interface_to_add;
-    interface_to_add.interface = new_interface;
-    interface_to_add.type = message_type;
-    interface_to_add.highLimit = (uint16_t)high;
-    interface_to_add.lowLimit = (uint16_t)low;
-    controllerInterfaces.push_back(interface_to_add);
-    new_interface->SetProcessorInterface(this);
-  }
-
   void MessageProcessor::OnStart()
   {
   }
@@ -38,23 +27,7 @@ executionPeriod = period;
 
   void MessageProcessor::HandleJsonMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size)
   {
-    // DeserializationError error = deserializeJson(received_json, recv_bytes, 256);
-    // if (error)
-    // {
-    //     Serial.println("Error parsing json in motor controller");
-    //     return;
-    // }
-
-    // if (received_json.containsKey("mode"))
-    // {
-    //     String mode_string = received_json["mode"];
-
-    //     if (mode_string == "Solid")
-    //     {
-    //     }
-    // }
   }
-
 
   void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size)
   {
@@ -62,27 +35,40 @@ executionPeriod = period;
 
     //TODO: check for checksum
 
-    DEBUG_PRINTF("Received message type: %x\n", hdr->message_type);
+    //DEBUG_PRINTF("Received message type: 0x%x\n", hdr->message_type);
     
     switch(hdr->message_type)
     {
       case MessageTypes::SetLedColor:
       {
         SetLedColorMessage* msg = (SetLedColorMessage*)recv_bytes;
-        DEBUG_PRINTF("Setting LED color to: R=%d, G=%d, B=%d\n", msg->ledColor.r, msg->ledColor.g, msg->ledColor.b);
+        //DEBUG_PRINTF("Setting LED color to: R=%d, G=%d, B=%d\n", msg->ledColor.r, msg->ledColor.g, msg->ledColor.b);
         addrLedController.SetLEDColor(CRGB(msg->ledColor.r, msg->ledColor.g, msg->ledColor.b));
+      break;
+      }
+
+      case MessageTypes::GetLedColor:
+      {
+        GetLedColorMessage* msg = (GetLedColorMessage*)recv_bytes;
+        msg->header.message_type = MessageTypes::GetLedColor;
+        msg->header.body_size = sizeof(GetLedColorMessage::ledColor);
+        msg->ledColor.r = addrLedController.GetLedColor().r;
+        msg->ledColor.g = addrLedController.GetLedColor().g;
+        msg->ledColor.b = addrLedController.GetLedColor().b;
+        msg->footer.checksum = 0;
+        SendMsg(recv_bytes, sizeof(GetLedColorMessage));
       break;
       }
 
       case MessageTypes::SetLedState:
       {
         SetLedStateMessage* msg = (SetLedStateMessage*)recv_bytes;
-        DEBUG_PRINTF("Setting LED state to: %d\n", msg->ledState);
+        //DEBUG_PRINTF("Setting LED state to: %d\n", msg->ledState);
         addrLedController.SetLedState(msg->ledState);
       break;
       }
       default:
-      DEBUG_PRINTLN("Unable to handle message type");
+      DEBUG_PRINTF("Unable to handle message type: 0x%x", hdr->message_type);
       break;
     }
 

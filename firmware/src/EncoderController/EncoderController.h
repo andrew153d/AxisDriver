@@ -2,9 +2,9 @@
 #include <Arduino.h>
 #include "Task/Task.h"
 #include <Tlv493d.h>
-#include "Messages.hpp"
+#include "Messages.h"
 #include "MessageProcessor/MessageProcessor.hpp"
-class EncoderController : public ITask, public IEncoderInterface, public IInternalInterface
+class EncoderController : public ITask, public IEncoderInterface
 {
 private:
     static const uint32_t device_address = 0x5E;
