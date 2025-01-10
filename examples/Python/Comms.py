@@ -2,6 +2,7 @@ import serial
 import json
 import time
 import threading
+import struct
 
 class MessageTypes:
     # General Device Info
@@ -129,6 +130,33 @@ def SetU32(msg_id, value):
     checksum = (sum(body) & 0xFF).to_bytes(2, 'little')
     message = message_type + body_size + body + checksum    
     SendMessage(message)
+
+def SetDouble(msg_id, value):
+    message_type = msg_id.to_bytes(2, 'little')
+    body = bytearray(struct.pack('d', value))
+    #print(body)
+    #print(len(body))
+    body_size = (len(body)).to_bytes(2, 'little')
+    checksum = (sum(body) & 0xFF).to_bytes(2, 'little')
+    message = message_type + body_size + body + checksum
+    SendMessage(message)
+
+def GetDouble(msg_id):
+    global listener_active
+    listener_active = False  # Pause listener thread
+    message_type = msg_id.to_bytes(2, 'little')
+    body = bytearray(struct.pack('d', 0.0))
+    body_size = (len(body)).to_bytes(2, 'little')
+    checksum = (sum(body) & 0xFF).to_bytes(2, 'little')
+    message = message_type + body_size + body + checksum
+    SendMessage(message)
+    time.sleep(0.1)
+    response = WaitSerialMessage()
+    listener_active = True  # Resume listener thread
+    if response:
+        #print(response)
+        return struct.unpack('d', response[4:12])[0]
+    return None
 
 def SetLedColor(msg_id, r, g, b):
     message_type = msg_id.to_bytes(2, 'little')

@@ -3,7 +3,6 @@
 #include "Task/Task.h"
 #include <AccelStepper.h>
 #include "LedController/LedController.h"
-#include "MessageProcessor/MessageProcessor.hpp"
 #include "easyTMC2209.h"
 #include "wiring_private.h"
 #include "pid.h"
@@ -49,8 +48,8 @@ private:
     easyTMC2209 driver;
     PIDController pid;
     AccelStepper stepper;
-
-    ControlMode controlMode;
+    
+    MotorStates controlMode;
     String modeString = "";
     //data that holds encoder data
     IEncoderInterface *encoder_ptr = nullptr;
@@ -92,11 +91,14 @@ public:
     void OnStop();
     void OnRun();
 
-    void SetPositionTarget(uint32_t position);
-    void GetPositionTarget();
+    void SetMotorState(MotorStates state);
+    MotorStates GetMotorState();
 
-    void SetVelocityTarget(uint32_t velocity);
-    void GetVelocityTarget();
+    void SetPositionTarget(double position);
+    double GetPositionTarget();
+
+    void SetVelocityTarget(double velocity);
+    double GetVelocityTarget();
     
     void setEncoderValueSource(IEncoderInterface *encoder_value);
     uint32_t GetErrors();

@@ -2,6 +2,7 @@
 #include "DebugPrinter.h"
 #include "LedController/LedController.h"
 #include "FlashStorage/FlashStorage.h"
+#include "MotorController/MotorController.h"
 #include "Ethernet.h"
 MessageProcessor::MessageProcessor(uint32_t period)
 {
@@ -36,7 +37,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
 
   // TODO: check for checksum
 
-  // DEBUG_PRINTF("Received message type: 0x%x\n", hdr->message_type);
+  //DEBUG_PRINTF("Received message type: 0x%x\n", hdr->message_type);
 
   switch (hdr->message_type)
   {
@@ -157,6 +158,83 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     FlashStorage::GetMacAddress();
     msg->footer.checksum = 0;
     SendMsg(send_buffer, sizeof(MACAddressMessage));
+  }
+
+  case MessageTypes::SetMotorState:
+  {
+    SetMotorStateMessage *msg = (SetMotorStateMessage *)recv_bytes;
+    //DEBUG_PRINTF("Setting Motor State to: %d\n", msg->value);
+    motorController.SetMotorState((MotorStates)msg->value);
+    break;
+  }
+
+  case MessageTypes::GetMotorState:
+  {
+    GetMotorStateMessage *msg = (GetMotorStateMessage *)&send_buffer[0];
+    msg->header.message_type = MessageTypes::GetMotorState;
+    msg->header.body_size = sizeof(GetMotorStateMessage::value);
+    msg->value = (uint8_t)motorController.GetMotorState();
+    msg->footer.checksum = 0;
+    SendMsg(send_buffer, sizeof(GetMotorStateMessage));
+    //DEBUG_PRINTF("Sending Motor State: %d\n", (uint8_t)motorController.GetMotorState());
+    break;
+  }
+
+  case MessageTypes::SetMotorPosition:
+  {
+    SetMotorPositionMessage *msg = (SetMotorPositionMessage *)recv_bytes;
+    //DEBUG_PRINTF("Setting Motor Position to: %f\n", msg->value);
+    motorController.SetPositionTarget(msg->value);
+    break;
+  }
+
+  case MessageTypes::GetMotorPosition:
+  {
+    GetMotorPositionMessage *msg = (GetMotorPositionMessage *)&send_buffer[0];
+    msg->header.message_type = MessageTypes::GetMotorPosition;
+    msg->header.body_size = sizeof(GetMotorPositionMessage::value);
+    msg->value = motorController.GetPositionTarget();
+    msg->footer.checksum = 0;
+    SendMsg(send_buffer, sizeof(GetMotorPositionMessage));
+    //DEBUG_PRINTF("Sending Motor Position: %f\n", motorController.GetPositionTarget());
+    break;
+  }
+
+  case MessageTypes::SetMotorVelocity:
+  {
+    SetMotorVelocityMessage *msg = (SetMotorVelocityMessage *)recv_bytes;
+    motorController.SetVelocityTarget(msg->value);
+    //DEBUG_PRINTF("Setting Motor Velocity to: %d\n", msg->value);
+    break;
+  }
+
+  case MessageTypes::GetMotorVelocity:
+  {
+    GetMotorVelocityMessage *msg = (GetMotorVelocityMessage *)&send_buffer[0];
+    msg->header.message_type = MessageTypes::GetMotorVelocity;
+    msg->header.body_size = sizeof(GetMotorVelocityMessage::value);
+    msg->value = motorController.GetVelocityTarget();
+    msg->footer.checksum = 0;
+    SendMsg(send_buffer, sizeof(GetMotorVelocityMessage));
+    break;
+  }
+
+  case MessageTypes::SetMotorCurrent:
+  {
+    SetMotorCurrentMessage *msg = (SetMotorCurrentMessage *)recv_bytes;
+    //DEBUG_PRINTF("Setting Motor Current to: %d\n", msg->value);
+    break;
+  }
+
+  case MessageTypes::GetMotorCurrent:
+  {
+    GetMotorCurrentMessage *msg = (GetMotorCurrentMessage *)&send_buffer[0];
+    msg->header.message_type = MessageTypes::GetMotorCurrent;
+    msg->header.body_size = sizeof(GetMotorCurrentMessage::value);
+    msg->value = 0;
+    msg->footer.checksum = 0;
+    SendMsg(send_buffer, sizeof(GetMotorCurrentMessage));
+    break;
   }
 
   default:

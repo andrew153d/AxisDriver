@@ -40,20 +40,16 @@ enum class MessageTypes : uint16_t
     // Drive Configuration
 
     // Motor Driving
-    GetMotorPosition = 0x5001,
-    GetMotorVelocity = 0x5002,
-    GetMotorCurrent = 0x5003,
+    SetMotorState = 0x5000,
+    GetMotorState = 0x5001,
 
-    SetMotorPosition = 0x5004,
-    SetMotorVelocity = 0x5005,
-    SetMotorCurrent = 0x5006,
+    GetMotorPosition = 0x5010,
+    GetMotorVelocity = 0x5012,
+    GetMotorCurrent = 0x5013,
 
-    SetControlMode = 0x5007,
-    GetControlMode = 0x5008,
-
-    GetMotorStatus = 0x5009,
-    StartMotor = 0x500A,
-
+    SetMotorPosition = 0x5014,
+    SetMotorVelocity = 0x5015,
+    SetMotorCurrent = 0x5016,
 };
 
 PACKEDSTRUCT Header
@@ -191,4 +187,19 @@ PACKEDSTRUCT SetEthernetPortMessage
 
 // *********************** Motor interface *********************** //
 
+enum class MotorStates : uint8_t{
+  OFF,
+  POSITION,
+  VELOCITY,
+  IDLE
+};
 
+typedef U8Message SetMotorStateMessage;
+typedef U8Message GetMotorStateMessage;
+
+typedef DoubleMessage SetMotorPositionMessage;
+typedef DoubleMessage GetMotorPositionMessage;
+typedef DoubleMessage SetMotorVelocityMessage;
+typedef DoubleMessage GetMotorVelocityMessage;
+typedef DoubleMessage SetMotorCurrentMessage;
+typedef DoubleMessage GetMotorCurrentMessage;

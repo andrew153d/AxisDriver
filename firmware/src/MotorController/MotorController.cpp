@@ -59,7 +59,7 @@ void MotorController::OnStart()
 
   driver.setup(serial_stream, 115200, TMC2209base::SerialAddress::SERIAL_ADDRESS_0);
 
-  controlMode = ControlMode::MOTOR_OFF;
+  SetMotorState(MotorStates::OFF);
   start_millis = millis();
   target_position = 0;
 
@@ -81,35 +81,69 @@ void MotorController::OnRun()
 
   switch (controlMode)
   {
-  case MOTOR_OFF:
-    stepper.disableOutputs();
-    controlMode = IDLE;
-    DEBUG_PRINTLN("Turning off motor");
+  case MotorStates::OFF:
     break;
-  case POSITION:
+  case MotorStates::POSITION:
     stepper.run();
     if (stepper.distanceToGo() == 0)
-      controlMode = MOTOR_OFF;
+      stepper.disableOutputs();
     break;
-  case VELOCITY:
+  case MotorStates::VELOCITY:
     stepper.runSpeed();
     if(target_velocity_duration!=0 && (millis()-target_velocity_timer)>target_velocity_duration)
-      controlMode = MOTOR_OFF;
+      controlMode = MotorStates::OFF;
     break;
-  case TORQUE:
-    break;
-  case IDLE:
-  case UNKNOWN:
+  case MotorStates::IDLE:
     break;
   }
 }
 
-void MotorController::SetPositionTarget(uint32_t position)
+void MotorController::SetMotorState(MotorStates state)
+{
+  controlMode = state;
+  switch(controlMode){
+    case MotorStates::OFF:
+      stepper.disableOutputs();
+      break;
+    case MotorStates::POSITION:
+      stepper.enableOutputs();
+      break;
+    case MotorStates::VELOCITY:
+      stepper.enableOutputs();
+      break;
+    case MotorStates::IDLE:
+      stepper.disableOutputs();
+      break;
+  }
+}
+
+MotorStates MotorController::GetMotorState()
+{
+  return controlMode;
+}
+
+void MotorController::SetPositionTarget(double position)
 {
   stepper.enableOutputs();
   target_position = position;
   stepper.moveTo(position);
-  controlMode = ControlMode::POSITION;
+}
+
+double MotorController::GetPositionTarget()
+{
+  return target_position;
+}
+
+void MotorController::SetVelocityTarget(double velocity)
+{
+  stepper.enableOutputs();
+  target_velocity = velocity;
+  stepper.setSpeed(velocity);
+}
+
+double MotorController::GetVelocityTarget()
+{
+  return target_velocity;
 }
 
 void MotorController::setEncoderValueSource(IEncoderInterface *encoder_value)
