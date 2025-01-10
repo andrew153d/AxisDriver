@@ -130,5 +130,27 @@ def SetU32(msg_id, value):
     message = message_type + body_size + body + checksum    
     SendMessage(message)
 
+def SetLedColor(msg_id, r, g, b):
+    message_type = msg_id.to_bytes(2, 'little')
+    body = bytearray([r, g, b])
+    body_size = (3).to_bytes(2, 'big')
+    checksum = (sum(body) & 0xFF).to_bytes(1, 'big')
+    message = message_type + body_size + body + checksum
+    SendMessage(message)
+
+def GetLedColor(msg_id):
+    global listener_active
+    listener_active = False  # Pause listener thread
+    message_type = msg_id.to_bytes(2, 'little')
+    body = bytearray([0, 0, 0])
+    body_size = (3).to_bytes(2, 'big')
+    checksum = (sum(body) & 0xFF).to_bytes(1, 'big')
+    message = message_type + body_size + body + checksum
+    SendMessage(message)
+    time.sleep(0.1)
+    response = WaitSerialMessage()
+    listener_active = True  # Resume listener thread
+    return response
+
 def print_bytes(byte_array):
     print("".join(f"{byte:02x}" for byte in byte_array))
