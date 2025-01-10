@@ -67,19 +67,7 @@ void SerialTextInterface::HandleIncomingMsg(uint8_t* recv_bytes, uint32_t recv_b
 }
 
 void SerialTextInterface::SendMsg(uint8_t* send_bytes, uint32_t send_bytes_size) {
-    for (uint32_t i = 0; i < send_bytes_size; ++i) {
-        uint8_t byte = send_bytes[i];
-        
-        // Print each byte as a two-digit hexadecimal number
-        // Serial.print(byte, HEX) prints the byte in hexadecimal format.
-        // Using "print" with HEX format directly might not pad single digits with leading zero.
-        
-        // Ensure we have two digits for each byte
-        if (byte < 16) {
-            Serial.print('0');  // Print leading zero if necessary
-        }
-        Serial.print(byte, HEX);  // Print the byte as hexadecimal
-    }
+    Serial.write(send_bytes, send_bytes_size);
     
     Serial.println();  // Optionally add a newline at the end
 }

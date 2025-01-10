@@ -2,6 +2,7 @@
 #include <Wire.h>
 #include "FlashStorage.h"
 
+#include <Ethernet.h>
 namespace FlashStorage
 {
     bool has_read_mac_address = false;
@@ -21,14 +22,14 @@ namespace FlashStorage
 
     static char macStr[18];
     static char snStr[32];
-    
-    void PrintBuffer(uint8_t* buf)
+
+    void PrintBuffer(uint8_t *buf)
     {
-     for (int i = 0; i < EEPROM_SIZE_BYTES; i ++)
+        for (int i = 0; i < EEPROM_SIZE_BYTES; i++)
         {
-            if(i%16 == 0)
+            if (i % 16 == 0)
                 DEBUG_PRINTLN();
-            DEBUG_PRINTF("%2x ", buf[i]);            
+            DEBUG_PRINTF("%2x ", buf[i]);
         }
         DEBUG_PRINTLN("");
     }
@@ -40,12 +41,18 @@ namespace FlashStorage
             FlashStorage::readBytes(i, &saved_settings_buffer[i], 16);
         }
         memcpy(&current_settings_buffer[0], &saved_settings_buffer[0], EEPROM_SIZE_BYTES);
-        
-        //PrintBuffer(&saved_settings_buffer[0]);
-        //DEBUG_PRINTF("Mac Address: %s\n", GetMacAddressString());
-        //DEBUG_PRINTF("Serial Number: %s\n", GetSerialNumberString());
-        //DEBUG_PRINTF("Port: %x\n", GetEthernetSettings()->port);
-        //DEBUG_PRINTF("Ip from flash %x\n", GetEthernetSettings()->ip_address);
+
+        // PrintBuffer(&saved_settings_buffer[0]);
+        //  DEBUG_PRINTF("Mac Address: %s\n", GetMacAddressString());
+        //  DEBUG_PRINTF("Serial Number: %s\n", GetSerialNumberString());
+        //  DEBUG_PRINTF("Port: %x\n", GetEthernetSettings()->port);
+        //  DEBUG_PRINTF("Ip from flash %x\n", GetEthernetSettings()->ip_address);
+        //  IPAddress ips = IPAddress(GetEthernetSettings()->ip_address);
+        //  DEBUG_PRINTLN(ips);
+        //  char ipStr[16];
+        //  uint32_t ip = GetEthernetSettings()->ip_address;
+        //  snprintf(ipStr, sizeof(ipStr), "%d.%d.%d.%d", (ip >> 24) & 0xFF, (ip >> 16) & 0xFF, (ip >> 8) & 0xFF, ip & 0xFF);
+        //  DEBUG_PRINTF("Ip from flash %s\n", ipStr);
     }
 
     void WaitWriteCycle()
@@ -201,6 +208,27 @@ namespace FlashStorage
         return &FlashStorageData->MotorSettings;
     }
 
+    uint8_t *GetBuffer()
+    {
+        return &current_settings_buffer[0];
+    }
+    uint32_t last_check_time = 0;
+    void Task()
+    {
+        if (millis() - last_check_time > 5000)
+        {
+            last_check_time = millis();
+            for (uint16_t i = 0; i < EEPROM_SIZE_BYTES; i++)
+            {
+                if (current_settings_buffer[i] != saved_settings_buffer[i])
+                {
+                    DEBUG_PRINTLN("found difference, need to write flash");
+                    return;
+                }
+            }
+        }
+    }
+
     void WriteFlash()
     {
         pages_write_mask = 0;
@@ -216,12 +244,14 @@ namespace FlashStorage
         {
             return;
         }
-
+        DEBUG_PRINTF("Writing pages: %x\n", pages_write_mask);
         for (uint16_t i = 0; i < 16; i++)
         {
             if ((pages_write_mask >> i) & 0x1 > 0)
             {
-                DEBUG_PRINTF("Writing page %d\n", i);
+                // DEBUG_PRINTF("Writing page %d\n", i);
+                // DEBUG_PRINTF("%x, %x, %x\n", &current_settings_buffer[(i * 16)+0], &current_settings_buffer[(i * 16)+1], &current_settings_buffer[(i * 16)+2]);
+
                 FlashStorage::writePage(i * 16, &current_settings_buffer[i * 16], 16);
                 FlashStorage::readBytes(i * 16, &saved_settings_buffer[i * 16], 16);
             }

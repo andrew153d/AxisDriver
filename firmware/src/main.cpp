@@ -90,6 +90,12 @@ void setup()
   }
 
   FlashStorage::Init();
+  //EthernetSettingsStruct* s = FlashStorage::GetEthernetSettings();
+  //DEBUG_PRINTF("%x, %x\n", s->ip_address, s->port);  
+  //s->port = 0x2ee1;
+  //s->ip_address = 0x630CA8C0;
+  //FlashStorage::WriteFlash();
+  //DEBUG_PRINTF("ip: %x\n", s->ip_address);
 
   addrLedController.SetLEDColor(CRGB(0x000000));
 
@@ -121,18 +127,6 @@ void setup()
   motorController.Start();
   motorController.setEncoderValueSource(&encoderController);
 
-  // uint8_t b = 0;
-  // FlashStorage::readBytes(0x11, &b, 1);
-  // b++;
-  // FlashStorage::writeRegister(0x11, b);
-  // DEBUG_PRINTLN(b);
-
-  EthernetSettingsStruct* s = FlashStorage::GetEthernetSettings();
-  //DEBUG_PRINTF("%x, %x", s->ip_address, s->port);  
-  //s->port = 0x2ee1; //12001;
-  //s->ip_address = 0x6F0CA8C0;
-  //FlashStorage::WriteFlash();
-  //DEBUG_PRINTF("ip: %x\n", s->ip_address);
   EvaluateHatType();
 }
 
@@ -157,4 +151,5 @@ void EvaluateHatType()
 void loop()
 {
   manager.RunTasks();
+  FlashStorage::Task();
 }

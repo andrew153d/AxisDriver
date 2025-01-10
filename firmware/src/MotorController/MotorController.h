@@ -91,6 +91,12 @@ public:
     void OnStart();
     void OnStop();
     void OnRun();
+
+    void SetPositionTarget(uint32_t position);
+    void GetPositionTarget();
+
+    void SetVelocityTarget(uint32_t velocity);
+    void GetVelocityTarget();
     
     void setEncoderValueSource(IEncoderInterface *encoder_value);
     uint32_t GetErrors();

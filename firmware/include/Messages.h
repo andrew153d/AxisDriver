@@ -1,5 +1,7 @@
 #pragma once
 
+#define FIRMWARE_VERSION "1.0.0.0"
+
 #define PACKEDSTRUCT struct __attribute__((packed))
 
 typedef void (*HandleIncomingMsgPtrType)(uint8_t *recv_bytes, uint32_t recv_bytes_size);
@@ -68,20 +70,52 @@ PACKEDSTRUCT Footer
 const uint32_t HEADER_SIZE = sizeof(Header);
 const uint32_t FOOTER_SIZE = sizeof(Footer);
 
-PACKEDSTRUCT GetVersionMessage
+PACKEDSTRUCT U8Message
 {
     Header header;
+    uint8_t value;
     Footer footer;
 };
 
-PACKEDSTRUCT VersionMessage
+PACKEDSTRUCT S8Message
 {
     Header header;
-    char version[32] = {0};
+    int8_t value;
     Footer footer;
 };
 
+PACKEDSTRUCT U32Message
+{
+    Header header;
+    uint32_t value;
+    Footer footer;
+};
 
+PACKEDSTRUCT S32Message
+{
+    Header header;
+    int32_t value;
+    Footer footer;
+};
+
+PACKEDSTRUCT DoubleMessage
+{
+    Header header;
+    double value;
+    Footer footer;
+};
+// *********************** Settings and Configuration *********************** //
+
+typedef U32Message VersionMessage;
+typedef U8Message I2CAddressMessage;
+typedef U32Message IPAddressMessage;
+typedef U32Message EthernetPortMessage;
+PACKEDSTRUCT MACAddressMessage
+{
+    Header header;
+    uint8_t mac[6];
+    Footer footer;
+};
 
 // *********************** LED interface *********************** //
 
@@ -118,7 +152,11 @@ enum LedStates : uint8_t{
   BOOTUP,
   RAINBOW,
   SOLID,
+  MAX_VALUE
 };
+
+typedef U8Message SetLedStateMessage;
+typedef U8Message GetLedStateMessage;
 
 PACKEDSTRUCT SetLedColorMessage
 {
@@ -134,14 +172,8 @@ PACKEDSTRUCT GetLedColorMessage
     Footer footer;
 };
 
-PACKEDSTRUCT SetLedStateMessage
-{
-    Header header;
-    LedStates ledState;
-    Footer footer;
-};
-
 // *********************** Ethernet interface *********************** //
+
 
 PACKEDSTRUCT SetEthernetIpAddressMessage
 {

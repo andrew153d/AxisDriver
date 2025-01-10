@@ -62,7 +62,9 @@ namespace FlashStorage
     EthernetSettingsStruct* GetEthernetSettings();
     I2CSettingsStruct* GetI2CSettings();
     MotorSettingsStruct* GetMotorSettings();
+    uint8_t* GetBuffer();
 
     void WriteFlash();
+    void Task();
 
 }

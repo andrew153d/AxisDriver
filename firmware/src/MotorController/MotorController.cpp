@@ -104,6 +104,14 @@ void MotorController::OnRun()
   }
 }
 
+void MotorController::SetPositionTarget(uint32_t position)
+{
+  stepper.enableOutputs();
+  target_position = position;
+  stepper.moveTo(position);
+  controlMode = ControlMode::POSITION;
+}
+
 void MotorController::setEncoderValueSource(IEncoderInterface *encoder_value)
 {
   encoder_ptr = encoder_value;
@@ -138,16 +146,6 @@ void MotorController::PrintErrorsToSerial()
   DEBUG_PRINTF("reserved1: %u\n", stat.reserved1);
   DEBUG_PRINTF("stealth_chop_mode: %u\n", stat.stealth_chop_mode);
   DEBUG_PRINTF("standstill: %u\n", stat.standstill);
-}
-
-ControlMode MotorController::GetModeFromString(String mode)
-{
-  if (mode == "SetPosition")
-    return ControlMode::POSITION;
-  if (mode == "SetVelocity")
-    return ControlMode::VELOCITY;
-
-  return ControlMode::UNKNOWN;
 }
 
 MotorController motorController(0);

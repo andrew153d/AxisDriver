@@ -25,7 +25,7 @@ void AxisEthernet::OnStart()
     digitalWrite(PMODE2, HIGH);
 
     Ethernet.init(nCS);
-
+    //DEBUG_PRINTF("Initializing ethernet with ip 0x%X\n", FlashStorage::GetEthernetSettings()->ip_address);
     Ethernet.begin(FlashStorage::GetMacAddress(), IPAddress(FlashStorage::GetEthernetSettings()->ip_address));
 
     // Check for Ethernet hardware present
@@ -48,8 +48,10 @@ void AxisEthernet::OnStart()
     //     // Serial.println("Detected Ethernet cable");
     // }
     Udp.begin(FlashStorage::GetEthernetSettings()->port);
-
-    DEBUG_PRINTF("Ip Address: %X, Port: %X\n", Ethernet.localIP(), Udp.localPort());
+    DEBUG_PRINT("Ip Address: ");
+    DEBUG_PRINTLN(Ethernet.localIP());
+    DEBUG_PRINTF("Port: 0x%x\n", Udp.localPort());
+    //DEBUG_PRINTF("Ip Address: %x, Port: %X\n", Ethernet.localIP(), Udp.localPort());
     //DEBUG_PRINTLN(Ethernet.localIP());
     //interrupts();
     //attachInterrupt(AUX4, HandleInturrupts, RISING);
