@@ -54,8 +54,8 @@ void MotorController::OnStart()
   stepper.setEnablePin(MOTOR_EN);
   stepper.setPinsInverted(true, false, true);
   stepper.disableOutputs();
-  stepper.setAcceleration(800 * 64);
-  stepper.setMaxSpeed(2500 * 64);
+  stepper.setAcceleration(100 * 64);
+  stepper.setMaxSpeed(100 * 64);
 
   driver.setup(serial_stream, 115200, TMC2209base::SerialAddress::SERIAL_ADDRESS_0);
 
@@ -103,6 +103,7 @@ void MotorController::SetMotorState(MotorStates state)
   controlMode = state;
   switch(controlMode){
     case MotorStates::OFF:
+      DEBUG_PRINTLN("Motor OFF");
       stepper.disableOutputs();
       break;
     case MotorStates::POSITION:
@@ -120,6 +121,13 @@ void MotorController::SetMotorState(MotorStates state)
 MotorStates MotorController::GetMotorState()
 {
   return controlMode;
+}
+
+void MotorController::SetPositionTargetRelative(double position)
+{
+  stepper.enableOutputs();
+  target_position += position;
+  stepper.moveTo(target_position);
 }
 
 void MotorController::SetPositionTarget(double position)

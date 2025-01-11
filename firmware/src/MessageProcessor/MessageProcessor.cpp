@@ -180,7 +180,15 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     break;
   }
 
-  case MessageTypes::SetMotorPosition:
+  case MessageTypes::SetTargetPositionRelative:
+  {
+    SetMotorPositionMessage *msg = (SetMotorPositionMessage *)recv_bytes;
+    motorController.SetPositionTargetRelative(msg->value);
+    //DEBUG_PRINTF("Setting Motor Position Relative to: %f\n", msg->value);
+    break;
+  }
+
+  case MessageTypes::SetTargetPosition:
   {
     SetMotorPositionMessage *msg = (SetMotorPositionMessage *)recv_bytes;
     //DEBUG_PRINTF("Setting Motor Position to: %f\n", msg->value);
@@ -188,10 +196,10 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     break;
   }
 
-  case MessageTypes::GetMotorPosition:
+  case MessageTypes::GetTargetPosition:
   {
     GetMotorPositionMessage *msg = (GetMotorPositionMessage *)&send_buffer[0];
-    msg->header.message_type = MessageTypes::GetMotorPosition;
+    msg->header.message_type = MessageTypes::GetTargetPosition;
     msg->header.body_size = sizeof(GetMotorPositionMessage::value);
     msg->value = motorController.GetPositionTarget();
     msg->footer.checksum = 0;

@@ -95,6 +95,7 @@ public:
     MotorStates GetMotorState();
 
     void SetPositionTarget(double position);
+    void SetPositionTargetRelative(double position);
     double GetPositionTarget();
 
     void SetVelocityTarget(double velocity);

@@ -13,9 +13,10 @@ class MessageTypes:
     GetLedColor = 0x3003
     SetMotorState = 0x5000
     GetMotorState = 0x5001
-    GetMotorPosition = 0x5010
+    GetTargetPosition = 0x5010
     GetMotorVelocity = 0x5012
     GetMotorCurrent = 0x5013
-    SetMotorPosition = 0x5014
-    SetMotorVelocity = 0x5015
-    SetMotorCurrent = 0x5016
+    SetTargetPosition = 0x5014
+    SetTargetPositionRelative = 0x5015
+    SetMotorVelocity = 0x5016
+    SetMotorCurrent = 0x5017
