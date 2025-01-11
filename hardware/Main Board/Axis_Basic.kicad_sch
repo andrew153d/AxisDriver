@@ -12551,7 +12551,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "24AA02T-I/OT"
+		(property "Value" "AT24MAC402"
 			(at 246.38 66.0399 0)
 			(effects
 				(font
@@ -18274,7 +18274,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "	MMSZ5254B"
+		(property "Value" "MMSZ5254B"
 			(at 64.77 43.18 90)
 			(effects
 				(font

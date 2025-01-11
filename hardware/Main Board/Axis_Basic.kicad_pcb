@@ -212,7 +212,7 @@
 	(net 63 "unconnected-(U3-PB22{slash}S1.2{slash}S5.2-Pad49)")
 	(net 64 "AUX4")
 	(net 65 "unconnected-(U3-PA19{slash}S1.3{slash}S3.3-Pad38)")
-	(net 66 "unconnected-(U3-PB15{slash}S4.3-Pad28)")
+	(net 66 "unconnected-(U3-PB13{slash}S4.1-Pad26)")
 	(net 67 "unconnected-(U3-PB17{slash}S5.1-Pad40)")
 	(net 68 "AUX3")
 	(net 69 "unconnected-(U3-PB23{slash}S1.3{slash}S5.3-Pad50)")
@@ -1398,7 +1398,7 @@
 				)
 			)
 		)
-		(property "Value" "0.33u"
+		(property "Value" "1u"
 			(at 0 1.16 90)
 			(layer "F.Fab")
 			(uuid "828710c7-3052-40b5-8557-3065430e1e51")
@@ -5538,7 +5538,7 @@
 				)
 			)
 		)
-		(property "Value" "24AA02E-OT"
+		(property "Value" "AT24MAC402"
 			(at 0 2.4 0)
 			(layer "F.Fab")
 			(uuid "10a7ab24-8bd8-44cc-a405-8661507881da")
@@ -7205,7 +7205,7 @@
 				)
 			)
 		)
-		(property "Value" "300"
+		(property "Value" "100"
 			(at 0 1.17 90)
 			(layer "F.Fab")
 			(uuid "175d81ac-5247-47da-8561-3b1157dd3a0e")
@@ -10302,7 +10302,7 @@
 				)
 			)
 		)
-		(property "Value" "	MMSZ5254B"
+		(property "Value" "MMSZ5254B"
 			(at 0 2.1 0)
 			(layer "F.Fab")
 			(uuid "8508f8df-5b65-4ff5-b7ff-cf5caa6ac58d")
@@ -13227,7 +13227,7 @@
 			(size 0.3 1.475)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(roundrect_rratio 0.25)
-			(net 56 "USR_LED")
+			(net 66 "unconnected-(U3-PB13{slash}S4.1-Pad26)")
 			(pinfunction "PB13/S4.1")
 			(pintype "bidirectional")
 			(uuid "8b593343-9fb6-4c4a-928f-0f7d83622167")
@@ -13247,9 +13247,9 @@
 			(size 0.3 1.475)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(roundrect_rratio 0.25)
-			(net 66 "unconnected-(U3-PB15{slash}S4.3-Pad28)")
+			(net 56 "USR_LED")
 			(pinfunction "PB15/S4.3")
-			(pintype "bidirectional+no_connect")
+			(pintype "bidirectional")
 			(uuid "c8b373d3-9dff-47e3-8e89-53758e152cf6")
 		)
 		(pad "29" smd roundrect
