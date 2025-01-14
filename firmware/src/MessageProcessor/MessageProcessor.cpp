@@ -180,6 +180,24 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     break;
   }
 
+  case MessageTypes::SetMotorBrake:
+  {
+    SetMotorBrakeMessage *msg = (SetMotorBrakeMessage* )&recv_bytes[0];
+    motorController.SetMotorBraking((MotorBrake)msg->value);
+  }
+
+  case MessageTypes::SetMaxSpeed:
+  {
+    SetMaxSpeedMessage *msg = (SetMaxSpeedMessage*)&recv_bytes[0];
+    motorController.SetMaxSpeed(msg->value);
+  }
+
+  case MessageTypes::SetAcceleration:
+  {
+    SetAccelerationMessage *msg = (SetAccelerationMessage*)&recv_bytes[0];
+    motorController.SetAcceleration(msg->value);
+  }
+
   case MessageTypes::SetTargetPositionRelative:
   {
     SetMotorPositionMessage *msg = (SetMotorPositionMessage *)recv_bytes;

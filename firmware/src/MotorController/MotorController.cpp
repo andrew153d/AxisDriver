@@ -15,6 +15,110 @@ bool UserButtonPressed()
   return !digitalRead(USR_INPUT);
 }
 
+/*
+Future implementations should totally implement this
+https://forum.arduino.cc/t/samd51-dac-using-dma-seems-too-fast/678418/6
+
+#define HWORDS 4000
+uint16_t data[HWORDS];
+float phase = 3.14159 * 2. / HWORDS;
+int i;
+static DmacDescriptor descriptor1 __attribute__((aligned(16)));
+void dma_init() {
+
+  static DmacDescriptor descriptor __attribute__((aligned(16)));
+  static DmacDescriptor descriptor1 __attribute__((aligned(16)));
+  static DmacDescriptor wrb __attribute__((aligned(16)));
+  static uint32_t chnl0 = 0;  // DMA channel
+  DMAC->BASEADDR.reg = (uint32_t)&descriptor1;
+  DMAC->WRBADDR.reg = (uint32_t)&wrb;
+  DMAC->CTRL.bit.LVLEN0 = 1 ;
+  DMAC->CTRL.bit.LVLEN1 = 1 ;
+  DMAC->CTRL.bit.LVLEN2 = 1 ;
+  DMAC->CTRL.bit.LVLEN3 = 1 ;
+  DMAC->CTRL.bit.DMAENABLE = 1;
+  DMAC->Channel[0].CHCTRLA.reg = DMAC_CHCTRLA_TRIGSRC(0x49) |   // DAC DATA trigger
+                                 DMAC_CHCTRLA_TRIGACT_BURST;    // Burst transfers
+  descriptor1.DESCADDR.reg = (uint32_t) &descriptor1;
+  descriptor1.BTCTRL.bit.VALID    = 0x1; //Its a valid channel
+  descriptor1.BTCTRL.bit.BEATSIZE = 0x1;  // HWORD.
+  descriptor1.BTCTRL.bit.SRCINC   = 0x1;   //Source increment is enabled
+  descriptor1.BTCTRL.bit.DSTINC   = 0x0;   //Destination increment disabled
+  descriptor1.BTCTRL.bit.BLOCKACT = 0x2;   //Suspend after block complete.
+  // ("Burst" size will be 1 "beat" = 1 HWORD, by default)
+  descriptor1.BTCNT.reg           = HWORDS;   //HWORDS points to send
+  descriptor1.SRCADDR.reg         = (uint32_t)(&data[HWORDS]); //send from the data vevtor
+  descriptor1.DSTADDR.reg         = (uint32_t)&DAC->DATA[1].reg;   //to the DAC output
+  // start channel
+  DMAC ->Channel[0].CHCTRLA.bit.ENABLE = 0x1;     //OK
+  DMAC->CTRL.bit.DMAENABLE = 1;
+}
+
+void dac_init() {
+ 
+ GCLK->GENCTRL[7].reg = GCLK_GENCTRL_DIV(4) |       // Divide the 
+48MHz clock source by divisor 4: 48MHz/4 = 12MHz (max for DAC)
+                         GCLK_GENCTRL_GENEN |        // Enable GCLK7
+                         GCLK_GENCTRL_SRC_DFLL;      // Select 48MHz DFLL clock source
+
+  while (GCLK->SYNCBUSY.bit.GENCTRL7);
+  GCLK->PCHCTRL[42].reg = GCLK_PCHCTRL_CHEN |        // Enable the DAC peripheral channel
+                          GCLK_PCHCTRL_GEN_GCLK7;    // Connect generic clock 7 to DAC
+  MCLK->APBDMASK.bit.DAC_ = 1;
+  DAC->CTRLA.bit.SWRST = 1;
+  while (DAC->CTRLA.bit.SWRST);
+  DAC->DACCTRL[1].reg = DAC_DACCTRL_REFRESH(2) |
+                        DAC_DACCTRL_CCTRL_CC12M |
+                        DAC_DACCTRL_ENABLE
+                        //                        | DAC_DACCTRL_FEXT
+                        ;
+  DAC_DACCTRL_LEFTADJ;
+  DAC->CTRLA.reg = DAC_CTRLA_ENABLE;
+  while (DAC->SYNCBUSY.bit.ENABLE);
+  while (!DAC->STATUS.bit.READY1);
+  PORT->Group[0].DIRSET.reg = (1 << 2);
+  PORT->Group[0].PINCFG[5].bit.PMUXEN = 1;
+  PORT->Group[0].PMUX[1].bit.PMUXE = 1;
+}
+
+void setup() {
+  for (i = 0; i < HWORDS; i++) {
+    data[i] = 4 * (sinf(i * phase) * 510.0f + 512.0f); //Make a single-period sine wave.
+  }
+#ifdef ANALOGWRITESQUARE
+  //  for (i = 0; i < 100000; i++) {
+  while (0) {
+    analogWrite(A0, 999);
+    delayMicroseconds(100);
+    analogWrite(A0, 0);
+    delayMicroseconds(100);
+  }
+#endif
+
+
+#ifdef ANALOGWRITERAMP
+  while (1) {
+    i++;
+    analogWrite(A0, i & 0x3FF);
+  }
+#endif
+  dac_init();
+  dma_init();
+}
+
+//#define ANALOGWRITESINE 1
+void loop() {
+#ifdef ANALOGWRITESINE
+  for (i = 0; i < HWORDS; i++) {
+    analogWrite(A0, data[i]);
+  }
+#endif
+  DMAC ->Channel[0].CHCTRLB.reg = 0x2;     // resume
+  delayMicroseconds(8000);
+}
+
+*/
+
 void MotorController::CheckForErrors()
 {
   motorErrors.bits.TMC_lost_comms = (driver.getVersion() == 0);
@@ -54,11 +158,12 @@ void MotorController::OnStart()
   stepper.setEnablePin(MOTOR_EN);
   stepper.setPinsInverted(true, false, true);
   stepper.disableOutputs();
-  stepper.setAcceleration(100 * 64);
+  stepper.setAcceleration(400 * 64);
   stepper.setMaxSpeed(100 * 64);
 
   driver.setup(serial_stream, 115200, TMC2209base::SerialAddress::SERIAL_ADDRESS_0);
-
+  //driver.setStandstillMode(TMC2209base::StandstillMode::BRAKING);
+  //driver.setStandstillMode(TMC2209base::StandstillMode::BRAKING);
   SetMotorState(MotorStates::OFF);
   start_millis = millis();
   target_position = 0;
@@ -85,8 +190,8 @@ void MotorController::OnRun()
     break;
   case MotorStates::POSITION:
     stepper.run();
-    if (stepper.distanceToGo() == 0)
-      stepper.disableOutputs();
+    //if (stepper.distanceToGo() == 0)
+    //  stepper.disableOutputs();
     break;
   case MotorStates::VELOCITY:
     stepper.runSpeed();
@@ -103,7 +208,6 @@ void MotorController::SetMotorState(MotorStates state)
   controlMode = state;
   switch(controlMode){
     case MotorStates::OFF:
-      DEBUG_PRINTLN("Motor OFF");
       stepper.disableOutputs();
       break;
     case MotorStates::POSITION:
@@ -123,16 +227,48 @@ MotorStates MotorController::GetMotorState()
   return controlMode;
 }
 
+void MotorController::SetMotorBraking(MotorBrake brake)
+{
+  motorBrake = brake;
+  driver.setStandstillMode((TMC2209base::StandstillMode)brake);
+  DEBUG_PRINTF("Setting Motor Brake: %d\n", brake);
+}
+
+MotorBrake MotorController::GetMotorBraking()
+{
+  return (MotorBrake)driver.pwm_config_.freewheel;
+}
+
+void MotorController::SetMaxSpeed(uint32_t spd)
+{
+  stepper.setMaxSpeed(spd);
+}
+
+uint32_t MotorController::GetMaxSpeed()
+{
+  return stepper.maxSpeed();
+}
+
+void MotorController::SetAcceleration(uint32_t acl)
+{
+  stepper.setAcceleration(acl);
+}
+
+uint32_t MotorController::GetAcceleration()
+{
+  return stepper.acceleration();
+}
+
 void MotorController::SetPositionTargetRelative(double position)
 {
-  stepper.enableOutputs();
+  SetMotorState(MotorStates::POSITION);
   target_position += position;
   stepper.moveTo(target_position);
 }
 
 void MotorController::SetPositionTarget(double position)
 {
-  stepper.enableOutputs();
+  SetMotorState(MotorStates::POSITION);
   target_position = position;
   stepper.moveTo(position);
 }

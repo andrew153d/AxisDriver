@@ -43,6 +43,16 @@ enum class MessageTypes : uint16_t
     SetMotorState = 0x5000,
     GetMotorState = 0x5001,
 
+    SetMotorBrake = 0x5004,
+    GetMotorBrake = 0x5005,
+
+    SetMaxSpeed = 0x5006,
+    GetMaxSpeed = 0x5007,
+
+    SetAcceleration = 0x5008,
+    GetAcceleration = 0x5009,
+
+
     GetTargetPosition = 0x5010,
     GetMotorVelocity = 0x5012,
     GetMotorCurrent = 0x5013,
@@ -195,8 +205,24 @@ enum class MotorStates : uint8_t{
   IDLE
 };
 
+enum class MotorBrake : uint8_t{
+    NORMAL = 0,
+    FREEWHEELING = 1,
+    STRONG_BRAKING = 2,
+    BRAKING = 3,
+};
+
 typedef U8Message SetMotorStateMessage;
 typedef U8Message GetMotorStateMessage;
+
+typedef U8Message SetMotorBrakeMessage;
+typedef U8Message GetMotorBrakeMessage;
+
+typedef U32Message SetAccelerationMessage;
+typedef U32Message GetAccelerationMessage;
+
+typedef U32Message SetMaxSpeedMessage;
+typedef U32Message GetMaxSpeedMessage;
 
 typedef DoubleMessage SetMotorPositionMessage;
 typedef DoubleMessage GetMotorPositionMessage;

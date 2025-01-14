@@ -50,6 +50,7 @@ private:
     AccelStepper stepper;
     
     MotorStates controlMode;
+    MotorBrake motorBrake;
     String modeString = "";
     //data that holds encoder data
     IEncoderInterface *encoder_ptr = nullptr;
@@ -93,6 +94,15 @@ public:
 
     void SetMotorState(MotorStates state);
     MotorStates GetMotorState();
+
+    void SetMotorBraking(MotorBrake brake);
+    MotorBrake GetMotorBraking();
+
+    void SetMaxSpeed(uint32_t spd);
+    uint32_t GetMaxSpeed();
+
+    void SetAcceleration(uint32_t acl);
+    uint32_t GetAcceleration();
 
     void SetPositionTarget(double position);
     void SetPositionTargetRelative(double position);
