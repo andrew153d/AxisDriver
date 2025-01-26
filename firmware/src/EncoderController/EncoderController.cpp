@@ -1,5 +1,5 @@
 #include "EncoderController.h"
-
+#include "DebugPrinter.h"
 float Wrap0to360(float input)
 {
     input = fmodf(input, 360.0f);
@@ -12,35 +12,27 @@ float Wrap0to360(float input)
 
 void EncoderController::OnStart()
 {
-
-    return;
+    Wire1.setClock(400000);
     Wire1.begin();
-    //Wire.setClock(400000);
     Wire1.beginTransmission(device_address);
     byte error = Wire1.endTransmission();
     if(error)
     {
-        Serial.println("Failed to find Endcoder");
+        Serial.println("Failed to find Encoder");
+
+        addrLedController.AddLedStep(CRGB::Red, 100);
+        addrLedController.AddLedStep(CRGB::Black, 100);
     }
     else
     {
         Serial.println("Can communicate with Encoder");
+        
+        addrLedController.AddLedStep(0x005500, 100);
+        addrLedController.AddLedStep(CRGB::Black, 100);
     }
-
-    Wire1.beginTransmission(0x50);
-    error = Wire1.endTransmission();
-    if(error)
-    {
-        Serial.println("Failed to find flash");
-    }
-    else
-    {
-        Serial.println("Can communicate with flash");
-    }
-
 
     Tlv493dMagnetic3DSensor.begin(Wire1);
-    Tlv493dMagnetic3DSensor.setAccessMode(Tlv493d::AccessMode_e::FASTMODE);
+    Tlv493dMagnetic3DSensor.setAccessMode(Tlv493d::AccessMode_e::MASTERCONTROLLEDMODE);
     Tlv493dMagnetic3DSensor.disableTemp();
     Tlv493dMagnetic3DSensor.updateData();
     home_position_offset = Wrap0to360(degrees(Tlv493dMagnetic3DSensor.getAzimuth()));
@@ -57,16 +49,20 @@ void EncoderController::OnRun()
         executionPeriod = Tlv493dMagnetic3DSensor.getMeasurementDelay();
     }
     
+    long m = micros();
     Tlv493d_Error_t err = Tlv493dMagnetic3DSensor.updateData();
+    long t = micros();
+    //DEBUG_PRINTF("Micros:%lu\n", t-m);
     if(err!=Tlv493d_Error_t::TLV493D_NO_ERROR){
-        Serial.printf("Encoder Error: %d\n", err);
+       Serial.printf("Encoder Error: %d\n", err);
     }
 
 
     raw_shaft_angle = Wrap0to360(degrees(Tlv493dMagnetic3DSensor.getAzimuth()));
-    //Serial.printf("%d\n", raw_shaft_angle);
+    //Serial.printf("%8.1f\n", raw_shaft_angle);
     // load the sliding window filter
     // to avoid invalid values at the ends, apply an offset
+    
     {
         float offset = 180 - raw_shaft_angle;
         sliding_window_center += offset;
@@ -104,8 +100,12 @@ void EncoderController::OnRun()
     full_shaft_position = Wrap0to360(sliding_window_center) + (360 * number_full_turns) + home_position_offset;
     prev_sliding_window_center = sliding_window_center;
 
-    shaft_velocity = (full_shaft_position - last_full_shaft_position) / ((float)executionPeriod / 1000);
-    //Serial.printf("%8.1f %8.1f %8.1f %8.1f %8.1f\n", sliding_window_center, delta, number_full_turns, full_shaft_position, shaft_velocity);
+
+
+    float vel = (full_shaft_position - last_full_shaft_position) / ((float)(micros()-last_read_time)/1000000);
+    shaft_velocity = vel*velocity_alpha + shaft_velocity*(1-velocity_alpha);
+    //DEBUG_PRINTF("%8.1f %8.1f %8.1f %lu \n", shaft_velocity, full_shaft_position, last_full_shaft_position, micros()-last_read_time);
+    //DEBUG_PRINTF("%8.1f %8.1f %8.1f %8.1f %8.1f\n", sliding_window_center, delta, number_full_turns, full_shaft_position, shaft_velocity);
 
     last_full_shaft_position = full_shaft_position;
     
@@ -116,6 +116,9 @@ void EncoderController::OnRun()
         update_rate = (float)update_rate_ticker*(1000/(float)update_rate_poll_period);
         update_rate_ticker = 0;
     }
+
+    last_read_time = micros();
+    
 }
 
 float EncoderController::GetShaftAngle()
@@ -141,7 +144,7 @@ float *EncoderController::GetShaftAnglePtr()
 void EncoderController::SetPosition(float position){
     home_position_offset += (position - GetShaftAngle());
     
-    Serial.printf("raw %f, offset %f, home %f \n", GetShaftAngle(), position, home_position_offset);
+    //Serial.printf("raw %f, offset %f, home %f \n", GetShaftAngle(), position, home_position_offset);
 }
 
 float EncoderController::GetUpdateRate()

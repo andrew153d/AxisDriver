@@ -4,6 +4,8 @@
 #include <Tlv493d.h>
 #include "Messages.h"
 #include "MessageProcessor/MessageProcessor.hpp"
+#include "LedController/LedController.h"
+
 class EncoderController : public ITask, public IEncoderInterface
 {
 private:
@@ -13,6 +15,7 @@ private:
     float home_position_offset = 0;
     float last_full_shaft_position = 0, full_shaft_position = 0;
     float shaft_velocity = 0;
+    float velocity_alpha = 0.1;
     // testing using an averaging filter
     static const uint32_t average_filter_length = 100;
     float average_filter[average_filter_length] = {};
@@ -29,6 +32,8 @@ private:
 
     JsonDocument recvd_json;
 
+    // loop timer
+    long last_read_time = 0;
     // update rate tracking
     const uint32_t update_rate_poll_period = 2000;
     uint32_t update_rate_timer = 0;

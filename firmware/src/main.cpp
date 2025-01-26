@@ -70,7 +70,6 @@ void setup()
 
   pinMode(USR_INPUT, INPUT);
   addrLedController.Start();
-  addrLedController.SetLedState(SOLID);
   addrLedController.SetLEDColor(CRGB(0x001100));
   uint32_t start_time = millis();
   while(digitalRead(USR_INPUT) && (millis()-start_time)<1500){delay(10);}
@@ -111,7 +110,7 @@ void setup()
   manager.AddTask(&statusLight);
   manager.AddTask(&addrLedController);
   manager.AddTask(&motorController);
-  
+  manager.AddTask(&encoderController);
   //  start the interfaces
   serialTextInterface.Start();
 
@@ -139,10 +138,14 @@ void EvaluateHatType()
 
   if (AEthernet->IsPresent())
   {
+    addrLedController.AddLedStep(CRGB::Purple, 100);
+    addrLedController.AddLedStep(CRGB::Black, 100);
     manager.AddTask(AEthernet);
   }
   else
   {
+    addrLedController.AddLedStep(CRGB::Red, 100);
+    addrLedController.AddLedStep(CRGB::Black, 100);
     //delete AEthernet;
     //AEthernet = nullptr;
   }

@@ -6,6 +6,7 @@
 #include "FastLED.h"
 #include "MessageProcessor/MessageProcessor.hpp"
 #include "Messages.h"
+#include "queue"
 
 #define FLASH_ERROR_EXEC_PERIOD 500
 #define ERROR_EXEC_PERIOD 500
@@ -16,6 +17,11 @@
 #define RED_HUE 0
 #define BLUE_HUE 170
 
+struct LedStep
+    {
+      CRGB color;
+      uint32_t duration;
+    };
 
 class AddrLedController : public ITask
 {
@@ -32,7 +38,11 @@ private:
     uint8_t rainbow_brightness = 255;
   }config;
   config ledConfig;
+
+  std::queue<LedStep> ledSteps;
+  uint32_t led_step_timer = 0;
 public:
+
     AddrLedController(uint32_t period){
       executionPeriod = period;
       ledState = OFF;
@@ -54,6 +64,7 @@ public:
     void SetLEDColor(CRGB color);
     CRGB GetLedColor();
 
+    void AddLedStep(CRGB color, uint32_t duration);
 };
 
 extern AddrLedController addrLedController;
