@@ -114,8 +114,6 @@ void MotorController::OnRun()
       stepper.runSpeed();
       if ((millis() - state_change_time_ > 200) && abs(encoder_ptr->GetVelocityDegreesPerSecond()) < 5)
       {
-        DEBUG_PRINTF("Home Direction is %d\n", homeDirection);
-        DEBUG_PRINTLN("Switching to backup");
         home_state_ = HomeState::BACKUP;
         stepper.setCurrentPosition(0);
         stepper.move(degreesToSteps((homeDirection == HomeDirection::CLOCKWISE)?10:-10));
@@ -125,7 +123,6 @@ void MotorController::OnRun()
       stepper.run();
       if(abs(stepper.distanceToGo()) < 1)
       {
-        DEBUG_PRINTLN("Switching to run2");
         home_state_ = HomeState::RUN2;
         stepper.setSpeed((homeDirection == HomeDirection::CLOCKWISE)?(float)homing_speed_/2*-1:(float)homing_speed_/2);
         state_change_time_ = millis();
@@ -136,7 +133,6 @@ void MotorController::OnRun()
     stepper.runSpeed();
       if ((millis() - state_change_time_ > 400) && abs(encoder_ptr->GetVelocityDegreesPerSecond()) < 5)
       {
-        DEBUG_PRINTLN("Switching to run3");
         SetMotorState(MotorStates::IDLE_ON);
         stepper.setCurrentPosition(0);
         home_state_ = HomeState::RUN1;

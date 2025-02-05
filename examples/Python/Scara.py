@@ -56,8 +56,8 @@ MotorA.send_message(DriverComms.SetU8(Messages.MessageTypes.SetHomeDirection, Me
 time.sleep(0.05)
 MotorA.send_message(DriverComms.SetU8(Messages.MessageTypes.Home, 0))
 
-#WaitState(MotorA)
-#move(MotorA, 100)
+WaitState(MotorA)
+move(MotorA, 117)
 #time.sleep(2)
 #move(MotorA, 0)
 #time.sleep(2)
