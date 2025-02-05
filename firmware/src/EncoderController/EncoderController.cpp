@@ -27,7 +27,7 @@ void EncoderController::OnStart()
     {
         Serial.println("Can communicate with Encoder");
         
-        addrLedController.AddLedStep(0x005500, 100);
+        addrLedController.AddLedStep(0x222200, 100);
         addrLedController.AddLedStep(CRGB::Black, 100);
     }
 

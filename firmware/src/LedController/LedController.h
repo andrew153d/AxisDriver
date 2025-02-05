@@ -58,8 +58,6 @@ public:
   
     void SendMsg(uint8_t* send_bytes, uint32_t send_bytes_size);
 
-    void SetLedState(LedStates state);
-
     void SetLEDColor(CHSV color);
     void SetLEDColor(CRGB color);
     CRGB GetLedColor();

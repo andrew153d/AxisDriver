@@ -17,50 +17,49 @@ public:
 enum class MessageTypes : uint16_t
 {
     // General Device Info
-    GetVersion = 0x0002,
+    GetVersion,
 
     // Device Settings
-    SetI2CAddress = 0x0500,
-    GetI2CAddress = 0x0501,
-    SetEthernetAddress = 0x0502,
-    GetEthernetAddress = 0x0503,
-    SetEthernetPort = 0x0504,
-    GetEthernetPort = 0x0505,
-    GetMacAddress = 0x0506,
+    SetI2CAddress,
+    GetI2CAddress,
+    SetEthernetAddress,
+    GetEthernetAddress,
+    SetEthernetPort,
+    GetEthernetPort,
+    GetMacAddress,
 
     // LED control
 
-    SetLedState = 0x3001,
-    SetLedColor = 0x3002,
-    GetLedColor = 0x3003,
+    SetLedState,
+    SetLedColor,
+    GetLedColor,
 
-    // Ethernet Configuration
+    // Motor Control
+
+    SetHomeDirection, 
+    GetHomeDirection,
+    Home,
+
+    SetMotorState,
+    GetMotorState,
+
+    SetMotorBrake,
+    GetMotorBrake,
+
+    SetMaxSpeed,
+    GetMaxSpeed,
+
+    SetAcceleration,
+    GetAcceleration,
+
+    SetTargetPosition,
+    GetTargetPosition,
+    SetTargetPositionRelative,
     
-
-    // Drive Configuration
-
-    // Motor Driving
-    SetMotorState = 0x5000,
-    GetMotorState = 0x5001,
-
-    SetMotorBrake = 0x5004,
-    GetMotorBrake = 0x5005,
-
-    SetMaxSpeed = 0x5006,
-    GetMaxSpeed = 0x5007,
-
-    SetAcceleration = 0x5008,
-    GetAcceleration = 0x5009,
+    SetMotorVelocity,
+    GetMotorVelocity,
 
 
-    GetTargetPosition = 0x5010,
-    GetMotorVelocity = 0x5012,
-    GetMotorCurrent = 0x5013,
-
-    SetTargetPosition = 0x5014,
-    SetTargetPositionRelative = 0x5015,
-    SetMotorVelocity = 0x5016,
-    SetMotorCurrent = 0x5017,
 };
 
 PACKEDSTRUCT Header
@@ -202,7 +201,8 @@ enum class MotorStates : uint8_t{
   OFF,
   POSITION,
   VELOCITY,
-  IDLE
+  IDLE_ON,
+  HOME
 };
 
 enum class MotorBrake : uint8_t{
@@ -212,8 +212,16 @@ enum class MotorBrake : uint8_t{
     BRAKING = 3,
 };
 
+enum class HomeDirection : uint8_t{
+    CLOCKWISE = 0,
+    COUNTERCLOCKWISE = 1,
+};
+
 typedef U8Message SetMotorStateMessage;
 typedef U8Message GetMotorStateMessage;
+
+typedef U8Message SetHomeDirectionMessage;
+typedef U8Message GetHomeDirectionMessage;
 
 typedef U8Message SetMotorBrakeMessage;
 typedef U8Message GetMotorBrakeMessage;

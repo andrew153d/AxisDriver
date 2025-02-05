@@ -62,19 +62,6 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     break;
   }
 
-  case MessageTypes::SetLedState:
-  {
-    SetLedStateMessage *msg = (SetLedStateMessage *)recv_bytes;
-    // DEBUG_PRINTF("Setting LED state to: %d\n", msg->ledState);
-    if(msg->value >= LedStates::MAX_VALUE)
-    {
-      DEBUG_PRINTF("Invalid LED state: %d\n", msg->value);
-      break;
-    }
-    addrLedController.SetLedState((LedStates)msg->value);
-    break;
-  }
-
   case MessageTypes::GetVersion:
   {
     VersionMessage *msg = (VersionMessage *)&send_buffer[0];
@@ -245,23 +232,27 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     break;
   }
 
-  case MessageTypes::SetMotorCurrent:
+  case MessageTypes::SetHomeDirection:
   {
-    SetMotorCurrentMessage *msg = (SetMotorCurrentMessage *)recv_bytes;
-    //DEBUG_PRINTF("Setting Motor Current to: %d\n", msg->value);
+    SetHomeDirectionMessage *msg = (SetHomeDirectionMessage *)recv_bytes;
+    motorController.SetHomeDirection((HomeDirection)msg->value);
     break;
   }
 
-  case MessageTypes::GetMotorCurrent:
+  case MessageTypes::GetHomeDirection:
   {
-    GetMotorCurrentMessage *msg = (GetMotorCurrentMessage *)&send_buffer[0];
-    msg->header.message_type = MessageTypes::GetMotorCurrent;
-    msg->header.body_size = sizeof(GetMotorCurrentMessage::value);
-    msg->value = 0;
+    GetHomeDirectionMessage *msg = (GetHomeDirectionMessage *)&send_buffer[0];
+    msg->header.message_type = MessageTypes::GetHomeDirection;
+    msg->header.body_size = sizeof(GetHomeDirectionMessage::value);
+    msg->value = (uint8_t)motorController.GetHomeDirection();
     msg->footer.checksum = 0;
-    SendMsg(send_buffer, sizeof(GetMotorCurrentMessage));
+    SendMsg(send_buffer, sizeof(GetHomeDirectionMessage));
     break;
   }
+
+  case MessageTypes::Home:
+  motorController.Home();
+  break;
 
   default:
     DEBUG_PRINTF("Unable to handle message type: 0x%x", hdr->message_type);

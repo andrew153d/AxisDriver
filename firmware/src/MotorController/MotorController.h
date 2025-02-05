@@ -12,14 +12,13 @@
 #define SERIAL_PORT Serial1
 #define R_SENSE 0.12f
 
+#define DEFAULT_HOMING_SPEED 800
+#define DEFAULT_HOMING_DIRECTION 1
 
-enum ControlMode{
-        MOTOR_OFF,
-        POSITION,
-        VELOCITY,
-        TORQUE,
-        UNKNOWN,
-        IDLE,
+enum HomeState{
+        RUN1,
+        BACKUP,
+        RUN2
     };
 union MotorError {
     struct {
@@ -50,8 +49,12 @@ private:
     AccelStepper stepper;
     
     MotorStates controlMode;
+    HomeDirection homeDirection = HomeDirection::CLOCKWISE;
     MotorBrake motorBrake;
     String modeString = "";
+
+
+
     //data that holds encoder data
     IEncoderInterface *encoder_ptr = nullptr;
     int step = 0;
@@ -62,8 +65,11 @@ private:
     uint32_t target_velocity_duration = 0;
     uint32_t target_velocity_timer = 0;
     
+    HomeState home_state_ = HomeState::RUN1;
+    uint32_t homing_speed_ = DEFAULT_HOMING_SPEED;
+    bool homing_direction = DEFAULT_HOMING_DIRECTION;
     int error_flag;
-    uint32_t start_millis;
+    uint32_t state_change_time_;
 
     //error checking stuff
     MotorError motorErrors;
@@ -74,12 +80,12 @@ private:
 
     uint8_t send_buffer[1024];
     JsonDocument received_json;
-    ControlMode GetModeFromString(String mode);
+    //ControlMode GetModeFromString(String mode);
+
+    long degreesToSteps(double degrees);  
+    double stepsToDegrees(long steps);
+
 public:
-
-    
-
-
     MotorController(uint32_t period) : serial_stream(Serial1),
                                        pid(10, 0.01, 0, 100000, 1000),
                                        stepper(stepper.DRIVER, MOTOR_STEP, MOTOR_DIR)
@@ -113,6 +119,10 @@ public:
     
     void setEncoderValueSource(IEncoderInterface *encoder_value);
     uint32_t GetErrors();
+
+    void SetHomeDirection(HomeDirection direction);
+    HomeDirection GetHomeDirection();
+    void Home();
 
     void PrintErrorsToSerial();
 };

@@ -61,6 +61,7 @@ SerialTextInterface serialTextInterface(0);
 StatusLedDriver statusLight(1000);
 
 DeviceManager deviceManager(0xFFFFFFFF);
+
 void setup()
 {
   DEBUG_BEGIN(115200);
@@ -78,7 +79,6 @@ void setup()
     while (!Serial)
     {
       addrLedController.Start();
-      addrLedController.SetLedState(LedStates::SOLID);
       digitalWrite(STAT_LED, LOW);
       addrLedController.SetLEDColor(CRGB(0x0000F0));
       delay(80);
@@ -89,20 +89,8 @@ void setup()
   }
 
   FlashStorage::Init();
-  //EthernetSettingsStruct* s = FlashStorage::GetEthernetSettings();
-  //DEBUG_PRINTF("%x, %x\n", s->ip_address, s->port);  
-  //s->port = 0x2ee1;
-  //s->ip_address = 0x630CA8C0;
-  //FlashStorage::WriteFlash();
-  //DEBUG_PRINTF("ip: %x\n", s->ip_address);
-
   addrLedController.SetLEDColor(CRGB(0x000000));
 
-  //   connect the SerialTextInterface to the Message Processor
-  //messageProcessor.AddControllerInterface(&addrLedController, JsonMessageTypes::Led, MessageTypes::LedControlMessageTypeLowerBounds, MessageTypes::LedControlMessageTypeUpperBounds);
-  // messageProcessor.AddControllerInterface(&deviceManager, "", MessageTypes::DeviceInfoMessageTypeLowerBounds, MessageTypes::DeviceInfoMessageTypeUpperBounds);
-  //messageProcessor.AddControllerInterface(&motorController, JsonMessageTypes::Motor, MessageTypes::MotorControlMessageTypeLowerBounds, MessageTypes::MotorControlMessageTypeUpperBounds);
-  //messageProcessor.AddControllerInterface(&encoderController, JsonMessageTypes::Encoder, MessageTypes::EncoderControlMessageTypeLowerBounds, MessageTypes::EncoderControlMessageTypeUpperBounds);
   messageProcessor.AddExternalInterface(&serialTextInterface);
 
   manager.AddTask(&serialTextInterface);
@@ -118,7 +106,6 @@ void setup()
   messageProcessor.Start();
   addrLedController.Start();
   addrLedController.SetRainbowBrightness(100);
-  addrLedController.SetLedState(BOOTUP);
 
   statusLight.Start();
 
@@ -150,9 +137,18 @@ void EvaluateHatType()
     //AEthernet = nullptr;
   }
 }
-
+uint32_t loop_count = 0;
+uint32_t loop_count_timer = 0;
 void loop()
 {
+  loop_count++;
+  if(millis()-loop_count_timer>1000)
+  {
+    loop_count_timer = millis();
+    //DEBUG_PRINTF("%d loops per second\n", loop_count/1);
+    //DEBUG_PRINTF("Position: %f\n", encoderController.GetPositionDegrees());
+    loop_count=0;
+  }
   manager.RunTasks();
   FlashStorage::Task();
 }
