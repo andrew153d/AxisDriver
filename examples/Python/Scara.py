@@ -3,13 +3,17 @@ import Serial
 import Messages
 import time
 import numpy as np
-MotorA = Serial.AxisSerial('/dev/ttyACM0')
-#MotorB = Serial.AxisSerial('/dev/ttyACM1')
+from enum import Enum
+import serial.tools.list_ports
+
+class MotorID(Enum):
+    RightMotor = 0xFCC23D6DB42A
+    LeftMotor = 0xFCC23D6DA11A
 
 # Define constants
-OFFSET = 200
-L1 = 200
-L2 = 300
+OFFSET = 86
+L1 = 50
+L2 = 150
 
 def inverse_kinematics_dual(x, y):
     def calculate_angles(x, y, flip_theta2=False):
@@ -45,23 +49,80 @@ def WaitState(motor):
             print("Failed to get mode")
         time.sleep(0.1)
 
-#MotorA.send_message(DriverComms.SetU8(Messages.MessageTypes.SetMotorBrake, Messages.MotorBrake.FREEWHEELING))
-#time.sleep(0.05)
-#MotorA.send_message(DriverComms.SetU32(Messages.MessageTypes.SetAcceleration, 64*100))
-#time.sleep(0.05)
-#MotorA.send_message(DriverComms.SetU32(Messages.MessageTypes.SetMaxSpeed, 64*50))
-#time.sleep(0.05)
+def IdentifyMotors():
+        left_motor = None
+        right_motor = None
+        ports = serial.tools.list_ports.comports()
+        for port in ports:
+            if(port.vid != 0x239A or port.pid != 0x8031):
+                continue
+            try:
+                motor = Serial.AxisSerial(port.device)
+                motor.send_message(DriverComms.GetMacAddressMessage(Messages.MessageTypes.GetMacAddress))
+                ret = motor.wait_serial_message()
+                if ret:
+                    mac_address = int.from_bytes(ret[4:10], byteorder='big')
+                    #print(f"Port: {port.device}, MAC Address: {mac_address:012X}")
+                    if mac_address == MotorID.LeftMotor.value:
+                        #print("Identified Left Motor")
+                        left_motor = motor
+                    elif mac_address == MotorID.RightMotor.value:
+                        #print("Identified Right Motor")
+                        right_motor = motor
+                    else:
+                        pass
+                        #print("Unknown Motor")
+            except Exception as e:
+                pass
+                #print(f"Failed to communicate with port {port.device}: {e}")
+        if(left_motor is None or right_motor is None):
+            print("Failed to identify motors")
+        else:
+            return left_motor, right_motor
 
-MotorA.send_message(DriverComms.SetU8(Messages.MessageTypes.SetHomeDirection, Messages.HomeDirection.CLOCKWISE))
-time.sleep(0.05)
-MotorA.send_message(DriverComms.SetU8(Messages.MessageTypes.Home, 0))
+def MoveScara(x, y):
+    (angles1, angles2) = inverse_kinematics_dual(x, y)
+    move(Left, angles1[0]+18)
+    move(Right, angles2[0]+18)
+Left, Right = IdentifyMotors()
+ 
+Left.send_message(DriverComms.SetU8(Messages.MessageTypes.SetHomeDirection, Messages.HomeDirection.CLOCKWISE))
+Right.send_message(DriverComms.SetU8(Messages.MessageTypes.SetHomeDirection, Messages.HomeDirection.CLOCKWISE))
+Left.send_message(DriverComms.SetU8(Messages.MessageTypes.Home, 0))
+Right.send_message(DriverComms.SetU8(Messages.MessageTypes.Home, 0))
 
-WaitState(MotorA)
-move(MotorA, 117)
-#time.sleep(2)
-#move(MotorA, 0)
-#time.sleep(2)
-#move(MotorA, -25)
-#
-# move(MotorA, 0)
+WaitState(Left)
+WaitState(Right)
+
+move(Left, 18)
+move(Right, 18)
+time.sleep(1)
+MoveScara(OFFSET/2, 150)
+time.sleep(3)
+
+while(1):
+    MoveScara((OFFSET/2) + 25, 130)
+    time.sleep(1)
+    MoveScara((OFFSET/2)+ 25, 170)
+    time.sleep(1)
+    MoveScara((OFFSET/2)- 25, 170)
+    time.sleep(1)
+    MoveScara((OFFSET/2)- 25, 130)
+    time.sleep(1)
+
+
+
+
+
+
+# WaitState(Left)
+# WaitState(Right)
+
+# # Move motors to the calculated angles for the second configuration
+# move(Left, angles2[0])
+# move(Right, angles2[1])
+
+# WaitState(Left)
+# WaitState(Right)
+
 time.sleep(5)

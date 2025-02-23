@@ -142,9 +142,9 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->header.message_type = MessageTypes::GetMacAddress;
     msg->header.body_size = sizeof(MACAddressMessage::mac);
     memcpy(&(msg->mac[0]), FlashStorage::GetMacAddress(), 6);    
-    FlashStorage::GetMacAddress();
     msg->footer.checksum = 0;
     SendMsg(send_buffer, sizeof(MACAddressMessage));
+    break;
   }
 
   case MessageTypes::SetMotorState:

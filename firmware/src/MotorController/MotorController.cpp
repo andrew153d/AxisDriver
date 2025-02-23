@@ -156,6 +156,7 @@ void MotorController::SetMotorState(MotorStates state)
     stepper.disableOutputs();
     break;
   case MotorStates::POSITION:
+    driver.setRunCurrent(100);
     stepper.enableOutputs();
     break;
   case MotorStates::VELOCITY:
