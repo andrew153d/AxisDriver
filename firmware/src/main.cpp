@@ -16,49 +16,41 @@ void setup()
 
   uint32_t tcNum = GetTCNumber(pinDesc.ulPWMChannel);
   uint8_t tcChannel = GetTCChannelNumber(pinDesc.ulPWMChannel);
-  static bool tcEnabled[TCC_INST_NUM + TC_INST_NUM];
 
-  if (attr & PIN_ATTR_PWM_E)
-    pinPeripheral(pin, PIO_TIMER);
-  else if (attr & PIN_ATTR_PWM_F)
-    pinPeripheral(pin, PIO_TIMER_ALT);
-  else if (attr & PIN_ATTR_PWM_G)
-    pinPeripheral(pin, PIO_TCC_PDEC);
+  pinPeripheral(pin, PIO_TCC_PDEC);
 
   GCLK->PCHCTRL[GCLK_CLKCTRL_IDs[tcNum]].reg = GCLK_PCHCTRL_GEN_GCLK0_Val | (1 << GCLK_PCHCTRL_CHEN_Pos);
 
   // -- Configure TCC
-  Tcc *TCCx = (Tcc *)GetTC(pinDesc.ulPWMChannel);
 
-  TCCx->CTRLA.bit.SWRST = 1;
-  while (TCCx->SYNCBUSY.bit.SWRST)
+  TCC0->CTRLA.bit.SWRST = 1;
+  while (TCC0->SYNCBUSY.bit.SWRST)
     ;
 
-  // Disable TCCx
-  TCCx->CTRLA.bit.ENABLE = 0;
-  while (TCCx->SYNCBUSY.bit.ENABLE)
+  TCC0->CTRLA.bit.ENABLE = 0;
+  while (TCC0->SYNCBUSY.bit.ENABLE)
     ;
   // Set prescaler to 1/256
-  TCCx->CTRLA.reg = TCC_CTRLA_PRESCALER_DIV256 | TCC_CTRLA_PRESCSYNC_GCLK;
+  TCC0->CTRLA.reg = TCC_CTRLA_PRESCALER_DIV256 | TCC_CTRLA_PRESCSYNC_GCLK;
 
   // Set TCx as normal PWM
-  TCCx->WAVE.reg = TCC_WAVE_WAVEGEN_NPWM;
-  while (TCCx->SYNCBUSY.bit.WAVE)
+  TCC0->WAVE.reg = TCC_WAVE_WAVEGEN_NPWM;
+  while (TCC0->SYNCBUSY.bit.WAVE)
     ;
 
-  while (TCCx->SYNCBUSY.bit.CC0 || TCCx->SYNCBUSY.bit.CC1)
+  while (TCC0->SYNCBUSY.bit.CC0 || TCC0->SYNCBUSY.bit.CC1)
     ;
   // Set the initial value
-  TCCx->CC[tcChannel].reg = (uint32_t)value;
-  while (TCCx->SYNCBUSY.bit.CC0 || TCCx->SYNCBUSY.bit.CC1)
+  TCC0->CC[tcChannel].reg = (uint32_t)value;
+  while (TCC0->SYNCBUSY.bit.CC0 || TCC0->SYNCBUSY.bit.CC1)
     ;
   // Set PER to maximum counter value (resolution : 0xFF)
-  TCCx->PER.reg = 0xFF;
-  while (TCCx->SYNCBUSY.bit.PER)
+  TCC0->PER.reg = 0xFF;
+  while (TCC0->SYNCBUSY.bit.PER)
     ;
   // Enable TCCx
-  TCCx->CTRLA.bit.ENABLE = 1;
-  while (TCCx->SYNCBUSY.bit.ENABLE)
+  TCC0->CTRLA.bit.ENABLE = 1;
+  while (TCC0->SYNCBUSY.bit.ENABLE)
     ;
 }
 
@@ -69,17 +61,17 @@ void myanalogWrite(uint32_t pin, uint32_t value)
 
   uint32_t tcNum = GetTCNumber(pinDesc.ulPWMChannel);
   uint8_t tcChannel = GetTCChannelNumber(pinDesc.ulPWMChannel);
-
-  Tcc *TCCx = (Tcc *)GetTC(pinDesc.ulPWMChannel);
-  while (TCCx->SYNCBUSY.bit.CTRLB)
+ 
+  
+  while (TCC0->SYNCBUSY.bit.CTRLB)
     ;
-  while (TCCx->SYNCBUSY.bit.CC0 || TCCx->SYNCBUSY.bit.CC1)
+  while (TCC0->SYNCBUSY.bit.CC0 || TCC0->SYNCBUSY.bit.CC1)
     ;
-  TCCx->CCBUF[tcChannel].reg = (uint32_t)value;
-  while (TCCx->SYNCBUSY.bit.CC0 || TCCx->SYNCBUSY.bit.CC1)
+  TCC0->CCBUF[tcChannel].reg = (uint32_t)value;
+  while (TCC0->SYNCBUSY.bit.CC0 || TCC0->SYNCBUSY.bit.CC1)
     ;
-  TCCx->CTRLBCLR.bit.LUPD = 1;
-  while (TCCx->SYNCBUSY.bit.CTRLB)
+  TCC0->CTRLBCLR.bit.LUPD = 1;
+  while (TCC0->SYNCBUSY.bit.CTRLB)
     ;
 }
 
