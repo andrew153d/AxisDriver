@@ -54,7 +54,7 @@ private:
     MotorBrake motorBrake;
     String modeString = "";
 
-
+    uint32_t timer_frequency = 0;
 
     //data that holds encoder data
     IEncoderInterface *encoder_ptr = nullptr;
@@ -98,6 +98,7 @@ public:
     void OnStart();
     void OnStop();
     void OnRun();
+    void OnTimer();
 
     void SetMotorState(MotorStates state);
     MotorStates GetMotorState();
