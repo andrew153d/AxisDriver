@@ -17,12 +17,12 @@ bool UserButtonPressed()
 
 long MotorController::degreesToSteps(double degrees)
 {
-  return (degrees/360) * 64 * 200;
+  return (degrees / 360) * 64 * 200;
 }
 
 double MotorController::stepsToDegrees(long steps)
 {
-  return (steps/64) * 360 / 200;
+  return (steps / 64) * 360 / 200;
 }
 
 void MotorController::CheckForErrors()
@@ -43,6 +43,74 @@ void MotorController::CheckForErrors()
   }
 
   previousErrors = motorErrors;
+}
+int start, time = 0;
+void TC0_Handler()
+{
+  if (TC0->COUNT16.INTFLAG.bit.OVF)
+  {
+    // Toggle the state of STAT_LED
+    // PORT->Group[g_APinDescription[MOTOR_STEP].ulPort].OUTTGL.reg = (1 << g_APinDescription[MOTOR_STEP].ulPin);
+    digitalWrite(MOTOR_STEP, HIGH);
+    delayMicroseconds(1);
+    digitalWrite(MOTOR_STEP, LOW);
+    // PORT->Group[g_APinDescription[MOTOR_STEP].ulPort].OUTTGL.reg = (1 << g_APinDescription[MOTOR_STEP].ulPin);
+    /// Clear the overflow interrupt flag
+    TC0->COUNT16.INTFLAG.bit.OVF = 1;
+    time = millis() - start;
+    start = millis();
+  }
+}
+
+void init_timer()
+{
+  // Enable the TC0 module
+  MCLK->APBAMASK.bit.TC0_ = 1;
+
+  // Configure the Generic Clock Generator 0 (GCLK0) for TC0
+  GCLK->PCHCTRL[TC0_GCLK_ID].reg = GCLK_PCHCTRL_GEN_GCLK1 | GCLK_PCHCTRL_CHEN;
+  while (GCLK->PCHCTRL[TC0_GCLK_ID].bit.CHEN == 0)
+    ;
+
+  GCLK->GENCTRL[1].bit.DIV = 0x00;
+  while (GCLK->SYNCBUSY.bit.GENCTRL1)
+    ;
+
+  GCLK->GENCTRL[1].bit.DIVSEL = 0;
+  while (GCLK->SYNCBUSY.bit.GENCTRL1)
+    ;
+
+  Serial.printf("Prescaler: %d\n", GCLK->GENCTRL[0].bit.DIV);
+
+  // Reset TC0
+  TC0->COUNT16.CTRLA.bit.SWRST = 1;
+  while (TC0->COUNT16.SYNCBUSY.bit.SWRST)
+    ;
+
+  TC0->COUNT16.CTRLA.bit.MODE = TC_CTRLA_MODE_COUNT16;
+  TC0->COUNT16.CTRLA.bit.PRESCALER = TC_CTRLA_PRESCALER_DIV8_Val;
+  TC0->COUNT16.WAVE.bit.WAVEGEN = TC_WAVE_WAVEGEN_MFRQ_Val;
+  while (TC0->COUNT16.SYNCBUSY.bit.ENABLE)
+    ;
+  // Set the period (TOP value) for the timer
+  TC0->COUNT16.CC[0].reg = 0x4010; // 46875 * (1024 / 48000000) = 1 second
+  TC0->COUNT16.CC[1].reg = 0x4010;
+  while (TC0->COUNT16.SYNCBUSY.bit.CC0)
+    ;
+
+  // Enable the overflow interrupt
+  TC0->COUNT16.INTENSET.bit.OVF = 1;
+
+  // Enable the TC0 interrupt in the NVIC
+  NVIC_EnableIRQ(TC0_IRQn);
+  NVIC_SetPriority(TC0_IRQn, 1);
+
+  // Enable TC0
+  TC0->COUNT16.CTRLA.bit.ENABLE = 1;
+  while (TC0->COUNT16.SYNCBUSY.bit.ENABLE)
+    ;
+
+  start = millis();
 }
 
 void MotorController::OnStart()
@@ -74,6 +142,10 @@ void MotorController::OnStart()
   state_change_time_ = millis();
   target_position = 0;
 
+  init_timer();
+
+  stepper.enableOutputs();
+  stepper.setSpeed(1000);
   DEBUG_PRINTF("TMC2209 Version: %d\n", driver.getVersion());
 }
 
@@ -84,6 +156,9 @@ void MotorController::OnStop()
 
 void MotorController::OnRun()
 {
+
+  Serial.printf("TC: %d\n", time);
+  return;
   if (millis() - error_check_timer > error_check_period)
   {
     error_check_timer = millis();
@@ -102,35 +177,35 @@ void MotorController::OnRun()
   case MotorStates::VELOCITY:
     stepper.runSpeed();
     if (target_velocity_duration != 0 && (millis() - target_velocity_timer) > target_velocity_duration)
-      //controlMode = MotorStates::OFF;
-    break;
+      // controlMode = MotorStates::OFF;
+      break;
   case MotorStates::HOME:
   {
     switch (home_state_)
     {
     case HomeState::RUN1:
 
-      stepper.setSpeed((homeDirection == HomeDirection::CLOCKWISE)?(float)homing_speed_*-1:(float)homing_speed_);
+      stepper.setSpeed((homeDirection == HomeDirection::CLOCKWISE) ? (float)homing_speed_ * -1 : (float)homing_speed_);
       stepper.runSpeed();
       if ((millis() - state_change_time_ > 200) && abs(encoder_ptr->GetVelocityDegreesPerSecond()) < 5)
       {
         home_state_ = HomeState::BACKUP;
         stepper.setCurrentPosition(0);
-        stepper.move(degreesToSteps((homeDirection == HomeDirection::CLOCKWISE)?10:-10));
+        stepper.move(degreesToSteps((homeDirection == HomeDirection::CLOCKWISE) ? 10 : -10));
       }
       break;
     case HomeState::BACKUP:
       stepper.run();
-      if(abs(stepper.distanceToGo()) < 1)
+      if (abs(stepper.distanceToGo()) < 1)
       {
         home_state_ = HomeState::RUN2;
-        stepper.setSpeed((homeDirection == HomeDirection::CLOCKWISE)?(float)homing_speed_/2*-1:(float)homing_speed_/2);
+        stepper.setSpeed((homeDirection == HomeDirection::CLOCKWISE) ? (float)homing_speed_ / 2 * -1 : (float)homing_speed_ / 2);
         state_change_time_ = millis();
       }
 
       break;
     case HomeState::RUN2:
-    stepper.runSpeed();
+      stepper.runSpeed();
       if ((millis() - state_change_time_ > 400) && abs(encoder_ptr->GetVelocityDegreesPerSecond()) < 5)
       {
         SetMotorState(MotorStates::IDLE_ON);

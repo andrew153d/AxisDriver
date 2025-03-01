@@ -46,6 +46,7 @@ private:
     HardwareSerial &serial_stream;
     easyTMC2209 driver;
     PIDController pid;
+    public:
     AccelStepper stepper;
     
     MotorStates controlMode;
