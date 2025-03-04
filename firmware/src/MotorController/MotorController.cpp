@@ -135,7 +135,7 @@ void MotorController::OnStart()
   init_timer();
 
   stepper.enableOutputs();
-  stepper.setSpeed(1000);
+  stepper.setSpeed(1000*64);
   DEBUG_PRINTF("TMC2209 Version: %d\n", driver.getVersion());
 }
 
