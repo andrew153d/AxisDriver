@@ -1,7 +1,7 @@
 #pragma once
 #include <Arduino.h>
 #include "Task/Task.h"
-#include <AccelStepper.h>
+#include "AccelStepper.h"
 #include "LedController/LedController.h"
 #include "easyTMC2209.h"
 #include "wiring_private.h"
@@ -15,11 +15,14 @@
 #define DEFAULT_HOMING_SPEED 800
 #define DEFAULT_HOMING_DIRECTION 1
 
-#define TIMER_FREQ 10000
+#define US_PER_SEC 1000000
+#define TIMER_FREQ 10000 // ticks per second
 #define TIMER_COUNT (48000000 / 8 / TIMER_FREQ)
+#define TICKS_PER_US TIMER_FREQ/US_PER_SEC
+
 static_assert(TIMER_COUNT > 0 && TIMER_COUNT < 0xFFFF, "TIMER_COUNT must be greater than 0 and less than 0xFFFF");
 
-#define DOUBLE_BUF_SIZE 4096
+#define DOUBLE_BUF_SIZE 1024
 
 enum HomeState{
         RUN1,

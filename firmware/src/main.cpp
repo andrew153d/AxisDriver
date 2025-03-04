@@ -1,7 +1,5 @@
 #include <Arduino.h>
-#include "wiring_private.h" // pinPeripheral() function
-#include <AccelStepper.h>
-#include <TMCStepper.h>
+#include "wiring_private.h"
 #include "Task/Task.h"
 #include "MessageProcessor/MessageProcessor.hpp"
 #include "LedController/LedController.h"

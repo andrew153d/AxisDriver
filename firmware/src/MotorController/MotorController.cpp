@@ -36,7 +36,7 @@ void MotorController::CheckForErrors()
   }
   if (previousErrors.errors == 0 && motorErrors.errors > 0)
   {
-    // stepper.disableOutputs();
+    // disableOutputs();
     // DEBUG_PRINTF("Motor Error Present: %4x\n", motorErrors.errors);
     // addrLedController.SetLedState(FLASH_ERROR);
     // controlMode = ControlMode::MOTOR_OFF;
@@ -136,6 +136,7 @@ void MotorController::OnStart()
 
   stepper.enableOutputs();
   stepper.setSpeed(1000);
+  stepper.move(200*64);
   DEBUG_PRINTF("TMC2209 Version: %d\n", driver.getVersion());
 }
 
@@ -146,6 +147,8 @@ void MotorController::OnStop()
 
 void MotorController::OnTimer()
 {
+  stepper.run();
+  return;
   if (*next_pulse > 0)
   {
     PORT->Group[g_APinDescription[MOTOR_STEP].ulPort].OUTTGL.reg = (1 << g_APinDescription[MOTOR_STEP].ulPin);
@@ -176,7 +179,7 @@ void MotorController::OnRun()
     uint8_t* end_ptr = buffer_to_update + DOUBLE_BUF_SIZE;
     uint8_t* ptr = start_ptr;
     uint32_t off_count = 0;
-    
+
     while(ptr<end_ptr)
     {
       *ptr = (uint32_t)ptr%3;
@@ -184,7 +187,7 @@ void MotorController::OnRun()
     }
     buffer_to_update = nullptr;
   }
-  
+
   return;
   if (millis() - error_check_timer > error_check_period)
   {
