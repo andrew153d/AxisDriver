@@ -56,15 +56,6 @@ void TC0_Handler()
 
 void init_timer()
 {
-  uint32_t desired_frequency = 10000; // 10000Hz
-  uint32_t timer_count = (48000000 / 8) / desired_frequency;
-
-  if (timer_count > 0xFFFF)
-  {
-    Serial.println("Timer count is too large");
-    return;
-  }
-  Serial.printf("Timer count: %d\n", timer_count);
   // Enable the TC0 module
   MCLK->APBAMASK.bit.TC0_ = 1;
 
@@ -94,7 +85,7 @@ void init_timer()
   while (TC0->COUNT16.SYNCBUSY.bit.ENABLE)
     ;
   // Set the period (TOP value) for the timer
-  TC0->COUNT16.CC[0].reg = timer_count; // 0x4010; // 46875 * (1024 / 48000000) = 1 second
+  TC0->COUNT16.CC[0].reg = TIMER_COUNT; // 0x4010; // 46875 * (1024 / 48000000) = 1 second
   // TC0->COUNT16.CC[1].reg = 10000;//w 0x4010;
   while (TC0->COUNT16.SYNCBUSY.bit.CC0)
     ;
@@ -155,13 +146,45 @@ void MotorController::OnStop()
 
 void MotorController::OnTimer()
 {
-  digitalWrite(MOTOR_STEP, HIGH);
-  delayMicroseconds(1);
-  digitalWrite(MOTOR_STEP, LOW);
+  if (*next_pulse > 0)
+  {
+    PORT->Group[g_APinDescription[MOTOR_STEP].ulPort].OUTTGL.reg = (1 << g_APinDescription[MOTOR_STEP].ulPin);
+    __asm__ __volatile__("nop\n\t" "nop\n\t"); //1 cycle at 120MHz is 8.33ns, min on time is 10ns for TMC2209
+    PORT->Group[g_APinDescription[MOTOR_STEP].ulPort].OUTTGL.reg = (1 << g_APinDescription[MOTOR_STEP].ulPin);
+  }
+  if (next_pulse == &buffer1[DOUBLE_BUF_SIZE - 1])
+  {
+    buffer_to_update = &buffer1[0];
+    next_pulse = &buffer2[0];
+    return;
+  }
+  if (next_pulse == &buffer2[DOUBLE_BUF_SIZE - 1])
+  {
+    buffer_to_update = &buffer2[0];
+    next_pulse = &buffer1[0];
+    return;
+  }
+  next_pulse++;
 }
-
 void MotorController::OnRun()
 {
+  if(buffer_to_update!=nullptr)
+  {
+    //need to put some data into the buffer
+
+    uint8_t* start_ptr = buffer_to_update;
+    uint8_t* end_ptr = buffer_to_update + DOUBLE_BUF_SIZE;
+    uint8_t* ptr = start_ptr;
+    uint32_t off_count = 0;
+    
+    while(ptr<end_ptr)
+    {
+      *ptr = (uint32_t)ptr%3;
+      ptr++;
+    }
+    buffer_to_update = nullptr;
+  }
+  
   return;
   if (millis() - error_check_timer > error_check_period)
   {

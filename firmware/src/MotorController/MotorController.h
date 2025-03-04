@@ -15,11 +15,18 @@
 #define DEFAULT_HOMING_SPEED 800
 #define DEFAULT_HOMING_DIRECTION 1
 
+#define TIMER_FREQ 10000
+#define TIMER_COUNT (48000000 / 8 / TIMER_FREQ)
+static_assert(TIMER_COUNT > 0 && TIMER_COUNT < 0xFFFF, "TIMER_COUNT must be greater than 0 and less than 0xFFFF");
+
+#define DOUBLE_BUF_SIZE 4096
+
 enum HomeState{
         RUN1,
         BACKUP,
         RUN2
     };
+
 union MotorError {
     struct {
         bool lostPower : 1;
@@ -54,8 +61,12 @@ private:
     MotorBrake motorBrake;
     String modeString = "";
 
-    uint32_t timer_frequency = 0;
-
+    uint8_t buffer1[DOUBLE_BUF_SIZE];
+    uint8_t buffer2[DOUBLE_BUF_SIZE];
+    uint8_t *current_buffer = buffer1;
+    uint8_t *buffer_to_update = nullptr;
+    uint8_t *next_pulse = buffer2;
+    
     //data that holds encoder data
     IEncoderInterface *encoder_ptr = nullptr;
     int step = 0;
