@@ -136,7 +136,7 @@ void MotorController::OnStart()
 
   enableOutputs();
   setSpeed(1000 * 64);
-  move(100 * 64);
+  move(200 * 64);
   DEBUG_PRINTF("TMC2209 Version: %d\n", driver.getVersion());
 }
 
