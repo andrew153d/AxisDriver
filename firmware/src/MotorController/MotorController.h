@@ -1,7 +1,7 @@
 #pragma once
 #include <Arduino.h>
 #include "Task/Task.h"
-#include <AccelStepper.h>
+#include "MotorController/AccelStepper.h"
 #include "LedController/LedController.h"
 #include "easyTMC2209.h"
 #include "wiring_private.h"
@@ -15,8 +15,11 @@
 #define DEFAULT_HOMING_SPEED 800
 #define DEFAULT_HOMING_DIRECTION 1
 
-#define TIMER_FREQ 10000
-#define TIMER_COUNT (48000000 / 8 / TIMER_FREQ)
+#define US_PER_SEC 1000000
+#define TIMER_FREQ 30000
+const uint32_t TIMER_COUNT = (48000000 / 8 / TIMER_FREQ);
+const float TICKS_PER_US  = (float)TIMER_FREQ / (float)US_PER_SEC;
+
 static_assert(TIMER_COUNT > 0 && TIMER_COUNT < 0xFFFF, "TIMER_COUNT must be greater than 0 and less than 0xFFFF");
 
 #define DOUBLE_BUF_SIZE 4096
@@ -47,14 +50,13 @@ class MotorStep{
 
 };
 
-class MotorController : public ITask
+class MotorController : public ITask, public AccelStepper
 {
 private:
     HardwareSerial &serial_stream;
     easyTMC2209 driver;
     PIDController pid;
     public:
-    AccelStepper stepper;
     
     MotorStates controlMode;
     HomeDirection homeDirection = HomeDirection::CLOCKWISE;
@@ -99,8 +101,8 @@ private:
 
 public:
     MotorController(uint32_t period) : serial_stream(Serial1),
-                                       pid(10, 0.01, 0, 100000, 1000),
-                                       stepper(stepper.DRIVER, MOTOR_STEP, MOTOR_DIR)
+                                       pid(10, 0.01, 0, 100000, 1000)
+                                       //stepper(stepper.DRIVER, MOTOR_STEP, MOTOR_DIR)
     {
         executionPeriod = period;
         driver = easyTMC2209();
