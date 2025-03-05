@@ -151,7 +151,9 @@ void MotorController::OnTimer()
   {
     PORT->Group[g_APinDescription[MOTOR_STEP].ulPort].OUTTGL.reg = (1 << g_APinDescription[MOTOR_STEP].ulPin);
     __asm__ __volatile__("nop\n\t"
-                         "nop\n\t"); // 1 cycle at 120MHz is 8.33ns, min on time is 10ns for TMC2209
+                         "nop\n\t"
+                         "nop\n\t"
+                         "nop\n\t");
     PORT->Group[g_APinDescription[MOTOR_STEP].ulPort].OUTTGL.reg = (1 << g_APinDescription[MOTOR_STEP].ulPin);
   }
   if (next_pulse == &buffer1[DOUBLE_BUF_SIZE - 1])
