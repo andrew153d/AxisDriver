@@ -153,7 +153,10 @@ void MotorController::OnTimer()
     __asm__ __volatile__("nop\n\t"
                          "nop\n\t"
                          "nop\n\t"
-                         "nop\n\t");
+                         "nop\n\t"
+                         "nop\n\t"
+                         "nop\n\t"
+                        );
     PORT->Group[g_APinDescription[MOTOR_STEP].ulPort].OUTTGL.reg = (1 << g_APinDescription[MOTOR_STEP].ulPin);
   }
   if (next_pulse == &buffer1[DOUBLE_BUF_SIZE - 1])
