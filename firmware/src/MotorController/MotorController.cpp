@@ -49,8 +49,8 @@ void TC0_Handler()
 {
   if (TC0->COUNT16.INTFLAG.bit.OVF)
   {
-    motorController.OnTimer();
     TC0->COUNT16.INTFLAG.bit.OVF = 1;
+    motorController.OnTimer();
   }
 }
 
@@ -71,8 +71,6 @@ void init_timer()
   GCLK->GENCTRL[1].bit.DIVSEL = 0;
   while (GCLK->SYNCBUSY.bit.GENCTRL1)
     ;
-
-  Serial.printf("Prescaler: %d\n", GCLK->GENCTRL[0].bit.DIV);
 
   // Reset TC0
   TC0->COUNT16.CTRLA.bit.SWRST = 1;
@@ -101,6 +99,43 @@ void init_timer()
   TC0->COUNT16.CTRLA.bit.ENABLE = 1;
   while (TC0->COUNT16.SYNCBUSY.bit.ENABLE)
     ;
+}
+
+void set_timer_period(uint16_t period)
+{
+// Disable TC0
+TC0->COUNT16.CTRLA.bit.ENABLE = 0;
+while (TC0->COUNT16.SYNCBUSY.bit.ENABLE)
+  ;
+
+// Reset TC0
+TC0->COUNT16.CTRLA.bit.SWRST = 1;
+while (TC0->COUNT16.SYNCBUSY.bit.SWRST)
+  ;
+
+TC0->COUNT16.CTRLA.bit.MODE = TC_CTRLA_MODE_COUNT16;
+TC0->COUNT16.CTRLA.bit.PRESCALER = TC_CTRLA_PRESCALER_DIV8_Val;
+TC0->COUNT16.WAVE.bit.WAVEGEN = TC_WAVE_WAVEGEN_MFRQ_Val;
+while (TC0->COUNT16.SYNCBUSY.bit.ENABLE)
+  ;
+// Set the period (TOP value) for the timer
+TC0->COUNT16.CC[0].reg = period; // 0x4010; // 46875 * (1024 / 48000000) = 1 second
+
+// TC0->COUNT16.CC[1].reg = 10000;//w 0x4010;
+while (TC0->COUNT16.SYNCBUSY.bit.CC0)
+  ;
+
+// Enable the overflow interrupt
+TC0->COUNT16.INTENSET.bit.OVF = 1;
+
+// Enable the TC0 interrupt in the NVIC
+NVIC_EnableIRQ(TC0_IRQn);
+NVIC_SetPriority(TC0_IRQn, 1);
+
+// Enable TC0
+TC0->COUNT16.CTRLA.bit.ENABLE = 1;
+while (TC0->COUNT16.SYNCBUSY.bit.ENABLE)
+  ;
 }
 
 void MotorController::OnStart()
@@ -149,15 +184,20 @@ void MotorController::OnTimer()
 {
   if (*next_pulse > 0)
   {
+    
     PORT->Group[g_APinDescription[MOTOR_STEP].ulPort].OUTTGL.reg = (1 << g_APinDescription[MOTOR_STEP].ulPin);
     __asm__ __volatile__("nop\n\t"
                          "nop\n\t"
                          "nop\n\t"
                          "nop\n\t"
                          "nop\n\t"
-                         "nop\n\t"
-                        );
+                         "nop\n\t");
     PORT->Group[g_APinDescription[MOTOR_STEP].ulPort].OUTTGL.reg = (1 << g_APinDescription[MOTOR_STEP].ulPin);
+    DEBUG_PRINTF("Next Pulse: %d | %X\n", *next_pulse, next_pulse);
+    set_timer_period(*next_pulse);
+    
+  }else{
+    set_timer_period(TIMER_COUNT);
   }
   if (next_pulse == &buffer1[DOUBLE_BUF_SIZE - 1])
   {
@@ -177,11 +217,12 @@ void MotorController::OnRun()
 {
   if (buffer_to_update != nullptr)
   {
+    DEBUG_PRINTF("Filling BUffer at %X\n", buffer_to_update);
     // need to put some data into the buffer
 
-    uint8_t *start_ptr = buffer_to_update;
-    uint8_t *end_ptr = buffer_to_update + DOUBLE_BUF_SIZE;
-    uint8_t *ptr = start_ptr;
+    uint16_t *start_ptr = buffer_to_update;
+    uint16_t *end_ptr = buffer_to_update + DOUBLE_BUF_SIZE;
+    uint16_t *ptr = start_ptr;
     static uint32_t remaining_time = 0;
     memset(start_ptr, 0, DOUBLE_BUF_SIZE);
 
@@ -191,24 +232,20 @@ void MotorController::OnRun()
     {
       if (remaining_time > 0)
       {
-        ptr+=remaining_time;
-        *ptr=1;
-        remaining_time=0;
+        ptr += remaining_time;
+        *ptr = 1;
+        remaining_time = 0;
         continue;
       }
       unsigned long interval = computeNewSpeed();
       unsigned long ptr_inc = interval * TICKS_PER_US;
-      //DEBUG_PRINTF("Interval: %lu, Ptr_inc: %lu\n", interval, ptr_inc);
+      unsigned long period = CALCULATE_TIMER_PERIOD(interval);
       if (interval == 0)
         break;
+      DEBUG_PRINTF("Interval: %lu, Ptr_inc: %lu, period: %lu\n", interval, ptr_inc, period);
       _currentPos++;
-      if (ptr + ptr_inc >= end_ptr)
-      {
-        remaining_time = ptr_inc - (end_ptr - ptr);
-        break;
-      }
-      ptr+=ptr_inc;
-      *ptr = 1;
+      *ptr = (uint16_t)period;
+      ptr++;
     }
 
     // for (uint8_t *p = start_ptr; p < end_ptr; p++)

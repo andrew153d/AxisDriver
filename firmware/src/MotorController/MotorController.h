@@ -16,7 +16,9 @@
 #define DEFAULT_HOMING_DIRECTION 1
 
 #define US_PER_SEC 1000000
-#define TIMER_FREQ 30000
+#define TIMER_FREQ 10000
+#define CALCULATE_TIMER_PERIOD(period_us) (48000000 / 8 / (US_PER_SEC/period_us))
+
 const uint32_t TIMER_COUNT = (48000000 / 8 / TIMER_FREQ);
 const float TICKS_PER_US  = (float)TIMER_FREQ / (float)US_PER_SEC;
 
@@ -63,11 +65,11 @@ private:
     MotorBrake motorBrake;
     String modeString = "";
 
-    uint8_t buffer1[DOUBLE_BUF_SIZE];
-    uint8_t buffer2[DOUBLE_BUF_SIZE];
-    uint8_t *current_buffer = buffer1;
-    uint8_t *buffer_to_update = nullptr;
-    uint8_t *next_pulse = buffer2;
+    uint16_t buffer1[DOUBLE_BUF_SIZE];
+    uint16_t buffer2[DOUBLE_BUF_SIZE];
+    uint16_t *current_buffer = buffer1;
+    uint16_t *buffer_to_update = nullptr;
+    uint16_t *next_pulse = buffer2;
     
     //data that holds encoder data
     IEncoderInterface *encoder_ptr = nullptr;
