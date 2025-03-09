@@ -28,13 +28,16 @@ class MessageTypes:
     SetTargetPositionRelative = 24
     SetMotorVelocity = 25
     GetMotorVelocity = 26
+    SetVelocityAndSteps = 27
+    StartPath = 28
 
 class MotorStates:
     OFF = 0
     POSITION = 1
     VELOCITY = 2
-    IDLE_ON = 3
-    HOME = 4
+    VELOCITY_STEP = 3
+    IDLE_ON = 4
+    HOME = 5
 
 class MotorBrake:
     NORMAL =  0

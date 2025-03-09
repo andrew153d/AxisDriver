@@ -25,26 +25,6 @@ double MotorController::stepsToDegrees(long steps)
   return (steps / 64) * 360 / 200;
 }
 
-void MotorController::CheckForErrors()
-{
-  motorErrors.bits.TMC_lost_comms = (driver.getVersion() == 0);
-  motorErrors.bits.lostPower = (readVBUS() < 5.0f);
-
-  if (previousErrors.errors > 0 && motorErrors.errors == 0)
-  {
-    stepper.enableOutputs();
-  }
-  if (previousErrors.errors == 0 && motorErrors.errors > 0)
-  {
-    // disableOutputs();
-    // DEBUG_PRINTF("Motor Error Present: %4x\n", motorErrors.errors);
-    // addrLedController.SetLedState(FLASH_ERROR);
-    // controlMode = ControlMode::MOTOR_OFF;
-  }
-
-  previousErrors = motorErrors;
-}
-
 void TC0_Handler()
 {
   if (TC0->COUNT16.INTFLAG.bit.OVF)
@@ -85,8 +65,7 @@ void init_timer()
   while (TC0->COUNT16.SYNCBUSY.bit.ENABLE)
     ;
   // Set the period (TOP value) for the timer
-  TC0->COUNT16.CC[0].reg = TIMER_COUNT; // 0x4010; // 46875 * (1024 / 48000000) = 1 second
-  // TC0->COUNT16.CC[1].reg = 10000;//w 0x4010;
+  TC0->COUNT16.CC[0].reg = TIMER_COUNT;
   while (TC0->COUNT16.SYNCBUSY.bit.CC0)
     ;
 
@@ -126,8 +105,7 @@ void MotorController::OnStart()
   stepper.setMaxSpeed(100 * 64);
 
   driver.setup(serial_stream, 115200, TMC2209base::SerialAddress::SERIAL_ADDRESS_0);
-  // driver.setStandstillMode(TMC2209base::StandstillMode::BRAKING);
-  // driver.setStandstillMode(TMC2209base::StandstillMode::BRAKING);
+
   SetMotorState(MotorStates::OFF);
   state_change_time_ = millis();
   target_position = 0;
@@ -135,9 +113,6 @@ void MotorController::OnStart()
   init_timer();
 
   stepper.enableOutputs();
-  stepper.setSpeed(1000);
-  stepper.move(200*64);
-  DEBUG_PRINTF("TMC2209 Version: %d\n", driver.getVersion());
 }
 
 void MotorController::OnStop()
@@ -147,68 +122,39 @@ void MotorController::OnStop()
 
 void MotorController::OnTimer()
 {
-  stepper.run();
-  return;
-  if (*next_pulse > 0)
-  {
-    PORT->Group[g_APinDescription[MOTOR_STEP].ulPort].OUTTGL.reg = (1 << g_APinDescription[MOTOR_STEP].ulPin);
-    __asm__ __volatile__("nop\n\t" "nop\n\t"); //1 cycle at 120MHz is 8.33ns, min on time is 10ns for TMC2209
-    PORT->Group[g_APinDescription[MOTOR_STEP].ulPort].OUTTGL.reg = (1 << g_APinDescription[MOTOR_STEP].ulPin);
-  }
-  if (next_pulse == &buffer1[DOUBLE_BUF_SIZE - 1])
-  {
-    buffer_to_update = &buffer1[0];
-    next_pulse = &buffer2[0];
-    return;
-  }
-  if (next_pulse == &buffer2[DOUBLE_BUF_SIZE - 1])
-  {
-    buffer_to_update = &buffer2[0];
-    next_pulse = &buffer1[0];
-    return;
-  }
-  next_pulse++;
-}
-void MotorController::OnRun()
-{
-  if(buffer_to_update!=nullptr)
-  {
-    //need to put some data into the buffer
-
-    uint8_t* start_ptr = buffer_to_update;
-    uint8_t* end_ptr = buffer_to_update + DOUBLE_BUF_SIZE;
-    uint8_t* ptr = start_ptr;
-    uint32_t off_count = 0;
-
-    while(ptr<end_ptr)
-    {
-      *ptr = (uint32_t)ptr%3;
-      ptr++;
-    }
-    buffer_to_update = nullptr;
-  }
-
-  return;
-  if (millis() - error_check_timer > error_check_period)
-  {
-    error_check_timer = millis();
-    CheckForErrors();
-  }
-  static uint32_t timer = 0;
   switch (controlMode)
   {
   case MotorStates::OFF:
     break;
   case MotorStates::POSITION:
     stepper.run();
-    // if (stepper.distanceToGo() == 0)
-    //   stepper.disableOutputs();
     break;
   case MotorStates::VELOCITY:
     stepper.runSpeed();
-    if (target_velocity_duration != 0 && (millis() - target_velocity_timer) > target_velocity_duration)
-      // controlMode = MotorStates::OFF;
-      break;
+    break;
+  case MotorStates::VELOCITY_STEP:
+  {
+    stepper.runSpeed();
+    if (stepper.currentPosition() == velocity_step_end)
+    {
+      if(velocity_steps.size() == 0)
+      {
+        stepper.setSpeed(0);
+        SetMotorState(MotorStates::IDLE_ON);
+        return;
+      }
+      
+      //Done stepping, on to the next
+      auto this_move = velocity_steps.front();
+      stepper.setSpeed(this_move.velocity);
+      velocity_step_end = stepper.currentPosition() + this_move.step;
+      velocity_steps.pop_front();
+    }
+    else
+    {
+    }
+    break;
+  }
   case MotorStates::HOME:
   {
     switch (home_state_)
@@ -251,11 +197,16 @@ void MotorController::OnRun()
   }
 }
 
+void MotorController::OnRun()
+{
+  return;
+}
+
 void MotorController::SetMotorState(MotorStates state)
 {
   state_change_time_ = millis();
-  controlMode = state;
-  switch (controlMode)
+
+  switch (state)
   {
   case MotorStates::OFF:
     stepper.disableOutputs();
@@ -265,6 +216,15 @@ void MotorController::SetMotorState(MotorStates state)
     stepper.enableOutputs();
     break;
   case MotorStates::VELOCITY:
+    driver.setRunCurrent(100);
+    stepper.enableOutputs();
+    break;
+  case MotorStates::VELOCITY_STEP:
+    if (controlMode != MotorStates::VELOCITY_STEP)
+    {
+      velocity_step_end = stepper.currentPosition();
+    }
+    driver.setRunCurrent(100);
     stepper.enableOutputs();
     break;
   case MotorStates::HOME:
@@ -275,6 +235,7 @@ void MotorController::SetMotorState(MotorStates state)
     stepper.enableOutputs();
     break;
   }
+  controlMode = state;
 }
 
 MotorStates MotorController::GetMotorState()
@@ -286,7 +247,6 @@ void MotorController::SetMotorBraking(MotorBrake brake)
 {
   motorBrake = brake;
   driver.setStandstillMode((TMC2209base::StandstillMode)brake);
-  DEBUG_PRINTF("Setting Motor Brake: %d\n", brake);
 }
 
 MotorBrake MotorController::GetMotorBraking()
@@ -344,6 +304,17 @@ void MotorController::SetVelocityTarget(double velocity)
 double MotorController::GetVelocityTarget()
 {
   return target_velocity;
+}
+
+void MotorController::AddVelocityStep(int32_t velocity, int32_t step)
+{
+  DEBUG_PRINTF("Adding velocity step: %d, %d\n", velocity, step);
+  velocity_steps.push_back({velocity, step});
+}
+
+void MotorController::StartPath()
+{
+  SetMotorState(MotorStates::VELOCITY_STEP);
 }
 
 void MotorController::setEncoderValueSource(IEncoderInterface *encoder_value)

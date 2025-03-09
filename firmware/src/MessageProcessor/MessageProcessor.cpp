@@ -254,6 +254,18 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
   motorController.Home();
   break;
 
+  case MessageTypes::SetVelocityAndSteps:
+  {
+    SetVelocityAndStepsMessage *msg = (SetVelocityAndStepsMessage*)&recv_bytes[0];
+    motorController.AddVelocityStep(msg->velocity, msg->steps);
+    //DEBUG_PRINTF("Velocity: %x, Steps: %x", msg->velocity, msg->steps);
+    break;
+  }
+
+  case MessageTypes::StartPath:
+    motorController.StartPath();
+  break;
+
   default:
     DEBUG_PRINTF("Unable to handle message type: 0x%x", hdr->message_type);
     break;

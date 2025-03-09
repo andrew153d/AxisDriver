@@ -56,5 +56,13 @@ def GetMacAddressMessage(msg_id):
     message = message_type + body_size + body + checksum
     return message
 
+def SetVelocityAndSteps(msg_id, vel, steps):
+    message_type = msg_id.to_bytes(2, 'little')
+    body = struct.pack('<i', vel) + struct.pack('<i', steps)
+    body_size = (3).to_bytes(2, 'big')
+    checksum = (sum(body) & 0xFF).to_bytes(1, 'big')
+    message = message_type + body_size + body + checksum
+    return message
+
 def print_bytes(byte_array):
     print("".join(f"{byte:02x}" for byte in byte_array))

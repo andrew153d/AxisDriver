@@ -1,7 +1,7 @@
 #pragma once
 #include <Arduino.h>
 #include "Task/Task.h"
-#include "AccelStepper.h"
+#include "MotorController/AccelStepper.h"
 #include "LedController/LedController.h"
 #include "easyTMC2209.h"
 #include "wiring_private.h"
@@ -18,20 +18,23 @@
 #define US_PER_SEC 1000000
 #define TIMER_FREQ 10000 // ticks per second
 #define TIMER_COUNT (48000000 / 8 / TIMER_FREQ)
-#define TICKS_PER_US TIMER_FREQ/US_PER_SEC
+#define TICKS_PER_US TIMER_FREQ / US_PER_SEC
 
 static_assert(TIMER_COUNT > 0 && TIMER_COUNT < 0xFFFF, "TIMER_COUNT must be greater than 0 and less than 0xFFFF");
 
 #define DOUBLE_BUF_SIZE 1024
 
-enum HomeState{
-        RUN1,
-        BACKUP,
-        RUN2
-    };
+enum HomeState
+{
+    RUN1,
+    BACKUP,
+    RUN2
+};
 
-union MotorError {
-    struct {
+union MotorError
+{
+    struct
+    {
         bool lostPower : 1;
         bool TMC_lost_comms : 1;
         uint32_t spares : 30;
@@ -39,15 +42,12 @@ union MotorError {
     uint32_t errors;
 };
 
-class MotorStep{
-    public:
-    
-
-    MotorStep(){
-
+class MotorStep
+{
+public:
+    MotorStep()
+    {
     }
-
-
 };
 
 class MotorController : public ITask
@@ -56,48 +56,44 @@ private:
     HardwareSerial &serial_stream;
     easyTMC2209 driver;
     PIDController pid;
-    public:
+
+public:
     AccelStepper stepper;
-    
+
     MotorStates controlMode;
     HomeDirection homeDirection = HomeDirection::CLOCKWISE;
     MotorBrake motorBrake;
     String modeString = "";
 
-    uint8_t buffer1[DOUBLE_BUF_SIZE];
-    uint8_t buffer2[DOUBLE_BUF_SIZE];
-    uint8_t *current_buffer = buffer1;
-    uint8_t *buffer_to_update = nullptr;
-    uint8_t *next_pulse = buffer2;
-    
-    //data that holds encoder data
+    //Velocity Step variables
+    struct VelocityStep
+    {
+        int32_t velocity;
+        int32_t step;
+    };
+    std::deque<VelocityStep> velocity_steps;
+    long velocity_step_end = 0;
+
+    // data that holds encoder data
     IEncoderInterface *encoder_ptr = nullptr;
     int step = 0;
     bool hold = false;
-    //targets and timers
+
+    // targets and timers
     int target_position = 0;
     int target_velocity = 0;
     uint32_t target_velocity_duration = 0;
     uint32_t target_velocity_timer = 0;
-    
+
     HomeState home_state_ = HomeState::RUN1;
     uint32_t homing_speed_ = DEFAULT_HOMING_SPEED;
     bool homing_direction = DEFAULT_HOMING_DIRECTION;
     int error_flag;
     uint32_t state_change_time_;
 
-    //error checking stuff
-    MotorError motorErrors;
-    MotorError previousErrors;
-    uint32_t error_check_timer = 0;
-    const uint32_t error_check_period = 1000;
-    void CheckForErrors();
-
     uint8_t send_buffer[1024];
-    JsonDocument received_json;
-    //ControlMode GetModeFromString(String mode);
 
-    long degreesToSteps(double degrees);  
+    long degreesToSteps(double degrees);
     double stepsToDegrees(long steps);
 
 public:
@@ -132,7 +128,10 @@ public:
 
     void SetVelocityTarget(double velocity);
     double GetVelocityTarget();
-    
+
+    void AddVelocityStep(int32_t velocity, int32_t step);
+    void StartPath();
+
     void setEncoderValueSource(IEncoderInterface *encoder_value);
     uint32_t GetErrors();
 

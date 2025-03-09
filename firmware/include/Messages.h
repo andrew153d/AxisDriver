@@ -59,6 +59,8 @@ enum class MessageTypes : uint16_t
     SetMotorVelocity,
     GetMotorVelocity,
 
+    SetVelocityAndSteps,
+    StartPath,
 
 };
 
@@ -201,8 +203,9 @@ enum class MotorStates : uint8_t{
   OFF,
   POSITION,
   VELOCITY,
+  VELOCITY_STEP,
   IDLE_ON,
-  HOME
+  HOME,
 };
 
 enum class MotorBrake : uint8_t{
@@ -215,6 +218,14 @@ enum class MotorBrake : uint8_t{
 enum class HomeDirection : uint8_t{
     CLOCKWISE = 0,
     COUNTERCLOCKWISE = 1,
+};
+
+PACKEDSTRUCT VelocityAndStepsMessage
+{
+    Header header;
+    int32_t velocity;
+    int32_t steps;
+    Footer footer;
 };
 
 typedef U8Message SetMotorStateMessage;
@@ -238,3 +249,6 @@ typedef DoubleMessage SetMotorVelocityMessage;
 typedef DoubleMessage GetMotorVelocityMessage;
 typedef DoubleMessage SetMotorCurrentMessage;
 typedef DoubleMessage GetMotorCurrentMessage;
+
+typedef VelocityAndStepsMessage SetVelocityAndStepsMessage;
+typedef U8Message StartPathMessage;
