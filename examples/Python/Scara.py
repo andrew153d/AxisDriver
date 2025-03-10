@@ -5,11 +5,14 @@ import time
 import numpy as np
 from enum import Enum
 import serial.tools.list_ports
+import math
+from collections import namedtuple
 
 class MotorID(Enum):
-    RightMotor = 0xFCC23D6DB42A
-    LeftMotor = 0xFCC23D6DA11A
+    LeftMotor = 0xFCC23D6DB42A
+    RightMotor = 0xFCC23D6DA11A
 
+Point = namedtuple('Point', ['x', 'y'])
 # Define constants
 OFFSET = 86
 L1 = 50
@@ -30,21 +33,25 @@ def inverse_kinematics_dual(x, y):
     theta1_1, theta2_1 = calculate_angles(x, y, y > 0)
     theta1_2, theta2_2 = calculate_angles(x - OFFSET, y, y < 0)
 
-    return (theta1_1, theta2_1), (theta1_2, theta2_2)
+    return (theta1_1), (theta1_2)
 
 def move(mot, deg):
     print(f"Moving to {deg} degrees")
     mot.send_message(DriverComms.SetDouble(Messages.MessageTypes.SetTargetPosition, 200*64*(deg/360)))
 
-def WaitState(motor):
+def AddStep(mot, steps, speed):
+    print(f"Adding {steps} steps at {speed} speed")
+    mot.send_message(DriverComms.SetVelocityAndSteps(Messages.MessageTypes.SetVelocityAndSteps, speed, steps))
+
+def WaitState(motor, state):
     while True:
         motor.send_message(DriverComms.SetU8(Messages.MessageTypes.GetMotorState, 0))
         ret = motor.wait_serial_message()
         if ret is not None:
             ret = DriverComms.GetU8(ret)
-            if(ret != 4):
+            if(ret != state):
                 break
-            print(f"Mode: 0x{ret:02X}")
+            #print(f"Mode: 0x{ret:02X}")
         else:
             print("Failed to get mode")
         time.sleep(0.1)
@@ -82,8 +89,8 @@ def IdentifyMotors():
 
 def MoveScara(x, y):
     (angles1, angles2) = inverse_kinematics_dual(x, y)
-    move(Left, angles1[0]+18)
-    move(Right, angles2[0]+18)
+    move(Left, angles1+18)
+    move(Right, angles2+18)
 Left, Right = IdentifyMotors()
  
 Left.send_message(DriverComms.SetU8(Messages.MessageTypes.SetHomeDirection, Messages.HomeDirection.CLOCKWISE))
@@ -91,38 +98,54 @@ Right.send_message(DriverComms.SetU8(Messages.MessageTypes.SetHomeDirection, Mes
 Left.send_message(DriverComms.SetU8(Messages.MessageTypes.Home, 0))
 Right.send_message(DriverComms.SetU8(Messages.MessageTypes.Home, 0))
 
-WaitState(Left)
-WaitState(Right)
-
-move(Left, 18)
-move(Right, 18)
-time.sleep(1)
-MoveScara(OFFSET/2, 150)
-time.sleep(3)
-
-while(1):
-    MoveScara((OFFSET/2) + 25, 130)
-    time.sleep(1)
-    MoveScara((OFFSET/2)+ 25, 170)
-    time.sleep(1)
-    MoveScara((OFFSET/2)- 25, 170)
-    time.sleep(1)
-    MoveScara((OFFSET/2)- 25, 130)
-    time.sleep(1)
+WaitState(Left, Messages.MotorStates.HOME)
+WaitState(Right, Messages.MotorStates.HOME)
 
 
+Start = Point(((OFFSET/2) - 40), 130)
+End = Point(((OFFSET/2) + 90), 160)
 
+MoveScara(Start.x, Start.y)
+time.sleep(2)
 
+while(True):
+    distance_to_goal = math.sqrt((End.x-Start.x)**2 + (End.y-Start.y)**2)
+    distance_to_go_now = min(5, distance_to_goal)
+    if(distance_to_goal < 1):
+        break
+    angle_to_go_now = math.atan2(End.y-Start.y, End.x-Start.x)
+    x_step = distance_to_go_now * math.cos(angle_to_go_now)
+    y_step = distance_to_go_now * math.sin(angle_to_go_now)
+    Start = Point(Start.x + x_step, Start.y + y_step)
+    print(f"Goal Distance: {distance_to_goal}, step distance: {distance_to_go_now}, angle step: {math.degrees(angle_to_go_now)}, x_step: {x_step}, y_step: {y_step}")
+    
+    curr_left_angle, curr_right_angle = inverse_kinematics_dual(Start.x, Start.y)
+    new_left_angles, new_right_angles = inverse_kinematics_dual(Start.x + x_step, Start.y + y_step)
 
+    left_diff = new_left_angles - curr_left_angle
+    right_diff = new_right_angles - curr_right_angle
+    print(f"Left diff: {left_diff}, Right diff: {right_diff}")
+    
+    #calculate the speed
+    speed = 1000
+    right_speed = 1000
+    left_speed = 1000
+    if(abs(left_diff)<abs(right_diff)):
+        left_speed = 1000 * abs(left_diff/right_diff)
+    else:
+        right_speed = 1000 * abs(right_diff/left_diff)
 
-# WaitState(Left)
-# WaitState(Right)
+    right_speed = right_speed*(right_diff/abs(right_diff))
+    left_speed = left_speed*(left_diff/abs(left_diff))
 
-# # Move motors to the calculated angles for the second configuration
-# move(Left, angles2[0])
-# move(Right, angles2[1])
+    #print(f"Left Speed: {left_speed}, Right Speed: {right_speed}")
+    AddStep(Left, int(left_diff*(1/360)*(200*64)), int(left_speed))
+    AddStep(Right, int(right_diff*(1/360)*(200*64)), int(right_speed))
+    
 
-# WaitState(Left)
-# WaitState(Right)
+Left.send_message(DriverComms.SetU8(Messages.MessageTypes.StartPath, 0))
+Right.send_message(DriverComms.SetU8(Messages.MessageTypes.StartPath, 0))
 
-time.sleep(5)
+#time.sleep(5)
+#MoveScara(POS2[0], POS2[1])
+#time.sleep(1)

@@ -308,7 +308,7 @@ double MotorController::GetVelocityTarget()
 
 void MotorController::AddVelocityStep(int32_t velocity, int32_t step)
 {
-  DEBUG_PRINTF("Adding velocity step: %d, %d\n", velocity, step);
+  //DEBUG_PRINTF("Adding velocity step: %d, %d\n", velocity, step);
   velocity_steps.push_back({velocity, step});
 }
 
