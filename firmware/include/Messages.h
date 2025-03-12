@@ -27,6 +27,7 @@ enum class MessageTypes : uint16_t
     SetEthernetPort,
     GetEthernetPort,
     GetMacAddress,
+    SaveSettings,
 
     // LED control
 
@@ -125,6 +126,22 @@ PACKEDSTRUCT MACAddressMessage
     Footer footer;
 };
 
+PACKEDSTRUCT SetEthernetIpAddressMessage
+{
+    Header header;
+    uint32_t ip_address;
+    Footer footer;
+};
+
+PACKEDSTRUCT SetEthernetPortMessage
+{
+    Header header;
+    uint32_t ip_address;
+    Footer footer;
+};
+
+typedef U8Message SaveSettingsMessage;
+
 // *********************** LED interface *********************** //
 
 PACKEDSTRUCT LedColors
@@ -177,23 +194,6 @@ PACKEDSTRUCT GetLedColorMessage
 {
     Header header;
     LedColors ledColor;
-    Footer footer;
-};
-
-// *********************** Ethernet interface *********************** //
-
-
-PACKEDSTRUCT SetEthernetIpAddressMessage
-{
-    Header header;
-    uint32_t ip_address;
-    Footer footer;
-};
-
-PACKEDSTRUCT SetEthernetPortMessage
-{
-    Header header;
-    uint32_t ip_address;
     Footer footer;
 };
 

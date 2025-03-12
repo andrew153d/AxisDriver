@@ -222,7 +222,7 @@ namespace FlashStorage
             {
                 if (current_settings_buffer[i] != saved_settings_buffer[i])
                 {
-                    DEBUG_PRINTLN("found difference, need to write flash");
+                    //DEBUG_PRINTLN("found difference, need to write flash");
                     return;
                 }
             }
@@ -244,7 +244,7 @@ namespace FlashStorage
         {
             return;
         }
-        DEBUG_PRINTF("Writing pages: %x\n", pages_write_mask);
+        //DEBUG_PRINTF("Writing pages: %x\n", pages_write_mask);
         for (uint16_t i = 0; i < 16; i++)
         {
             if ((pages_write_mask >> i) & 0x1 > 0)

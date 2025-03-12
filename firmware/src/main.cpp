@@ -90,6 +90,7 @@ void setup()
   addrLedController.SetLEDColor(CRGB(0x000000));
 
   messageProcessor.AddExternalInterface(&serialTextInterface);
+  messageProcessor.AddExternalInterface(&AEthernet);
 
   manager.AddTask(&serialTextInterface);
   manager.AddTask(&messageProcessor);
@@ -117,22 +118,18 @@ void setup()
 void EvaluateHatType()
 {
   // check for the the ethernet hat
-  AxisEthernet *AEthernet = new AxisEthernet(10);
-  if (AEthernet != nullptr)
-    AEthernet->Start();
+     AEthernet.Start();
 
-  if (AEthernet->IsPresent())
+  if (AEthernet.IsPresent())
   {
     addrLedController.AddLedStep(CRGB::Purple, 100);
     addrLedController.AddLedStep(CRGB::Black, 100);
-    manager.AddTask(AEthernet);
+    //manager.AddTask(&AEthernet);
   }
   else
   {
     addrLedController.AddLedStep(CRGB::Red, 100);
     addrLedController.AddLedStep(CRGB::Black, 100);
-    //delete AEthernet;
-    //AEthernet = nullptr;
   }
 }
 uint32_t loop_count = 0;

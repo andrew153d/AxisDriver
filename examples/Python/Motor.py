@@ -3,14 +3,18 @@ import Serial
 import Messages
 import time
 
-SerialComms = Serial.AxisSerial('/dev/ttyACM0')
-
+#SerialComms = Serial.AxisSerial('/dev/ttyACM0')
+SerialComms = Serial.AxisUDP("192.168.12.156", 4568)
 
 #Start in velocity and step mode
 SerialComms.send_message(DriverComms.SetVelocityAndSteps(Messages.MessageTypes.SetVelocityAndSteps, 1800, 64*100))
+time.sleep(0.1)
 SerialComms.send_message(DriverComms.SetVelocityAndSteps(Messages.MessageTypes.SetVelocityAndSteps, -4000, -64*100))
+time.sleep(0.1)
 SerialComms.send_message(DriverComms.SetU8(Messages.MessageTypes.StartPath, 0))
+time.sleep(0.1)
 
+exit()
 time.sleep(6)
 
 #Setup parameters

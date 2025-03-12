@@ -147,6 +147,12 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     break;
   }
 
+  case MessageTypes::SaveSettings:
+  {
+    FlashStorage::WriteFlash();
+    DEBUG_PRINTLN("Writing flash");
+  }
+
   case MessageTypes::SetMotorState:
   {
     SetMotorStateMessage *msg = (SetMotorStateMessage *)recv_bytes;

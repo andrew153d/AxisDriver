@@ -8,7 +8,16 @@
 #include "DebugPrinter.h"
 #include <EthernetUdp.h> 
 
-class AxisEthernet : public ITask, public IInternalInterface
+class W5500UdpClient : public EthernetUDP
+{
+    public:
+    uint8_t GetSocketIndex()
+    {
+        return sockindex;
+    }
+};
+
+class AxisEthernet : public ITask, public IExternalInterface
 {
 private:
     const uint32_t PMODE0 = AUX2;
@@ -21,7 +30,7 @@ private:
 
     bool device_found = false;
 
-    EthernetUDP Udp; 
+    W5500UdpClient Udp; 
     uint8_t buffer[1024];
     
 public:
@@ -40,10 +49,9 @@ public:
     bool IsPresent(){ return device_found; }
     // messageHandlers
     void HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size);
-    void HandleJsonMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size);
-    void HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size);
+    void SendMsg(uint8_t* send_bytes, uint32_t send_bytes_size);
 
     void HandleInturrupt();
 };
 
-extern AxisEthernet* AEthernet;
+extern AxisEthernet AEthernet;

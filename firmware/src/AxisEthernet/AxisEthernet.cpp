@@ -9,14 +9,14 @@ void AxisEthernet::OnStart()
 {
     pinMode(nRST, OUTPUT);
     digitalWrite(nRST, LOW);
-    delay(500); //increase this if issues with link
+    delay(500); // increase this if issues with link
     digitalWrite(nRST, HIGH);
-    
+
     pinMode(nINT, INPUT);
     pinMode(nCS, OUTPUT);
     digitalWrite(nCS, LOW);
 
-    //set mode
+    // set mode
     pinMode(PMODE0, OUTPUT);
     pinMode(PMODE1, OUTPUT);
     pinMode(PMODE2, OUTPUT);
@@ -25,7 +25,7 @@ void AxisEthernet::OnStart()
     digitalWrite(PMODE2, HIGH);
 
     Ethernet.init(nCS);
-    //DEBUG_PRINTF("Initializing ethernet with ip 0x%X\n", FlashStorage::GetEthernetSettings()->ip_address);
+    // DEBUG_PRINTF("Initializing ethernet with ip 0x%X\n", FlashStorage::GetEthernetSettings()->ip_address);
     Ethernet.begin(FlashStorage::GetMacAddress(), IPAddress(FlashStorage::GetEthernetSettings()->ip_address));
 
     // Check for Ethernet hardware present
@@ -48,128 +48,66 @@ void AxisEthernet::OnStart()
     //     // Serial.println("Detected Ethernet cable");
     // }
     Udp.begin(FlashStorage::GetEthernetSettings()->port);
+
+    //W5100.writeIR();
+    //W5100.writeIMR();
+    
+    W5100.writeSIMR(1<<Udp.GetSocketIndex());
+    
+    W5100.writeSnIMR(Udp.GetSocketIndex(), 0xF);
+    //W5100.writeSnIR()
+
     DEBUG_PRINT("Ip Address: ");
     DEBUG_PRINTLN(Ethernet.localIP());
     DEBUG_PRINTF("Port: 0x%x\n", Udp.localPort());
-    //DEBUG_PRINTF("Ip Address: %x, Port: %X\n", Ethernet.localIP(), Udp.localPort());
-    //DEBUG_PRINTLN(Ethernet.localIP());
-    //interrupts();
-    //attachInterrupt(AUX4, HandleInturrupts, RISING);
+    // DEBUG_PRINTF("Ip Address: %x, Port: %X\n", Ethernet.localIP(), Udp.localPort());
+    // DEBUG_PRINTLN(Ethernet.localIP());
     
+    interrupts();
+    NVIC_EnableIRQ(EIC_3_IRQn);
+    NVIC_SetPriority(EIC_3_IRQn, 2);
+    attachInterrupt(AUX4, HandleInturrupts, CHANGE);
 }
 
 void AxisEthernet::HandleInturrupt()
 {
-    //Serial.println("int");
+    uint8_t intr = W5100.readSnIR(Udp.GetSocketIndex());
+    //DEBUG_PRINTF("interupt: 0x%x\n", intr);
+    W5100.writeSnIR(Udp.GetSocketIndex(), intr);
+    uint16_t packetSize = Udp.parsePacket();
+    if (packetSize == 0)
+        return;
+
+    Udp.read(buffer, packetSize);
+    
+    HandleIncomingMsg(buffer, packetSize);
+
     return;
 }
 
 void HandleInturrupts()
 {
-    // if(AEthernet!=nullptr)
-    //     AEthernet->HandleInturrupt();
+    AEthernet.HandleInturrupt();
 }
+
 void AxisEthernet::OnRun()
 {
-    uint16_t packetSize = Udp.parsePacket();
-    if(packetSize == 0)
-        return;
-
-    Udp.read(buffer, packetSize); 
-    DEBUG_PRINT((char*)&buffer[0]);
+    
 }
 
 void AxisEthernet::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size)
 {
-    // if (recv_bytes_size == 0)
-    //     return;
-
-    // if ((char)recv_bytes[0] == '{')
-    //     HandleJsonMsg(recv_bytes, recv_bytes_size);
-    // else
-    //     HandleByteMsg(recv_bytes, recv_bytes_size);
+    if(processor_interface_!=nullptr){
+        processor_interface_->HandleIncomingMsg(recv_bytes, recv_bytes_size);
+    }else{
+        Serial.println("processor_interface is null");
+    }
 }
 
-void AxisEthernet::HandleJsonMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size)
-{
-    // DeserializationError error = deserializeJson(recvd_json, recv_bytes, 256);
-    // if (error)
-    // {
-    //     Serial.println("Error parsing json in motor controller");
-    //     return;
-    // }
-
-    // String command = "";
-
-    // if (!TryParseJson<String>("mode", &command, recvd_json))
-    // {
-    //     Serial.println("Failed to parse encoder mode");
-    //     return;
-    // }
-
-    // EncoderCommands encoder_command = ToEncoderCommandsEnum(command);
-
-    // switch (encoder_command)
-    // {
-    // case EncoderCommands::SetPosition:
-    // {
-    //     float offset = 0;
-    //     if (!TryParseJson<float>("position", &offset, recvd_json))
-    //     {
-    //         Serial.println("Failed to parse position");
-    //         return;
-    //     }
-    //     SetPosition(offset);
-    //     break;
-    // }
-    // case EncoderCommands::GetPosition:
-    // {
-    //     recvd_json.clear();
-    //     recvd_json["type"] = ENCODERTYPESTRING;
-    //     recvd_json["mode"] = GETPOSITIONCOMMAND;
-    //     recvd_json["position"] = GetShaftAngle();
-    //     String output;
-    //     serializeJson(recvd_json, output);
-    //     Serial.println(output);
-    //     break;
-    // }
-    // case EncoderCommands::GetUpdateRate:
-    // {
-
-    //     recvd_json.clear();
-    //     recvd_json["type"] = ENCODERTYPESTRING;
-    //     recvd_json["mode"] = GETUPDATERATECOMMAND;
-    //     recvd_json["rate"] = GetUpdateRate();
-    //     String output;
-    //     serializeJson(recvd_json, output);
-    //     Serial.println(output);
-    //     break;
-    // }
-    // }
-}
-
-void AxisEthernet::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size)
-{
-    // if (recv_bytes_size < HEADER_SIZE + FOOTER_SIZE)
-    // {
-    //     Serial.println("Size too small");
-    // }
-
-    // Header *header = (Header *)recv_bytes;
-    // if (recv_bytes_size < HEADER_SIZE + header->body_size + FOOTER_SIZE)
-    // {
-    //     Serial.printf("Invalid body size: recv_bytes:%d, header_size:%d, body_size:%d, footer_size:%d\n", recv_bytes_size, HEADER_SIZE, header->body_size, FOOTER_SIZE);
-    //     return;
-    // }
-
-    // //   switch (header->message_type)
-    // //   {
-    // //   break;
-    // //   default:
-    // //     break;
-    // //   }
-}
+void AxisEthernet::SendMsg(uint8_t* send_bytes, uint32_t send_bytes_size){};
 
 void AxisEthernet::OnStop()
 {
 }
+
+AxisEthernet AEthernet(10);
