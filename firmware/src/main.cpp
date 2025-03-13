@@ -124,7 +124,7 @@ void EvaluateHatType()
   {
     addrLedController.AddLedStep(CRGB::Purple, 100);
     addrLedController.AddLedStep(CRGB::Black, 100);
-    //manager.AddTask(&AEthernet);
+    manager.AddTask(&AEthernet);
   }
   else
   {

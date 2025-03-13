@@ -49,40 +49,41 @@ void AxisEthernet::OnStart()
     // }
     Udp.begin(FlashStorage::GetEthernetSettings()->port);
 
-    //W5100.writeIR();
-    //W5100.writeIMR();
-    
-    W5100.writeSIMR(1<<Udp.GetSocketIndex());
-    
-    W5100.writeSnIMR(Udp.GetSocketIndex(), 0xF);
-    //W5100.writeSnIR()
+    // W5100.writeIR();
+    // W5100.writeIMR();
 
+    W5100.writeSIMR(1 << Udp.GetSocketIndex());
+
+    W5100.writeSnIMR(Udp.GetSocketIndex(), 0xF);
+    // W5100.writeSnIR()
+    uint16_t int_level = 0x0FFF;
+    W5100.writeINTLEVEL((uint8_t*)&int_level);
     DEBUG_PRINT("Ip Address: ");
     DEBUG_PRINTLN(Ethernet.localIP());
     DEBUG_PRINTF("Port: 0x%x\n", Udp.localPort());
-    // DEBUG_PRINTF("Ip Address: %x, Port: %X\n", Ethernet.localIP(), Udp.localPort());
-    // DEBUG_PRINTLN(Ethernet.localIP());
-    
+
     interrupts();
     NVIC_EnableIRQ(EIC_3_IRQn);
-    NVIC_SetPriority(EIC_3_IRQn, 2);
+    NVIC_SetPriority(EIC_3_IRQn, 1);
     attachInterrupt(AUX4, HandleInturrupts, CHANGE);
 }
 
 void AxisEthernet::HandleInturrupt()
 {
     uint8_t intr = W5100.readSnIR(Udp.GetSocketIndex());
-    //DEBUG_PRINTF("interupt: 0x%x\n", intr);
     W5100.writeSnIR(Udp.GetSocketIndex(), intr);
-    uint16_t packetSize = Udp.parsePacket();
-    if (packetSize == 0)
-        return;
-
-    Udp.read(buffer, packetSize);
+    //DEBUG_PRINTF("interupt: 0x%x\n", intr);
     
-    HandleIncomingMsg(buffer, packetSize);
-
-    return;
+    while (true)
+    {
+        uint16_t packetSize = Udp.parsePacket();
+        if (packetSize == 0)
+            return;
+        //DEBUG_PRINTF("Inturrupt received size %d\n", packetSize);
+        memset(buffer, 0, 1024);
+        Udp.read(buffer, packetSize);
+        HandleIncomingMsg(buffer, packetSize);
+    }
 }
 
 void HandleInturrupts()
@@ -92,19 +93,40 @@ void HandleInturrupts()
 
 void AxisEthernet::OnRun()
 {
-    
+    uint16_t packetSize = Udp.parsePacket();
+    if (packetSize == 0)
+        return;
+    //DEBUG_PRINTF("Run Received %d\n", packetSize);
+    memset(buffer, 0, 1024);
+    Udp.read(buffer, packetSize);
+    HandleIncomingMsg(buffer, packetSize);
 }
 
 void AxisEthernet::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size)
 {
-    if(processor_interface_!=nullptr){
+    // for (uint32_t i = 0; i < recv_bytes_size; i++)
+    // {
+    //     DEBUG_PRINT("0x");
+    //     if (recv_bytes[i] < 0x10)
+    //     {
+    //         Serial.print("0");
+    //     }
+    //     DEBUG_PRINT(recv_bytes[i], HEX);
+    //     DEBUG_PRINT(" ");
+    // }
+    // DEBUG_PRINTLN();
+    // DEBUG_PRINTF("Received %d bytes\n", recv_bytes_size);
+    if (processor_interface_ != nullptr)
+    {
         processor_interface_->HandleIncomingMsg(recv_bytes, recv_bytes_size);
-    }else{
+    }
+    else
+    {
         Serial.println("processor_interface is null");
     }
 }
 
-void AxisEthernet::SendMsg(uint8_t* send_bytes, uint32_t send_bytes_size){};
+void AxisEthernet::SendMsg(uint8_t *send_bytes, uint32_t send_bytes_size) {};
 
 void AxisEthernet::OnStop()
 {

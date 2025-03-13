@@ -67,9 +67,9 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     VersionMessage *msg = (VersionMessage *)&send_buffer[0];
     msg->header.message_type = MessageTypes::GetVersion;
     msg->header.body_size = sizeof(VersionMessage::value);
-    uint8_t* v_buf = (uint8_t*)&msg->value;
+    uint8_t *v_buf = (uint8_t *)&msg->value;
     sscanf(FIRMWARE_VERSION, "%u.%u.%u.%u", &v_buf[0], &v_buf[1], &v_buf[2], &v_buf[3]);
-    //DEBUG_PRINTF("0x%8X\n", msg->value);
+    // DEBUG_PRINTF("0x%8X\n", msg->value);
     msg->footer.checksum = 0;
     SendMsg(send_buffer, sizeof(VersionMessage));
     break;
@@ -89,7 +89,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->header.body_size = sizeof(I2CAddressMessage::value);
     msg->value = FlashStorage::GetI2CSettings()->address;
     msg->footer.checksum = 0;
-    //DEBUG_PRINTF("Sending I2C Address: 0x%x\n", msg->value);
+    // DEBUG_PRINTF("Sending I2C Address: 0x%x\n", msg->value);
     SendMsg(send_buffer, sizeof(I2CAddressMessage));
     break;
   }
@@ -98,8 +98,8 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
   {
     IPAddressMessage *msg = (IPAddressMessage *)recv_bytes;
     FlashStorage::GetEthernetSettings()->ip_address = msg->value;
-    //DEBUG_PRINT("Setting IP Address: ");
-    //DEBUG_PRINTLN(IPAddress(msg->value));
+    // DEBUG_PRINT("Setting IP Address: ");
+    // DEBUG_PRINTLN(IPAddress(msg->value));
     break;
   }
 
@@ -111,7 +111,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->value = FlashStorage::GetEthernetSettings()->ip_address;
     msg->footer.checksum = 0;
     SendMsg(send_buffer, sizeof(IPAddressMessage));
-    //DEBUG_PRINTF("Sending IP Address: 0x%x\n", sizeof(IPAddressMessage));
+    // DEBUG_PRINTF("Sending IP Address: 0x%x\n", sizeof(IPAddressMessage));
     break;
   }
 
@@ -119,7 +119,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
   {
     EthernetPortMessage *msg = (EthernetPortMessage *)recv_bytes;
     FlashStorage::GetEthernetSettings()->port = (uint16_t)(msg->value);
-    //DEBUG_PRINTF("Setting Port: 0x%x\n", FlashStorage::GetEthernetSettings()->port);
+    // DEBUG_PRINTF("Setting Port: 0x%x\n", FlashStorage::GetEthernetSettings()->port);
     break;
   }
 
@@ -131,17 +131,17 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->value = FlashStorage::GetEthernetSettings()->port;
     msg->footer.checksum = 0;
     SendMsg(send_buffer, sizeof(EthernetPortMessage));
-    //DEBUG_PRINTF("Sending Port: %d\n", FlashStorage::GetEthernetSettings()->port);
-    //DEBUG_PRINTF("Port msg size: %d\n", sizeof(EthernetPortMessage));
+    // DEBUG_PRINTF("Sending Port: %d\n", FlashStorage::GetEthernetSettings()->port);
+    // DEBUG_PRINTF("Port msg size: %d\n", sizeof(EthernetPortMessage));
     break;
   }
 
   case MessageTypes::GetMacAddress:
   {
-    MACAddressMessage *msg = (MACAddressMessage*)&send_buffer[0];
+    MACAddressMessage *msg = (MACAddressMessage *)&send_buffer[0];
     msg->header.message_type = MessageTypes::GetMacAddress;
     msg->header.body_size = sizeof(MACAddressMessage::mac);
-    memcpy(&(msg->mac[0]), FlashStorage::GetMacAddress(), 6);    
+    memcpy(&(msg->mac[0]), FlashStorage::GetMacAddress(), 6);
     msg->footer.checksum = 0;
     SendMsg(send_buffer, sizeof(MACAddressMessage));
     break;
@@ -150,13 +150,14 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
   case MessageTypes::SaveSettings:
   {
     FlashStorage::WriteFlash();
-    DEBUG_PRINTLN("Writing flash");
+    // DEBUG_PRINTLN("Writing flash");
+    break;
   }
 
   case MessageTypes::SetMotorState:
   {
     SetMotorStateMessage *msg = (SetMotorStateMessage *)recv_bytes;
-    //DEBUG_PRINTF("Setting Motor State to: %d\n", msg->value);
+    // DEBUG_PRINTF("Setting Motor State to: %d\n", msg->value);
     motorController.SetMotorState((MotorStates)msg->value);
     break;
   }
@@ -169,40 +170,43 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->value = (uint8_t)motorController.GetMotorState();
     msg->footer.checksum = 0;
     SendMsg(send_buffer, sizeof(GetMotorStateMessage));
-    //DEBUG_PRINTF("Sending Motor State: %d\n", (uint8_t)motorController.GetMotorState());
+    // DEBUG_PRINTF("Sending Motor State: %d\n", (uint8_t)motorController.GetMotorState());
     break;
   }
 
   case MessageTypes::SetMotorBrake:
   {
-    SetMotorBrakeMessage *msg = (SetMotorBrakeMessage* )&recv_bytes[0];
+    SetMotorBrakeMessage *msg = (SetMotorBrakeMessage *)&recv_bytes[0];
     motorController.SetMotorBraking((MotorBrake)msg->value);
+    break;
   }
 
   case MessageTypes::SetMaxSpeed:
   {
-    SetMaxSpeedMessage *msg = (SetMaxSpeedMessage*)&recv_bytes[0];
+    SetMaxSpeedMessage *msg = (SetMaxSpeedMessage *)&recv_bytes[0];
     motorController.SetMaxSpeed(msg->value);
+    break;
   }
 
   case MessageTypes::SetAcceleration:
   {
-    SetAccelerationMessage *msg = (SetAccelerationMessage*)&recv_bytes[0];
+    SetAccelerationMessage *msg = (SetAccelerationMessage *)&recv_bytes[0];
     motorController.SetAcceleration(msg->value);
+    break;
   }
 
   case MessageTypes::SetTargetPositionRelative:
   {
     SetMotorPositionMessage *msg = (SetMotorPositionMessage *)recv_bytes;
     motorController.SetPositionTargetRelative(msg->value);
-    //DEBUG_PRINTF("Setting Motor Position Relative to: %f\n", msg->value);
+    //DEBUG_PRINTF("Setting Motor Position Relative: %f\n", msg->value);
     break;
   }
 
   case MessageTypes::SetTargetPosition:
   {
     SetMotorPositionMessage *msg = (SetMotorPositionMessage *)recv_bytes;
-    //DEBUG_PRINTF("Setting Motor Position to: %f\n", msg->value);
+    // DEBUG_PRINTF("Setting Motor Position to: %f\n", msg->value);
     motorController.SetPositionTarget(msg->value);
     break;
   }
@@ -215,7 +219,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->value = motorController.GetPositionTarget();
     msg->footer.checksum = 0;
     SendMsg(send_buffer, sizeof(GetMotorPositionMessage));
-    //DEBUG_PRINTF("Sending Motor Position: %f\n", motorController.GetPositionTarget());
+    // DEBUG_PRINTF("Sending Motor Position: %f\n", motorController.GetPositionTarget());
     break;
   }
 
@@ -223,7 +227,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
   {
     SetMotorVelocityMessage *msg = (SetMotorVelocityMessage *)recv_bytes;
     motorController.SetVelocityTarget(msg->value);
-    //DEBUG_PRINTF("Setting Motor Velocity to: %d\n", msg->value);
+    // DEBUG_PRINTF("Setting Motor Velocity to: %d\n", msg->value);
     break;
   }
 
@@ -257,20 +261,20 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
   }
 
   case MessageTypes::Home:
-  motorController.Home();
-  break;
+    motorController.Home();
+    break;
 
   case MessageTypes::SetVelocityAndSteps:
   {
-    SetVelocityAndStepsMessage *msg = (SetVelocityAndStepsMessage*)&recv_bytes[0];
+    SetVelocityAndStepsMessage *msg = (SetVelocityAndStepsMessage *)&recv_bytes[0];
     motorController.AddVelocityStep(msg->velocity, msg->steps);
-    //DEBUG_PRINTF("Velocity: %x, Steps: %x", msg->velocity, msg->steps);
+    // DEBUG_PRINTF("Velocity: %x, Steps: %x", msg->velocity, msg->steps);
     break;
   }
 
   case MessageTypes::StartPath:
     motorController.StartPath();
-  break;
+    break;
 
   default:
     DEBUG_PRINTF("Unable to handle message type: 0x%x", hdr->message_type);

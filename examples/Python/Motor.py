@@ -1,30 +1,27 @@
 import DriverComms
-import Serial
+from Serial import *
 import Messages
 import time
 
-#SerialComms = Serial.AxisSerial('/dev/ttyACM0')
-SerialComms = Serial.AxisUDP("192.168.12.156", 4568)
+#SerialComms = AxisSerial('/dev/ttyACM0')
+SerialComms = AxisUDP("192.168.12.156", 4568)
 
 #Start in velocity and step mode
-SerialComms.send_message(DriverComms.SetVelocityAndSteps(Messages.MessageTypes.SetVelocityAndSteps, 1800, 64*100))
-time.sleep(0.1)
-SerialComms.send_message(DriverComms.SetVelocityAndSteps(Messages.MessageTypes.SetVelocityAndSteps, -4000, -64*100))
-time.sleep(0.1)
-SerialComms.send_message(DriverComms.SetU8(Messages.MessageTypes.StartPath, 0))
-time.sleep(0.1)
+# SerialComms.send_message(DriverComms.SetVelocityAndSteps(Messages.MessageTypes.SetVelocityAndSteps, 1800, 64*100))
+# SerialComms.send_message(DriverComms.SetVelocityAndSteps(Messages.MessageTypes.SetVelocityAndSteps, -4000, -64*100))
+# SerialComms.send_message(DriverComms.SetU8(Messages.MessageTypes.StartPath, 0))
 
-exit()
-time.sleep(6)
+# time.sleep(6)
 
 #Setup parameters
-SerialComms.send_message(DriverComms.SetU32(Messages.MessageTypes.SetAcceleration, 64*500))
-SerialComms.send_message(DriverComms.SetU32(Messages.MessageTypes.SetMaxSpeed, 64*100))
+SerialComms.send_message(DriverComms.SetU32(Messages.MessageTypes.SetAcceleration, 64*1000))
+SerialComms.send_message(DriverComms.SetU32(Messages.MessageTypes.SetMaxSpeed, 64*5000))
 
 #Drive in relative position mode
-SerialComms.send_message(DriverComms.SetDouble(Messages.MessageTypes.SetTargetPositionRelative, 200*64*2))
+SerialComms.send_message(DriverComms.SetDouble(Messages.MessageTypes.SetTargetPositionRelative, 200*64*1))
+exit()
 time.sleep(7)
-
+exit()
 #Get the current position
 SerialComms.send_message(DriverComms.SetDouble(Messages.MessageTypes.GetTargetPosition, 0))
 ret = DriverComms.GetDouble(SerialComms.wait_serial_message())

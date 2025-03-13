@@ -35,7 +35,7 @@ with open(output_file, 'w') as f:
             else:
                 name = member
                 value = value_counter
-            f.write(f"    {name.strip()} = {value}\n")
+            f.write(f"    {name.strip()} = 0x{int(value):x}\n")
             value_counter += 1
 
 print(f"Python enums written to {output_file}")

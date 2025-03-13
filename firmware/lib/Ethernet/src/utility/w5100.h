@@ -212,7 +212,7 @@ public:
   __GP_REGISTER8 (VERSIONR_W5500,0x0039);   // Chip Version Register (W5500 only)
   __GP_REGISTER8 (PSTATUS_W5200,     0x0035);    // PHY Status
   __GP_REGISTER8 (PHYCFGR_W5500,     0x002E);    // PHY Configuration register, default: 10111xxx
-
+  __GP_REGISTER_N(INTLEVEL, 0x0013, 2)
 
 #undef __GP_REGISTER8
 #undef __GP_REGISTER16
@@ -292,6 +292,7 @@ public:
   __SOCKET_REGISTER16(SnRX_RD,    0x0028)        // RX Read Pointer
   __SOCKET_REGISTER16(SnRX_WR,    0x002A)        // RX Write Pointer (supported?)
   __SOCKET_REGISTER8(SnIMR, 0x002C)
+
 
 #undef __SOCKET_REGISTER8
 #undef __SOCKET_REGISTER16

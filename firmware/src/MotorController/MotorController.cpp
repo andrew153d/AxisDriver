@@ -276,6 +276,7 @@ uint32_t MotorController::GetAcceleration()
 
 void MotorController::SetPositionTargetRelative(double position)
 {
+  //DEBUG_PRINTF("Steps: %f\n", position);
   SetMotorState(MotorStates::POSITION);
   target_position += position;
   stepper.moveTo(target_position);
