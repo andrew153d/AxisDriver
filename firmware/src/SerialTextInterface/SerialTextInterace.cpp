@@ -60,7 +60,7 @@ void SerialTextInterface::OnRun()
 void SerialTextInterface::HandleIncomingMsg(uint8_t* recv_bytes, uint32_t recv_bytes_size = 0)
 {
     if(processor_interface_!=nullptr){
-        processor_interface_->HandleIncomingMsg(recv_bytes, recv_bytes_size);
+        processor_interface_->HandleIncomingMsg(recv_bytes, recv_bytes_size, this);
     }else{
         Serial.println("processor_interface is null");
     }

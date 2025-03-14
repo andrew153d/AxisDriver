@@ -24,13 +24,15 @@ class MessageTypes:
     GetMaxSpeed = 0x14
     SetAcceleration = 0x15
     GetAcceleration = 0x16
-    SetTargetPosition = 0x17
-    GetTargetPosition = 0x18
-    SetTargetPositionRelative = 0x19
-    SetMotorVelocity = 0x1a
-    GetMotorVelocity = 0x1b
-    SetVelocityAndSteps = 0x1c
-    StartPath = 0x1d
+    GetPosition = 0x17
+    SetPosition = 0x18
+    SetTargetPosition = 0x19
+    GetTargetPosition = 0x1a
+    SetTargetPositionRelative = 0x1b
+    SetVelocity = 0x1c
+    GetVelocity = 0x1d
+    SetVelocityAndSteps = 0x1e
+    StartPath = 0x1f
 
 class MotorStates:
     OFF = 0x0

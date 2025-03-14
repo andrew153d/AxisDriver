@@ -28,6 +28,9 @@ private:
     const uint32_t nINT = AUX4;
     const uint32_t nCS = ETH_CS;
 
+    IPAddress remoteIp;
+    uint16_t remotePort;
+
     bool device_found = false;
 
     W5500UdpClient Udp; 

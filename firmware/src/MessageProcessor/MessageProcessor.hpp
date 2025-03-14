@@ -5,12 +5,14 @@
 #include <ArduinoJson.h>
 #include "Task/Task.h"
 
+class IExternalInterface; // Forward declaration
+
 class IProcessorInterface
 {
 protected:
 public:
   virtual void SendMsg(uint8_t *send_bytes, uint32_t send_bytes_size) = 0;
-  virtual void HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size) = 0;
+  virtual void HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size, IExternalInterface* calling_interface) = 0;
 };
 
 class IExternalInterface
@@ -31,7 +33,7 @@ class IInternalInterface
 {
 protected:
   IProcessorInterface *processor_interface_ = nullptr;
-
+  
 public:
   virtual void HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size) = 0;
 
@@ -58,7 +60,7 @@ public:
 
   void HandleJsonMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size);
   void HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size);
-  void HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size = 0);
+  void HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size, IExternalInterface* calling_interface);
 
   void SendMsg(uint8_t *send_bytes, uint32_t send_bytes_size);
 };

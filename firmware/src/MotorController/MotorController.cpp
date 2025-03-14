@@ -139,6 +139,7 @@ void MotorController::OnTimer()
     {
       if(velocity_steps.size() == 0)
       {
+        //DEBUG_PRINTF("Finished velocity step at %ld\n", stepper.currentPosition());
         stepper.setSpeed(0);
         SetMotorState(MotorStates::IDLE_ON);
         return;
@@ -147,6 +148,7 @@ void MotorController::OnTimer()
       //Done stepping, on to the next
       auto this_move = velocity_steps.front();
       stepper.setSpeed(this_move.velocity);
+      //DEBUG_PRINTF("Current End: %ld, current position: %ld new step: %d\n", velocity_step_end, stepper.currentPosition(), this_move.step);
       velocity_step_end = stepper.currentPosition() + this_move.step;
       velocity_steps.pop_front();
     }
@@ -222,7 +224,9 @@ void MotorController::SetMotorState(MotorStates state)
   case MotorStates::VELOCITY_STEP:
     if (controlMode != MotorStates::VELOCITY_STEP)
     {
+      stepper.setSpeed(0); //initialize it to 0
       velocity_step_end = stepper.currentPosition();
+      //DEBUG_PRINTF("Starting Velocity Step at %ld\n", velocity_step_end);
     }
     driver.setRunCurrent(100);
     stepper.enableOutputs();
@@ -232,7 +236,7 @@ void MotorController::SetMotorState(MotorStates state)
     driver.setRunCurrent(25);
     break;
   case MotorStates::IDLE_ON:
-    stepper.enableOutputs();
+    stepper.disableOutputs();
     break;
   }
   controlMode = state;
@@ -274,6 +278,16 @@ uint32_t MotorController::GetAcceleration()
   return stepper.acceleration();
 }
 
+void MotorController::SetPosition(double position)
+{
+  stepper.setCurrentPosition((long)position);
+}
+
+double MotorController::GetPosition()
+{
+  return stepper.currentPosition();
+}
+
 void MotorController::SetPositionTargetRelative(double position)
 {
   //DEBUG_PRINTF("Steps: %f\n", position);
@@ -311,6 +325,7 @@ void MotorController::AddVelocityStep(int32_t velocity, int32_t step)
 {
   //DEBUG_PRINTF("Adding velocity step: %d, %d\n", velocity, step);
   velocity_steps.push_back({velocity, step});
+  //DEBUG_PRINTF("vector size: %d\n", velocity_steps.size());
 }
 
 void MotorController::StartPath()

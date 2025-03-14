@@ -188,6 +188,17 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     break;
   }
 
+  case MessageTypes::GetMaxSpeed:
+  {
+    GetMaxSpeedMessage *msg = (GetMaxSpeedMessage *)&send_buffer[0];
+    msg->header.message_type = MessageTypes::GetMaxSpeed;
+    msg->header.body_size = sizeof(GetMaxSpeedMessage::value);
+    msg->value = motorController.GetMaxSpeed();
+    msg->footer.checksum = 0;
+    SendMsg(send_buffer, sizeof(GetPositionMessage));
+    break;
+  }
+
   case MessageTypes::SetAcceleration:
   {
     SetAccelerationMessage *msg = (SetAccelerationMessage *)&recv_bytes[0];
@@ -195,17 +206,38 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     break;
   }
 
-  case MessageTypes::SetTargetPositionRelative:
+  case MessageTypes::GetAcceleration:
   {
-    SetMotorPositionMessage *msg = (SetMotorPositionMessage *)recv_bytes;
-    motorController.SetPositionTargetRelative(msg->value);
-    //DEBUG_PRINTF("Setting Motor Position Relative: %f\n", msg->value);
+    GetAccelerationMessage *msg = (GetAccelerationMessage *)&send_buffer[0];
+    msg->header.message_type = MessageTypes::GetAcceleration;
+    msg->header.body_size = sizeof(GetAccelerationMessage::value);
+    msg->value = motorController.GetAcceleration();
+    msg->footer.checksum = 0;
+    SendMsg(send_buffer, sizeof(GetAccelerationMessage));
+    break;
+  }
+
+  case MessageTypes::SetPosition:
+  {
+    SetPositionMessage *msg = (SetPositionMessage *)&recv_bytes[0];
+    motorController.SetPosition(msg->value);
+    break;
+  }
+
+  case MessageTypes::GetPosition:
+  {
+    GetPositionMessage *msg = (GetPositionMessage*)send_buffer;
+    msg->header.message_type = MessageTypes::GetPosition;
+    msg->header.body_size = sizeof(GetPositionMessage::value);
+    msg->value = motorController.GetPosition();
+    msg->footer.checksum = 0;
+    SendMsg(send_buffer, sizeof(GetPositionMessage));
     break;
   }
 
   case MessageTypes::SetTargetPosition:
   {
-    SetMotorPositionMessage *msg = (SetMotorPositionMessage *)recv_bytes;
+    SetTargetPositionMessage *msg = (SetTargetPositionMessage *)recv_bytes;
     // DEBUG_PRINTF("Setting Motor Position to: %f\n", msg->value);
     motorController.SetPositionTarget(msg->value);
     break;
@@ -213,32 +245,40 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
 
   case MessageTypes::GetTargetPosition:
   {
-    GetMotorPositionMessage *msg = (GetMotorPositionMessage *)&send_buffer[0];
+    GetPositionMessage *msg = (GetPositionMessage *)&send_buffer[0];
     msg->header.message_type = MessageTypes::GetTargetPosition;
-    msg->header.body_size = sizeof(GetMotorPositionMessage::value);
+    msg->header.body_size = sizeof(GetPositionMessage::value);
     msg->value = motorController.GetPositionTarget();
     msg->footer.checksum = 0;
-    SendMsg(send_buffer, sizeof(GetMotorPositionMessage));
+    SendMsg(send_buffer, sizeof(GetPositionMessage));
     // DEBUG_PRINTF("Sending Motor Position: %f\n", motorController.GetPositionTarget());
     break;
   }
 
-  case MessageTypes::SetMotorVelocity:
+  case MessageTypes::SetTargetPositionRelative:
   {
-    SetMotorVelocityMessage *msg = (SetMotorVelocityMessage *)recv_bytes;
+    SetTargetRelativePositionMessage *msg = (SetTargetRelativePositionMessage *)recv_bytes;
+    motorController.SetPositionTargetRelative(msg->value);
+    //DEBUG_PRINTF("Setting Motor Position Relative: %f\n", msg->value);
+    break;
+  }
+
+  case MessageTypes::SetVelocity:
+  {
+    SetVelocityMessage *msg = (SetVelocityMessage *)recv_bytes;
     motorController.SetVelocityTarget(msg->value);
     // DEBUG_PRINTF("Setting Motor Velocity to: %d\n", msg->value);
     break;
   }
 
-  case MessageTypes::GetMotorVelocity:
+  case MessageTypes::GetVelocity:
   {
-    GetMotorVelocityMessage *msg = (GetMotorVelocityMessage *)&send_buffer[0];
-    msg->header.message_type = MessageTypes::GetMotorVelocity;
-    msg->header.body_size = sizeof(GetMotorVelocityMessage::value);
+    GetVelocityMessage *msg = (GetVelocityMessage *)&send_buffer[0];
+    msg->header.message_type = MessageTypes::GetVelocity;
+    msg->header.body_size = sizeof(GetVelocityMessage::value);
     msg->value = motorController.GetVelocityTarget();
     msg->footer.checksum = 0;
-    SendMsg(send_buffer, sizeof(GetMotorVelocityMessage));
+    SendMsg(send_buffer, sizeof(GetVelocityMessage));
     break;
   }
 
@@ -282,8 +322,9 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
   }
 }
 
-void MessageProcessor::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size)
+void MessageProcessor::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size, IExternalInterface* calling_interface)
 {
+  last_interface_ = calling_interface;
   if (recv_bytes_size == 0)
     return;
 
@@ -299,6 +340,12 @@ void MessageProcessor::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_byte
 
 void MessageProcessor::SendMsg(uint8_t *send_bytes, uint32_t send_bytes_size)
 {
+  if(last_interface_!=nullptr)
+  {
+    last_interface_->SendMsg(send_bytes, send_bytes_size);
+    return;
+  }
+
   for (auto i : externalInterfaces)
   {
     i->SendMsg(send_bytes, send_bytes_size);

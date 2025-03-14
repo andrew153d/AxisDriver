@@ -53,12 +53,16 @@ enum class MessageTypes : uint16_t
     SetAcceleration,
     GetAcceleration,
 
+    GetPosition,
+    SetPosition,
+
     SetTargetPosition,
     GetTargetPosition,
+
     SetTargetPositionRelative,
     
-    SetMotorVelocity,
-    GetMotorVelocity,
+    SetVelocity,
+    GetVelocity,
 
     SetVelocityAndSteps,
     StartPath,
@@ -243,12 +247,15 @@ typedef U32Message GetAccelerationMessage;
 typedef U32Message SetMaxSpeedMessage;
 typedef U32Message GetMaxSpeedMessage;
 
-typedef DoubleMessage SetMotorPositionMessage;
-typedef DoubleMessage GetMotorPositionMessage;
-typedef DoubleMessage SetMotorVelocityMessage;
-typedef DoubleMessage GetMotorVelocityMessage;
-typedef DoubleMessage SetMotorCurrentMessage;
-typedef DoubleMessage GetMotorCurrentMessage;
+typedef DoubleMessage SetTargetPositionMessage;
+typedef DoubleMessage GetTargetPositionMessage;
+
+typedef DoubleMessage SetTargetRelativePositionMessage;
+typedef DoubleMessage SetPositionMessage;
+
+typedef DoubleMessage GetPositionMessage;
+typedef DoubleMessage SetVelocityMessage;
+typedef DoubleMessage GetVelocityMessage;
 
 typedef VelocityAndStepsMessage SetVelocityAndStepsMessage;
 typedef U8Message StartPathMessage;

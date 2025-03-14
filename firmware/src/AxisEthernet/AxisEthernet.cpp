@@ -94,6 +94,8 @@ void HandleInturrupts()
 void AxisEthernet::OnRun()
 {
     uint16_t packetSize = Udp.parsePacket();
+    remoteIp = Udp.remoteIP();
+    remotePort = Udp.remotePort();
     if (packetSize == 0)
         return;
     //DEBUG_PRINTF("Run Received %d\n", packetSize);
@@ -118,7 +120,7 @@ void AxisEthernet::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     // DEBUG_PRINTF("Received %d bytes\n", recv_bytes_size);
     if (processor_interface_ != nullptr)
     {
-        processor_interface_->HandleIncomingMsg(recv_bytes, recv_bytes_size);
+        processor_interface_->HandleIncomingMsg(recv_bytes, recv_bytes_size, this);
     }
     else
     {
@@ -126,7 +128,12 @@ void AxisEthernet::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     }
 }
 
-void AxisEthernet::SendMsg(uint8_t *send_bytes, uint32_t send_bytes_size) {};
+void AxisEthernet::SendMsg(uint8_t *send_bytes, uint32_t send_bytes_size) 
+{
+    Udp.beginPacket(remoteIp, remotePort);
+    Udp.write(send_bytes, send_bytes_size);
+    Udp.endPacket();
+};
 
 void AxisEthernet::OnStop()
 {

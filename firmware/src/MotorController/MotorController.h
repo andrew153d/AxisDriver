@@ -122,6 +122,9 @@ public:
     void SetAcceleration(uint32_t acl);
     uint32_t GetAcceleration();
 
+    void SetPosition(double position);
+    double GetPosition();
+
     void SetPositionTarget(double position);
     void SetPositionTargetRelative(double position);
     double GetPositionTarget();

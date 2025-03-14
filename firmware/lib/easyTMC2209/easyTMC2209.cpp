@@ -596,7 +596,7 @@ void easyTMC2209::initialize(long serial_baud_rate,
   chopper_config_.hstart = 4;
   chopper_config_.hend = 0;
 
-  chopper_config_.mres = MRES_064;
+  chopper_config_.mres = MRES_008;
   
   write(ADDRESS_TCOOLTHRS, 0xFFFFF);
   writeStoredChopperConfig();

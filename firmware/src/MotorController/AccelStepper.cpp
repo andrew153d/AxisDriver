@@ -306,6 +306,7 @@ float   AccelStepper::acceleration()
 
 void AccelStepper::setSpeed(float speed)
 {
+    //Serial.printf("Setting Speed: %f\n", speed);
     if (speed == _speed)
         return;
     speed = constrain(speed, -_maxSpeed, _maxSpeed);
