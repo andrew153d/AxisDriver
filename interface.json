@@ -1,0 +1,254 @@
+{
+    "MessageIds": [
+        "GetVersion",
+        "SetI2CAddress",
+        "GetI2CAddress",
+        "SetEthernetAddress",
+        "GetEthernetAddress",
+        "SetEthernetPort",
+        "GetEthernetPort",
+        "GetMacAddress",
+        "SaveSettings",
+        "SetLedState",
+        "SetLedColor",
+        "GetLedColor",
+        "SetHomeDirection",
+        "GetHomeDirection",
+        "Home",
+        "SetMotorState",
+        "GetMotorState",
+        "SetMotorBrake",
+        "GetMotorBrake",
+        "SetMaxSpeed",
+        "GetMaxSpeed",
+        "SetAcceleration",
+        "GetAcceleration",
+        "GetPosition",
+        "SetPosition",
+        "SetTargetPosition",
+        "GetTargetPosition",
+        "SetTargetPositionRelative",
+        "SetVelocity",
+        "GetVelocity",
+        "SetVelocityAndSteps",
+        "StartPath"
+    ],
+    "PredefinedMessages": {
+        "Header": [
+            {
+                "name": "message_type",
+                "type": "uint16_t"
+            },
+            {
+                "name": "body_size",
+                "type": "uint16_t"
+            }
+        ],
+        "Footer": [
+            {
+                "name": "checksum",
+                "type": "uint16_t"
+            }
+        ],
+        "U8Message": [
+            {
+                "name": "value",
+                "type": "uint8_t"
+            }
+        ],
+        "S8Message": [
+            {
+                "name": "value",
+                "type": "int8_t"
+            }
+        ],
+        "U32Message": [
+            {
+                "name": "value",
+                "type": "uint32_t"
+            }
+        ],
+        "S32Message": [
+            {
+                "name": "value",
+                "type": "int32_t"
+            }
+        ],
+        "DoubleMessage": [
+            {
+                "name": "value",
+                "type": "double"
+            }
+        ]
+    },
+    "messages": [
+        {
+            "name": "VersionMessage",
+            "type": "U32Message"
+        },
+        {
+            "name": "I2CAddressMessage",
+            "type": "U8Message"
+        },
+        {
+            "name": "IPAddressMessage",
+            "type": "U32Message"
+        },
+        {
+            "name": "EthernetPortMessage",
+            "type": "U32Message"
+        },
+        {
+            "name": "MACAddressMessage",
+            "type": "Custom",
+            "fields": [
+                {
+                    "name": "mac",
+                    "type": "uint8_t[6]"
+                },
+                {
+                    "name": "mac2",
+                    "type": "uint8_t[2]"
+                }
+            ]
+        },
+        {
+            "name": "SetEthernetIpAddressMessage",
+            "type": "Custom",
+            "fields": [
+                {
+                    "name": "ip_address",
+                    "type": "uint32_t"
+                }
+            ]
+        },
+        {
+            "name": "SetEthernetPortMessage",
+            "type": "Custom",
+            "fields": [
+                {
+                    "name": "port",
+                    "type": "uint16_t"
+                }
+            ]
+        },
+        {
+            "name": "SaveSettingsMessage",
+            "type": "U8Message"
+        },
+        {
+            "name": "SetLedStateMessage",
+            "type": "U8Message"
+        },
+        {
+            "name": "GetLedStateMessage",
+            "type": "U8Message"
+        },
+        {
+            "name": "SetLedColorMessage",
+            "type": "Custom",
+            "fields": [
+                {
+                    "name": "ledColor",
+                    "type": "uint8_t[3]"
+                }
+            ]
+        },
+        {
+            "name": "GetLedColorMessage",
+            "type": "Custom",
+            "fields": [
+                {
+                    "name": "ledColor",
+                    "type": "uint8_t[3]"
+                }
+            ]
+        },
+        {
+            "name": "SetMotorStateMessage",
+            "type": "U8Message"
+        },
+        {
+            "name": "GetMotorStateMessage",
+            "type": "U8Message"
+        },
+        {
+            "name": "SetHomeDirectionMessage",
+            "type": "U8Message"
+        },
+        {
+            "name": "GetHomeDirectionMessage",
+            "type": "U8Message"
+        },
+        {
+            "name": "SetMotorBrakeMessage",
+            "type": "U8Message"
+        },
+        {
+            "name": "GetMotorBrakeMessage",
+            "type": "U8Message"
+        },
+        {
+            "name": "SetAccelerationMessage",
+            "type": "U32Message"
+        },
+        {
+            "name": "GetAccelerationMessage",
+            "type": "U32Message"
+        },
+        {
+            "name": "SetMaxSpeedMessage",
+            "type": "U32Message"
+        },
+        {
+            "name": "GetMaxSpeedMessage",
+            "type": "U32Message"
+        },
+        {
+            "name": "SetTargetPositionMessage",
+            "type": "DoubleMessage"
+        },
+        {
+            "name": "GetTargetPositionMessage",
+            "type": "DoubleMessage"
+        },
+        {
+            "name": "SetTargetRelativePositionMessage",
+            "type": "DoubleMessage"
+        },
+        {
+            "name": "SetPositionMessage",
+            "type": "DoubleMessage"
+        },
+        {
+            "name": "GetPositionMessage",
+            "type": "DoubleMessage"
+        },
+        {
+            "name": "SetVelocityMessage",
+            "type": "DoubleMessage"
+        },
+        {
+            "name": "GetVelocityMessage",
+            "type": "DoubleMessage"
+        },
+        {
+            "name": "SetVelocityAndStepsMessage",
+            "type": "Custom",
+            "fields": [
+                {
+                    "name": "velocity",
+                    "type": "int32_t"
+                },
+                {
+                    "name": "steps",
+                    "type": "int32_t"
+                }
+            ]
+        },
+        {
+            "name": "StartPathMessage",
+            "type": "U8Message"
+        }
+    ]
+}
