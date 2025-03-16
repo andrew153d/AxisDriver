@@ -76,7 +76,7 @@ def generate_python_code(messages):
                 py_code+=", "
             py_code += field['name']
         py_code+='):\n'
-        py_code+="\tmessage = []\n"
+        py_code+="\tmessage = bytearray(0)\n"
         
         #fill in the fields
         for field in messages["PredefinedMessages"][msg]:
@@ -88,7 +88,7 @@ def generate_python_code(messages):
     already_defined_messages = []
     for msg in messages["messages"]:
         # function defenition
-        py_code += f"def Create{msg['name']}("
+        py_code += f"def {msg['name']}("
         if msg['type'] == "Custom":
             py_code += "message_id, "
             first=True
@@ -99,7 +99,7 @@ def generate_python_code(messages):
                     py_code+=", "
                 py_code += field['name']
             py_code+='):\n'
-            py_code += "\tbody = []\n"
+            py_code += "\tbody = bytearray(0)\n"
             for field in msg['fields']:
                 if(field['type'].find('[')!=-1):
                     py_code += f"\tbody+={field['name']}\n"
@@ -115,6 +115,10 @@ def generate_python_code(messages):
         py_code += f"\tfooter = CreateFooter(sum(body) & 0xFF)\n"
         # return the result
         py_code+="\treturn header+body+footer\n\n"
+
+    py_code += "def print_bytes(byte_array):\n"
+    py_code += "\tprint(''.join(f'0x{byte:02x} ' for byte in byte_array))\n"
+    py_code += "print_bytes(CreateSetVelocityAndStepsMessage(0x11, 0x22, 0x33))\n"
     return py_code
 
 with open("interface.json", "r") as file:
@@ -123,5 +127,5 @@ with open("interface.json", "r") as file:
 # with open("messages.c", "w") as file:
 #     file.write(generate_c_code(messages))
 
-with open("messages.py", "w") as file:
+with open("examples/Python/automessages.py", "w") as file:
     file.write(generate_python_code(messages))
