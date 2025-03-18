@@ -204,21 +204,19 @@ def GenerateCustomClass(msg):
 
     return ret_string
 
-def GenerateGetter(msg_name, msg_def, predefined):
-    ret_string = ""
-    ret_string += f"def {msg_name}(axis:Axis"
+def GenerateGetter(msg_id, msg_def, predefined):
+    getter_fun = msg_id.replace("Id","")
+    message_class = msg_id.replace("Id","").replace('Get', '').replace('Set', '')+'Message'
     
-    # if(msg_def['type'] == 'Custom'):
-    #     ret_string += f"{msg['name'].split('Message')[0]}Body"
-    # elif msg_def['type'] != 'Base':
-    #     ret_string += f"{msg_def['type']}"
+    ret_string = ""
+    ret_string += f"def {getter_fun}(axis:Axis"
     ret_string += ", timeout = 0.1):\n"
-    ret_string += f"\tsend_msg = {msg_name.replace('Get', '').replace('Set', '')+'Message'}({msg_name}, 0)\n"
+    ret_string += f"\tsend_msg = {message_class}({msg_id}, 0)\n"
     
     ret_string += f"\taxis.send_message(send_msg.serialize())\n"
     ret_string += f"\tret = axis.wait_message(timeout)\n"
-    ret_string += f"\tif(ret[0]=={msg_name}):\n"
-    ret_string += f"\t\tmsg = {msg_name.replace('Get', '').replace('Set', '')+'Message'}.deserialize(ret)\n"
+    ret_string += f"\tif(ret[0]=={msg_id}):\n"
+    ret_string += f"\t\tmsg = {message_class}.deserialize(ret)\n"
     ret_string += f"\t\treturn msg.body\n"
     ret_string += f"\telse:\n"
     ret_string += "\t\t return None\n"
@@ -226,16 +224,19 @@ def GenerateGetter(msg_name, msg_def, predefined):
     
     return ret_string
 
-def GenerateSetter(msg_name, msg_def, predefined):
+def GenerateSetter(msg_id, msg_def, predefined):
+    setter_fun = msg_id.replace("Id","")
+    message_class = msg_id.replace("Id","").replace('Get', '').replace('Set', '')+'Message'
+    
     ret_string = ""
-    ret_string += f"def {msg_name}(axis:Axis, body:"
+    ret_string += f"def {setter_fun}(axis:Axis, body:"
     
     if(msg_def['type'] == 'Custom'):
         ret_string += f"{msg['name'].split('Message')[0]}Body"
     elif msg_def['type'] != 'Base':
         ret_string += f"{msg_def['type']}"
     ret_string += ", timeout = 0.1):\n"
-    ret_string += f"\tsend_msg = {msg_name.replace('Get', '').replace('Set', '')+'Message'}({msg_name}, 0)\n"
+    ret_string += f"\tsend_msg = {message_class}({msg_id}, 0)\n"
     ret_string += f"\tsend_msg.body = body\n"
     ret_string += f"\taxis.send_message(send_msg.serialize())\n"
     ret_string += "\n"
@@ -249,7 +250,7 @@ with open("examples/Python/automessages.py", "w") as file:
     file.write(Python_Header)
     
     #Create Message Defenitions
-    id = 0x4F # non zero start
+    id = 0x00 # non zero start
     for m in messages["MessageIds"]:
         file.write(f"{m} = 0x{id:X}\n")
         id = id+1
@@ -270,10 +271,9 @@ with open("examples/Python/automessages.py", "w") as file:
     #Generate Setters
     for msg_id in messages["MessageIds"]:
         for msg in messages["Messages"]: #disgusting and slow, I know
-            msg_name = msg_id.replace("Get", "").replace("Set", "")+"Message"
+            msg_name = msg_id.replace("Get", "").replace("Set", "").replace("Id","")+"Message"
             if msg['name'] == msg_name:
                 if(msg_id.find('Set')==-1):
-                    print(msg)
                     file.write(GenerateGetter(msg_id, msg, predefined_messages))
                 else:
                     file.write(GenerateSetter(msg_id, msg, predefined_messages))
