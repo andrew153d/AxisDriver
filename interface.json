@@ -9,16 +9,13 @@
         "GetEthernetPortId",
         "GetMacAddressId",
         "SaveSettingsId",
-
         "SetLedStateId",
         "GetLedStateId",
         "SetLedColorId",
         "GetLedColorId",
-
         "SetHomeDirectionId",
         "GetHomeDirectionId",
         "HomeId",
-
         "SetMotorStateId",
         "GetMotorStateId",
         "SetMotorBrakeId",
@@ -37,6 +34,35 @@
         "SetVelocityAndStepsId",
         "StartPathId"
     ],
+    "Enums": {
+        "LedStates": [
+            "OFF",
+            "FLASH_ERROR",
+            "ERROR",
+            "BOOTUP",
+            "RAINBOW",
+            "SOLID",
+            "MAX_VALUE"
+        ],
+        "MotorStates": [
+            "OFF",
+            "POSITION",
+            "VELOCITY",
+            "VELOCITY_STEP",
+            "IDLE_ON",
+            "HOME"
+        ],
+        "MotorBrake": [
+            "NORMAL",
+            "FREEWHEELING",
+            "STRONG_BRAKING",
+            "BRAKING"
+        ],
+        "HomeDirection": [
+            "CLOCKWISE",
+            "COUNTERCLOCKWISE"
+        ]
+    },
     "Messages": [
         {
             "name": "Header",
@@ -164,7 +190,6 @@
             "name": "SaveSettingsMessage",
             "type": "U8Message"
         },
-
         {
             "name": "LedStateMessage",
             "type": "U8Message"

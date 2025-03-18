@@ -19,7 +19,7 @@ public:
 
 
 Python_Header = """
-from Axis import *
+from Axis import *\n
 """
 
 def GetLen(type):
@@ -65,6 +65,18 @@ def ConvertCTypeToPythonType(input_type):
     if input_type.find('[')!=-1:
         return "bytearray"
     return None
+
+def GenerateEnum(enum_name, enum_def):
+    ret_string = ''
+    
+    ret_string += f"#{enum_name}\n"
+    
+    count = 0x00
+    for defi in enum_def:
+        ret_string += f"{defi} = 0x{count:X}\n"
+        count = count + 1
+    ret_string+="\n"
+    return ret_string
 
 def GenerateBaseClass(msg):
     ret_string = ""
@@ -255,6 +267,10 @@ with open("examples/Python/automessages.py", "w") as file:
         file.write(f"{m} = 0x{id:X}\n")
         id = id+1
     file.write("\n\n")
+    
+    #Generate Enums
+    for enum in messages["Enums"]:
+        file.write(GenerateEnum(enum, messages["Enums"][enum]))
     
     #Generate Classes
     predefined_messages = {}
