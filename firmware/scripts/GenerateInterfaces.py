@@ -17,6 +17,11 @@ public:
 };
 """
 
+
+Python_Header = """
+from Axis import *
+"""
+
 def GetLen(type):
     print(type.split('[')[1])
     return 0
@@ -199,10 +204,49 @@ def GenerateCustomClass(msg):
 
     return ret_string
 
+def GenerateGetter(msg_name, msg_def, predefined):
+    ret_string = ""
+    ret_string += f"def {msg_name}(axis:Axis"
+    
+    # if(msg_def['type'] == 'Custom'):
+    #     ret_string += f"{msg['name'].split('Message')[0]}Body"
+    # elif msg_def['type'] != 'Base':
+    #     ret_string += f"{msg_def['type']}"
+    ret_string += ", timeout = 0.1):\n"
+    ret_string += f"\tsend_msg = {msg_name.replace('Get', '').replace('Set', '')+'Message'}({msg_name}, 0)\n"
+    
+    ret_string += f"\taxis.send_message(send_msg.serialize())\n"
+    ret_string += f"\tret = axis.wait_message(timeout)\n"
+    ret_string += f"\tif(ret[0]=={msg_name}):\n"
+    ret_string += f"\t\tmsg = {msg_name.replace('Get', '').replace('Set', '')+'Message'}.deserialize(ret)\n"
+    ret_string += f"\t\treturn msg.body\n"
+    ret_string += f"\telse:\n"
+    ret_string += "\t\t return None\n"
+    ret_string += "\n"
+    
+    return ret_string
+
+def GenerateSetter(msg_name, msg_def, predefined):
+    ret_string = ""
+    ret_string += f"def {msg_name}(axis:Axis, body:"
+    
+    if(msg_def['type'] == 'Custom'):
+        ret_string += f"{msg['name'].split('Message')[0]}Body"
+    elif msg_def['type'] != 'Base':
+        ret_string += f"{msg_def['type']}"
+    ret_string += ", timeout = 0.1):\n"
+    ret_string += f"\tsend_msg = {msg_name.replace('Get', '').replace('Set', '')+'Message'}({msg_name}, 0)\n"
+    ret_string += f"\tsend_msg.body = body\n"
+    ret_string += f"\taxis.send_message(send_msg.serialize())\n"
+    ret_string += "\n"
+    
+    return ret_string
+
 with open("interface.json", "r") as file:
     messages = json.load(file)
 
 with open("examples/Python/automessages.py", "w") as file:
+    file.write(Python_Header)
     
     #Create Message Defenitions
     id = 0x4F # non zero start
@@ -210,6 +254,8 @@ with open("examples/Python/automessages.py", "w") as file:
         file.write(f"{m} = 0x{id:X}\n")
         id = id+1
     file.write("\n\n")
+    
+    #Generate Classes
     predefined_messages = {}
     for msg in messages["Messages"]:
         if(msg['type'] == 'Base'):
@@ -217,6 +263,18 @@ with open("examples/Python/automessages.py", "w") as file:
             predefined_messages[msg['name']] = msg
         elif(msg['type'] == 'Custom'):
             file.write(GenerateCustomClass(msg))
-            pass
         else:
             file.write(GeneratePredefinedClass(msg, predefined_messages))
+    
+       
+    #Generate Setters
+    for msg_id in messages["MessageIds"]:
+        for msg in messages["Messages"]: #disgusting and slow, I know
+            msg_name = msg_id.replace("Get", "").replace("Set", "")+"Message"
+            if msg['name'] == msg_name:
+                if(msg_id.find('Set')==-1):
+                    print(msg)
+                    file.write(GenerateGetter(msg_id, msg, predefined_messages))
+                else:
+                    file.write(GenerateSetter(msg_id, msg, predefined_messages))
+        

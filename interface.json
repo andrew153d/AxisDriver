@@ -9,12 +9,16 @@
         "GetEthernetPort",
         "GetMacAddress",
         "SaveSettings",
+
         "SetLedState",
+        "GetLedState",
         "SetLedColor",
         "GetLedColor",
+
         "SetHomeDirection",
         "GetHomeDirection",
         "Home",
+
         "SetMotorState",
         "GetMotorState",
         "SetMotorBrake",
@@ -23,8 +27,8 @@
         "GetMaxSpeed",
         "SetAcceleration",
         "GetAcceleration",
-        "GetPosition",
         "SetPosition",
+        "GetPosition",
         "SetTargetPosition",
         "GetTargetPosition",
         "SetTargetPositionRelative",
@@ -33,73 +37,117 @@
         "SetVelocityAndSteps",
         "StartPath"
     ],
-    "PredefinedMessages": {
-        "Header": [
-            {
-                "name": "message_type",
-                "type": "uint16_t"
-            },
-            {
-                "name": "body_size",
-                "type": "uint16_t"
-            }
-        ],
-        "Footer": [
-            {
-                "name": "checksum",
-                "type": "uint16_t"
-            }
-        ],
-        "U8Message": [
-            {
-                "name": "value",
-                "type": "uint8_t"
-            }
-        ],
-        "S8Message": [
-            {
-                "name": "value",
-                "type": "int8_t"
-            }
-        ],
-        "U32Message": [
-            {
-                "name": "value",
-                "type": "uint32_t"
-            }
-        ],
-        "S32Message": [
-            {
-                "name": "value",
-                "type": "int32_t"
-            }
-        ],
-        "DoubleMessage": [
-            {
-                "name": "value",
-                "type": "double"
-            }
-        ]
-    },
-    "messages": [
+    "Messages": [
+        {
+            "name": "Header",
+            "type": "Base",
+            "fields": [
+                {
+                    "name": "message_type",
+                    "type": "uint16_t"
+                },
+                {
+                    "name": "body_size",
+                    "type": "uint16_t"
+                }
+            ]
+        },
+        {
+            "name": "Footer",
+            "type": "Base",
+            "fields": [
+                {
+                    "name": "checksum",
+                    "type": "uint16_t"
+                }
+            ]
+        },
+        {
+            "name": "U8Message",
+            "type": "Base",
+            "fields": [
+                {
+                    "name": "value",
+                    "type": "uint8_t"
+                }
+            ]
+        },
+        {
+            "name": "S8Message",
+            "type": "Base",
+            "fields": [
+                {
+                    "name": "value",
+                    "type": "int8_t"
+                }
+            ]
+        },
+        {
+            "name": "U32Message",
+            "type": "Base",
+            "fields": [
+                {
+                    "name": "value",
+                    "type": "uint32_t"
+                }
+            ]
+        },
+        {
+            "name": "S32Message",
+            "type": "Base",
+            "fields": [
+                {
+                    "name": "value",
+                    "type": "int32_t"
+                }
+            ]
+        },
+        {
+            "name": "DoubleMessage",
+            "type": "Base",
+            "fields": [
+                {
+                    "name": "value",
+                    "type": "double"
+                }
+            ]
+        },
         {
             "name": "VersionMessage",
             "type": "U32Message"
         },
         {
             "name": "I2CAddressMessage",
-            "type": "U8Message"
+            "type": "U8Message",
+            "fields": [
+                {
+                    "name": "value",
+                    "type": "uint8_t"
+                }
+            ]
         },
         {
-            "name": "IPAddressMessage",
-            "type": "U32Message"
+            "name": "EthernetAddressMessage",
+            "type": "U32Message",
+            "fields": [
+                {
+                    "name": "value",
+                    "type": "uint32_t"
+                }
+            ]
         },
         {
             "name": "EthernetPortMessage",
-            "type": "U32Message"
+            "type": "U32Message",
+            "fields": [
+                {
+                    "name": "value",
+                    "type": "uint32_t"
+                }
+            ]
         },
         {
-            "name": "MACAddressMessage",
+            "name": "MacAddressMessage",
             "type": "Custom",
             "fields": [
                 {
@@ -108,27 +156,7 @@
                 },
                 {
                     "name": "mac2",
-                    "type": "uint8_t[2]"
-                }
-            ]
-        },
-        {
-            "name": "SetEthernetIpAddressMessage",
-            "type": "Custom",
-            "fields": [
-                {
-                    "name": "ip_address",
                     "type": "uint32_t"
-                }
-            ]
-        },
-        {
-            "name": "SetEthernetPortMessage",
-            "type": "Custom",
-            "fields": [
-                {
-                    "name": "port",
-                    "type": "uint16_t"
                 }
             ]
         },
@@ -136,16 +164,13 @@
             "name": "SaveSettingsMessage",
             "type": "U8Message"
         },
+
         {
-            "name": "SetLedStateMessage",
+            "name": "LedStateMessage",
             "type": "U8Message"
         },
         {
-            "name": "GetLedStateMessage",
-            "type": "U8Message"
-        },
-        {
-            "name": "SetLedColorMessage",
+            "name": "LedColorMessage",
             "type": "Custom",
             "fields": [
                 {
@@ -155,85 +180,47 @@
             ]
         },
         {
-            "name": "GetLedColorMessage",
-            "type": "Custom",
-            "fields": [
-                {
-                    "name": "ledColor",
-                    "type": "uint8_t[3]"
-                }
-            ]
-        },
-        {
-            "name": "SetMotorStateMessage",
+            "name": "HomeDirectionMessage",
             "type": "U8Message"
         },
         {
-            "name": "GetMotorStateMessage",
-            "type": "U8Message"
-        },
-        {
-            "name": "SetHomeDirectionMessage",
-            "type": "U8Message"
-        },
-        {
-            "name": "GetHomeDirectionMessage",
-            "type": "U8Message"
-        },
-        {
-            "name": "SetMotorBrakeMessage",
-            "type": "U8Message"
-        },
-        {
-            "name": "GetMotorBrakeMessage",
-            "type": "U8Message"
-        },
-        {
-            "name": "SetAccelerationMessage",
+            "name": "HomeMessage",
             "type": "U32Message"
         },
         {
-            "name": "GetAccelerationMessage",
+            "name": "MotorStateMessage",
+            "type": "U8Message"
+        },
+        {
+            "name": "MotorBrakeMessage",
+            "type": "U8Message"
+        },
+        {
+            "name": "MaxSpeedMessage",
             "type": "U32Message"
         },
         {
-            "name": "SetMaxSpeedMessage",
+            "name": "AccelerationMessage",
             "type": "U32Message"
         },
         {
-            "name": "GetMaxSpeedMessage",
-            "type": "U32Message"
-        },
-        {
-            "name": "SetTargetPositionMessage",
+            "name": "CurrentPositionMessage",
             "type": "DoubleMessage"
         },
         {
-            "name": "GetTargetPositionMessage",
+            "name": "TargetPositionMessage",
             "type": "DoubleMessage"
         },
         {
-            "name": "SetTargetRelativePositionMessage",
+            "name": "RelativeTargetPositionMessage",
             "type": "DoubleMessage"
         },
         {
-            "name": "SetPositionMessage",
+            "name": "VelocityMessage",
             "type": "DoubleMessage"
         },
         {
-            "name": "GetPositionMessage",
-            "type": "DoubleMessage"
-        },
-        {
-            "name": "SetVelocityMessage",
-            "type": "DoubleMessage"
-        },
-        {
-            "name": "GetVelocityMessage",
-            "type": "DoubleMessage"
-        },
-        {
-            "name": "SetVelocityAndStepsMessage",
+            "name": "VelocityAndStepsMessage",
             "type": "Custom",
             "fields": [
                 {
