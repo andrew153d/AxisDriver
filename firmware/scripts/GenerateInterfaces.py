@@ -1,7 +1,7 @@
 import json
 
 CPP_Header = """#pragma once
-
+#include <Arduino.h>
 #define FIRMWARE_VERSION "1.0.0.0"
 
 #define PACKEDSTRUCT struct __attribute__((packed))
@@ -19,12 +19,9 @@ public:
 
 
 Python_Header = """
-from Axis import *\n
+from Axis import *
+import struct\n
 """
-
-def GetLen(type):
-    print(type.split('[')[1])
-    return 0
 
 def GetBytes(size:str):
     if(size.find("[")!=-1):
@@ -66,7 +63,7 @@ def ConvertCTypeToPythonType(input_type):
         return "bytearray"
     return None
 
-def GenerateEnum(enum_name, enum_def):
+def GeneratePythonEnum(enum_name, enum_def):
     ret_string = ''
     
     ret_string += f"#{enum_name}\n"
@@ -78,7 +75,7 @@ def GenerateEnum(enum_name, enum_def):
     ret_string+="\n"
     return ret_string
 
-def GenerateBaseClass(msg):
+def GeneratePythonBaseClass(msg):
     ret_string = ""
     ret_string += f"class {msg['name']}: \n"
     
@@ -94,7 +91,11 @@ def GenerateBaseClass(msg):
     ret_string += "\tdef serialize(self):\n"
     ret_string += "\t\tret = bytearray(0)\n"
     for field in msg['fields']:
-        ret_string += f"\t\tret += self.{field['name']}.to_bytes({GetBytes(field['type'])}, 'little')\n"
+        #bytearray(struct.pack('d', 100*8))
+        if field['type'] == 'double':
+            ret_string += f"\t\tret += bytearray(struct.pack('d', self.value))\n"
+        else:
+            ret_string += f"\t\tret += self.{field['name']}.to_bytes({GetBytes(field['type'])}, 'little')\n"
     ret_string += "\t\treturn ret\n\n"
 
     #deserialize
@@ -102,7 +103,12 @@ def GenerateBaseClass(msg):
     ret_string += "\tdef deserialize(cls, byte_array):\n"
     counter = 0
     for field in msg['fields']:
-        ret_string += f"\t\t{field['name']} = {ConvertCTypeToPythonType(field['type'])}.from_bytes(byte_array[{counter}:{GetBytes(field['type'])+counter}], 'little')\n"
+        if(field['type']!='double'):
+            ret_string += f"\t\t{field['name']} = {ConvertCTypeToPythonType(field['type'])}.from_bytes(byte_array[{counter}:{GetBytes(field['type'])+counter}], 'little')\n"
+        else:
+            ret_string += f"\t\t{field['name']} = struct.unpack('d', byte_array[{counter}:{GetBytes(field['type'])+counter}])[0]\n"
+            #struct.unpack('d', message[4:12])[0]
+            
         counter += GetBytes(field['type'])
     ret_string += "\t\treturn cls("
     ret_string += ", ".join([field['name'] for field in msg['fields']])
@@ -110,7 +116,7 @@ def GenerateBaseClass(msg):
 
     return ret_string
 
-def GeneratePredefinedClass(msg, predefined):
+def GeneratePythonPredefinedClass(msg, predefined):
     body_size = GetBytes(predefined[msg['type']]['fields'][0]['type'])
     ret_string = ""
     ret_string += f"class {msg['name']}: \n"
@@ -142,7 +148,7 @@ def GeneratePredefinedClass(msg, predefined):
     ret_string += "\t\treturn msg\n\n"
     return ret_string
 
-def GenerateCustomClass(msg):
+def GeneratePythonCustomClass(msg):
     body_size = 0 #GetBytes(predefined[msg['type']]['fields'][0]['type'])
     for field in msg['fields']:
         body_size += GetBytes(field['type'])
@@ -216,7 +222,7 @@ def GenerateCustomClass(msg):
 
     return ret_string
 
-def GenerateGetter(msg_id, msg_def, predefined):
+def GeneratePythonGetter(msg_id, msg_def, predefined):
     getter_fun = msg_id.replace("Id","")
     message_class = msg_id.replace("Id","").replace('Get', '').replace('Set', '')+'Message'
     
@@ -236,61 +242,128 @@ def GenerateGetter(msg_id, msg_def, predefined):
     
     return ret_string
 
-def GenerateSetter(msg_id, msg_def, predefined):
+def GeneratePythonSetter(msg_id, msg_def, predefined):
     setter_fun = msg_id.replace("Id","")
     message_class = msg_id.replace("Id","").replace('Get', '').replace('Set', '')+'Message'
+    body_class = ''
+    if(msg_def['type'] == 'Custom'):
+        body_class += f"{msg['name'].split('Message')[0]}Body"
+    elif msg_def['type'] != 'Base':
+        body_class += f"{msg_def['type']}"
+    
+    print(body_class)
     
     ret_string = ""
     ret_string += f"def {setter_fun}(axis:Axis, body:"
-    
-    if(msg_def['type'] == 'Custom'):
-        ret_string += f"{msg['name'].split('Message')[0]}Body"
-    elif msg_def['type'] != 'Base':
-        ret_string += f"{msg_def['type']}"
-    ret_string += ", timeout = 0.1):\n"
+    ret_string += body_class
+        
+    ret_string += "):\n"
     ret_string += f"\tsend_msg = {message_class}({msg_id}, 0)\n"
+    # for field in msg_def['fields']:
+    #     print(field)
     ret_string += f"\tsend_msg.body = body\n"
     ret_string += f"\taxis.send_message(send_msg.serialize())\n"
     ret_string += "\n"
     
     return ret_string
 
+def GenerateCppEnum(enum_name, enum_def):
+    ret_string = ''
+    
+    ret_string += f"enum class {enum_name}"
+    ret_string += "{\n"
+    
+    count = 0x00
+    for defi in enum_def:
+        ret_string += f"\t{defi} = 0x{count:X},\n"
+        count = count + 1
+    ret_string+="};\n\n"
+    return ret_string
+
+def GenerateCppPredefinedClass(msg, predefined):
+    ret_string = ""
+    ret_string += f"typedef {msg['type']} {msg['name']};\n"
+    
+    return ret_string
+
+def GenerateCppBaseClass(msg):
+    #print(msg)
+    ret_string = ""
+    ret_string += f"PACKEDSTRUCT {msg['name']}\n"
+    ret_string += "{\n"
+    if(msg['name'] != "Header" and msg['name'] != "Footer"):
+        ret_string += "\tHeader header;\n"
+    for field in msg['fields']:
+        ret_string += f"\t{field['type']} {field['name']};\n"
+    if(msg['name'] != "Header" and msg['name'] != "Footer"):
+        ret_string += "\tFooter footer;\n"
+    ret_string += "};\n"
+    return ret_string
+
+def GenerateCppCustomClass(msg):
+    ret_string = ""
+    ret_string += f"PACKEDSTRUCT {msg['name']}\n"
+    ret_string += "{\n"
+    ret_string += "\tHeader header;\n"
+    for field in msg['fields']:
+        if field['type'].find('[')!=-1:
+            ret_string += f"\t{field['type'].split('[')[0]} {field['name']}{field['type'][field['type'].find('['):]};\n"
+        else:
+            ret_string += f"\t{field['type'].split('[')[0]} {field['name']};\n"
+    ret_string += "\tFooter footer;\n"
+    ret_string += "};\n"
+    return ret_string
+    return ret_string
+
 with open("interface.json", "r") as file:
     messages = json.load(file)
 
-with open("examples/Python/automessages.py", "w") as file:
-    file.write(Python_Header)
-    
-    #Create Message Defenitions
-    id = 0x00 # non zero start
-    for m in messages["MessageIds"]:
-        file.write(f"{m} = 0x{id:X}\n")
-        id = id+1
-    file.write("\n\n")
-    
-    #Generate Enums
-    for enum in messages["Enums"]:
-        file.write(GenerateEnum(enum, messages["Enums"][enum]))
-    
-    #Generate Classes
-    predefined_messages = {}
-    for msg in messages["Messages"]:
-        if(msg['type'] == 'Base'):
-            file.write(GenerateBaseClass(msg))
-            predefined_messages[msg['name']] = msg
-        elif(msg['type'] == 'Custom'):
-            file.write(GenerateCustomClass(msg))
-        else:
-            file.write(GeneratePredefinedClass(msg, predefined_messages))
-    
-       
-    #Generate Setters
-    for msg_id in messages["MessageIds"]:
-        for msg in messages["Messages"]: #disgusting and slow, I know
-            msg_name = msg_id.replace("Get", "").replace("Set", "").replace("Id","")+"Message"
-            if msg['name'] == msg_name:
-                if(msg_id.find('Set')==-1):
-                    file.write(GenerateGetter(msg_id, msg, predefined_messages))
-                else:
-                    file.write(GenerateSetter(msg_id, msg, predefined_messages))
+python_file = open("examples/Python/automessages.py", "w")
+cpp_file = open("firmware/include/Messages.h", "w")
+
+python_file.write(Python_Header)
+cpp_file.write(CPP_Header)
+
+#Create Message Defenitions
+id = 0x00 # non zero start
+cpp_file.write(f"enum class MessageTypes : uint16_t\n")
+cpp_file.write("{\n")
+for m in messages["MessageIds"]:
+    python_file.write(f"{m} = 0x{id:X}\n")
+    cpp_file.write(f"\t{m} = 0x{id:X},\n")
+    id = id+1
+cpp_file.write("};\n\n")
+python_file.write("\n\n")
+
+#Generate Enums
+for enum in messages["Enums"]:
+    python_file.write(GeneratePythonEnum(enum, messages["Enums"][enum]))
+    cpp_file.write(GenerateCppEnum(enum, messages["Enums"][enum]))
+#Generate Classes
+predefined_messages = {}
+for msg in messages["Messages"]:
+    if(msg['type'] == 'Base'):
+        python_file.write(GeneratePythonBaseClass(msg))
+        cpp_file.write(GenerateCppBaseClass(msg))
+        predefined_messages[msg['name']] = msg
+    elif(msg['type'] == 'Custom'):
+        python_file.write(GeneratePythonCustomClass(msg))
+        cpp_file.write(GenerateCppCustomClass(msg))
+    else:
+        python_file.write(GeneratePythonPredefinedClass(msg, predefined_messages))
+        cpp_file.write(GenerateCppPredefinedClass(msg, predefined_messages))
+
+
+#Generate Setters
+for msg_id in messages["MessageIds"]:
+    for msg in messages["Messages"]: #disgusting and slow, I know
+        msg_name = msg_id.replace("Get", "").replace("Set", "").replace("Id","")+"Message"
+        if msg['name'] == msg_name:
+            if(msg_id.find('Get')==-1):
+                python_file.write(GeneratePythonSetter(msg_id, msg, predefined_messages))
+            else:
+                python_file.write(GeneratePythonGetter(msg_id, msg, predefined_messages))
         
+
+python_file.close()
+cpp_file.close()
