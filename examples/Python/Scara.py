@@ -113,6 +113,9 @@ def interpolate(Start:Point, End:Point, distance):
     num_steps = int(total_distance / distance)
     
     # Calculate the step size in x and y directions
+    if num_steps == 0:
+        return [Start]  # Return the starting point if no steps are needed
+
     x_step = (End.x - Start.x) / num_steps
     y_step = (End.y - Start.y) / num_steps
     
@@ -129,7 +132,7 @@ def interpolate_to_goal(Start:Point, End:Point, speed):
     left_time = 0
     right_time = 0
     current_position = Start
-    interpolated_points = interpolate(Start, End, 3)
+    interpolated_points = interpolate(Start, End, 5)
     angle_between_points = math.degrees(math.atan2(End.y - Start.y, End.x - Start.x))
     # for point in interpolated_points:
     #     print(f"Interpolated Point: x={point.x}, y={point.y}")
@@ -193,11 +196,24 @@ def move_to_goal(Start, End):
         AddStep(Right, int(right_diff*(1/360)*(200*8)), int(right_speed))
     #print(f"Left steps: {left_steps}, Right steps: {right_steps}")
 
+#given 3 points, generate a polynomial spline
+# P1, P2, P3 are the points
+def generate_spline(P1:Point, P2:Point, P3:Point, step_distance):
+    # Calculate the coefficients of the cubic polynomial
+    a = P1.y
+    b = (P2.y - P1.y) / (P2.x - P1.x)
+    c = ((P3.y - P1.y) - b * (P3.x - P1.x)) / ((P3.x - P1.x)**2)
+    
+    # Generate points along the spline
+    points = []
+    for x in np.arange(P1.x, P3.x, step_distance):
+        y = a + b * (x - P1.x) + c * (x - P1.x)**2
+        points.append(Point(x, y))
+    
+    return points
 
-
-
-#Left, Right = IdentifyMotors()
-Left  = AxisUDP("192.168.12.157", 4568)#AxisSerial('/dev/ttyACM0')
+#Left, Right = IdentifyMotors() #Use this if connected to the motors via USB
+Left  = AxisUDP("192.168.12.157", 4568)
 Right = AxisUDP("192.168.12.156", 4568)
 
 SetHomeDirection(Left, CLOCKWISE)
@@ -212,23 +228,18 @@ WaitState(Right, HOME)
 SetCurrentPosition(Left, degrees_to_steps(-18))
 SetCurrentPosition(Right, degrees_to_steps(-18))
 
-P1 = Point(((OFFSET/2)-45), 140)
-P2 = Point(((OFFSET/2)+45), 140)
-P3 = Point(((OFFSET/2)), 180)
 
+Points = [Point((OFFSET/2)-40, 140), Point(((OFFSET/2)), 185), Point(((OFFSET/2)+40), 140)]
 
-MoveScara(P1.x, P1.y)
-time.sleep(3)
+curr = Points[0]
+MoveScara(curr.x, curr.y)
+
 while(True):
-    interpolate_to_goal(P1, P2, 500)
-    StartPath(Left, 0)
-    StartPath(Right, 0)
-    time.sleep(1)
-    interpolate_to_goal(P2, P3, 500)
-    StartPath(Left, 0)
-    StartPath(Right, 0)
-    time.sleep(1)
-    interpolate_to_goal(P3, P1, 500)
-    StartPath(Left, 0)
-    StartPath(Right, 0)
-    time.sleep(1)
+    for point in Points:
+        interpolate_to_goal(curr, point, 300)
+        curr = point
+        StartPath(Left, 0)
+        StartPath(Right, 0)
+        time.sleep(5)
+    
+
