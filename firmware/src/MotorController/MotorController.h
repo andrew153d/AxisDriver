@@ -6,13 +6,13 @@
 #include "easyTMC2209.h"
 #include "wiring_private.h"
 #include "pid.h"
-#include "Messages.h"
+#include "AxisMessages.h"
 #include "DebugPrinter.h"
 
 #define SERIAL_PORT Serial1
 #define R_SENSE 0.12f
 
-#define DEFAULT_HOMING_SPEED 800
+#define DEFAULT_HOMING_SPEED 100
 #define DEFAULT_HOMING_DIRECTION 1
 
 #define US_PER_SEC 1000000
@@ -68,6 +68,7 @@ public:
     //Velocity Step variables
     struct VelocityStep
     {
+        PositionMode positionMode;
         int32_t velocity;
         int32_t step;
     };
@@ -132,7 +133,7 @@ public:
     void SetVelocityTarget(double velocity);
     double GetVelocityTarget();
 
-    void AddVelocityStep(int32_t velocity, int32_t step);
+    void AddVelocityStep(int32_t velocity, int32_t step, uint8_t position_mode);
     void StartPath();
 
     void setEncoderValueSource(IEncoderInterface *encoder_value);

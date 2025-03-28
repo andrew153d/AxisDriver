@@ -1,39 +1,36 @@
-import DriverComms
-from Serial import *
-import Messages
 import time
+from AxisMessages import *
+from Axis import *
 
-#SerialComms = AxisSerial('/dev/ttyACM0')
-SerialComms = AxisUDP("192.168.12.156", 4568)
+AxisComms = AxisUDP("192.168.12.156", 4568)
 
+Home(AxisComms, 0)
 #Start in velocity and step mode
-# SerialComms.send_message(DriverComms.SetVelocityAndSteps(Messages.MessageTypes.SetVelocityAndSteps, 1800, 64*100))
-# SerialComms.send_message(DriverComms.SetVelocityAndSteps(Messages.MessageTypes.SetVelocityAndSteps, -4000, -64*100))
-# SerialComms.send_message(DriverComms.SetU8(Messages.MessageTypes.StartPath, 0))
-
-# time.sleep(6)
-
+SetVelocityAndSteps(AxisComms, 100, 8*100)
+SetVelocityAndSteps(AxisComms, -100, -8*100)
+StartPath(AxisComms, 0)
+exit()
+time.sleep(4)
 #Setup parameters
-SerialComms.send_message(DriverComms.SetU32(Messages.MessageTypes.SetAcceleration, 64*1000))
-SerialComms.send_message(DriverComms.SetU32(Messages.MessageTypes.SetMaxSpeed, 64*5000))
+SetAcceleration(AxisComms, 8*5000)
+SetMaxSpeed(AxisComms, 8*6000)
 
-#Drive in relative position mode
-SerialComms.send_message(DriverComms.SetDouble(Messages.MessageTypes.SetTargetPositionRelative, 200*64*1))
-exit()
-time.sleep(7)
-exit()
-#Get the current position
-SerialComms.send_message(DriverComms.SetDouble(Messages.MessageTypes.GetTargetPosition, 0))
-ret = DriverComms.GetDouble(SerialComms.wait_serial_message())
-print(f"Received Motor Position: {ret:.2f}")
+# #Drive in relative position mode
+SetCurrentPosition(AxisComms, 0)
+SetTargetPosition(AxisComms, 200*8*0.5)
+time.sleep(1)
+SetTargetPosition(AxisComms, 122)
+time.sleep(2)
 
-#Drive in velocity mode
-SerialComms.send_message(DriverComms.SetDouble(Messages.MessageTypes.SetMotorVelocity, 6000))
-SerialComms.send_message(DriverComms.SetDouble(Messages.MessageTypes.GetMotorVelocity, 0))
-ret = DriverComms.GetDouble(SerialComms.wait_serial_message())
-print(f"Received Motor Velocity: {ret:.2f}")
+# #Get the current position
+print(f"Received Motor Position: {GetCurrentPosition(AxisComms).value:.2f}")
+
+# #Drive in velocity mode
+SetVelocity(AxisComms, 8*100)
+
+print(f"Received Motor Velocity: {GetVelocity(AxisComms).value:.2f}")
 
 time.sleep(2)
 
-#Stop the motor
-SerialComms.send_message(DriverComms.SetU8(Messages.MessageTypes.SetMotorState, Messages.MotorStates.IDLE_ON))
+# #Stop the motor
+SetMotorState(AxisComms, IDLE_ON)

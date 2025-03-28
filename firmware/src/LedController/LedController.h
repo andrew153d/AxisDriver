@@ -5,7 +5,7 @@
 #include "Task/Task.h"
 #include "FastLED.h"
 #include "MessageProcessor/MessageProcessor.hpp"
-#include "Messages.h"
+#include "AxisMessages.h"
 #include "queue"
 
 #define FLASH_ERROR_EXEC_PERIOD 500
@@ -45,7 +45,7 @@ public:
 
     AddrLedController(uint32_t period){
       executionPeriod = period;
-      ledState = OFF;
+      ledState = LedStates::OFF;
     }
 
     void OnStart();

@@ -17,7 +17,7 @@ bool UserButtonPressed()
 
 long MotorController::degreesToSteps(double degrees)
 {
-  return (degrees / 360) * 64 * 200;
+  return (degrees / 360) * 8 * 200;
 }
 
 double MotorController::stepsToDegrees(long steps)
@@ -101,8 +101,8 @@ void MotorController::OnStart()
   stepper.setEnablePin(MOTOR_EN);
   stepper.setPinsInverted(true, false, true);
   stepper.disableOutputs();
-  stepper.setAcceleration(400 * 64);
-  stepper.setMaxSpeed(100 * 64);
+  stepper.setAcceleration(400 * 8);
+  stepper.setMaxSpeed(100 * 8);
 
   driver.setup(serial_stream, 115200, TMC2209base::SerialAddress::SERIAL_ADDRESS_0);
 
@@ -134,27 +134,41 @@ void MotorController::OnTimer()
     break;
   case MotorStates::VELOCITY_STEP:
   {
-    stepper.runSpeed();
+
     if (stepper.currentPosition() == velocity_step_end)
     {
-      if(velocity_steps.size() == 0)
+      if (velocity_steps.size() == 0)
       {
-        //DEBUG_PRINTF("Finished velocity step at %ld\n", stepper.currentPosition());
+        // DEBUG_PRINTF("Finished velocity step at %ld\n", stepper.currentPosition());
         stepper.setSpeed(0);
         SetMotorState(MotorStates::IDLE_ON);
         return;
       }
-      
-      //Done stepping, on to the next
+
+      // Done stepping, on to the next
       auto this_move = velocity_steps.front();
-      stepper.setSpeed(this_move.velocity);
       //DEBUG_PRINTF("Current End: %ld, current position: %ld new step: %d\n", velocity_step_end, stepper.currentPosition(), this_move.step);
-      velocity_step_end = stepper.currentPosition() + this_move.step;
+      if (this_move.positionMode == PositionMode::ABSOLUTE)
+      {
+        velocity_step_end = this_move.step;
+        //DEBUG_PRINTF("New absolute target %ld\n", velocity_step_end);
+      }
+      else if (this_move.positionMode == PositionMode::RELATIVE)
+      {
+        velocity_step_end = stepper.currentPosition() + this_move.step;
+        //DEBUG_PRINTF("New relative target %ld\n", velocity_step_end);
+      }
+      if (stepper.currentPosition() > velocity_step_end)
+      {
+        stepper.setSpeed(-this_move.velocity);
+      }
+      else
+      {
+        stepper.setSpeed(this_move.velocity);
+      }
       velocity_steps.pop_front();
     }
-    else
-    {
-    }
+      stepper.runSpeed();
     break;
   }
   case MotorStates::HOME:
@@ -165,7 +179,7 @@ void MotorController::OnTimer()
 
       stepper.setSpeed((homeDirection == HomeDirection::CLOCKWISE) ? (float)homing_speed_ * -1 : (float)homing_speed_);
       stepper.runSpeed();
-      if ((millis() - state_change_time_ > 200) && abs(encoder_ptr->GetVelocityDegreesPerSecond()) < 5)
+      if ((millis() - state_change_time_ > 300) && abs(encoder_ptr->GetVelocityDegreesPerSecond()) < 1)
       {
         home_state_ = HomeState::BACKUP;
         stepper.setCurrentPosition(0);
@@ -184,7 +198,7 @@ void MotorController::OnTimer()
       break;
     case HomeState::RUN2:
       stepper.runSpeed();
-      if ((millis() - state_change_time_ > 400) && abs(encoder_ptr->GetVelocityDegreesPerSecond()) < 5)
+      if ((millis() - state_change_time_ > 400) && abs(encoder_ptr->GetVelocityDegreesPerSecond()) < 1)
       {
         SetMotorState(MotorStates::IDLE_ON);
         stepper.setCurrentPosition(0);
@@ -224,9 +238,9 @@ void MotorController::SetMotorState(MotorStates state)
   case MotorStates::VELOCITY_STEP:
     if (controlMode != MotorStates::VELOCITY_STEP)
     {
-      stepper.setSpeed(0); //initialize it to 0
+      stepper.setSpeed(0); // initialize it to 0
       velocity_step_end = stepper.currentPosition();
-      //DEBUG_PRINTF("Starting Velocity Step at %ld\n", velocity_step_end);
+      // DEBUG_PRINTF("Starting Velocity Step at %ld\n", velocity_step_end);
     }
     driver.setRunCurrent(100);
     stepper.enableOutputs();
@@ -236,7 +250,7 @@ void MotorController::SetMotorState(MotorStates state)
     driver.setRunCurrent(25);
     break;
   case MotorStates::IDLE_ON:
-    stepper.disableOutputs();
+    stepper.enableOutputs();
     break;
   }
   controlMode = state;
@@ -281,6 +295,7 @@ uint32_t MotorController::GetAcceleration()
 void MotorController::SetPosition(double position)
 {
   stepper.setCurrentPosition((long)position);
+  //DEBUG_PRINTF("Setting position to %f, stepper position: %ld\n", position, stepper.currentPosition());
 }
 
 double MotorController::GetPosition()
@@ -290,7 +305,7 @@ double MotorController::GetPosition()
 
 void MotorController::SetPositionTargetRelative(double position)
 {
-  //DEBUG_PRINTF("Steps: %f\n", position);
+  // DEBUG_PRINTF("Steps: %f\n", position);
   SetMotorState(MotorStates::POSITION);
   target_position += position;
   stepper.moveTo(target_position);
@@ -321,11 +336,10 @@ double MotorController::GetVelocityTarget()
   return target_velocity;
 }
 
-void MotorController::AddVelocityStep(int32_t velocity, int32_t step)
+void MotorController::AddVelocityStep(int32_t velocity, int32_t step, uint8_t position_mode)
 {
-  //DEBUG_PRINTF("Adding velocity step: %d, %d\n", velocity, step);
-  velocity_steps.push_back({velocity, step});
-  //DEBUG_PRINTF("vector size: %d\n", velocity_steps.size());
+  // DEBUG_PRINTF("Adding velocity step: %d, %d\n", velocity, step);
+  velocity_steps.push_back({(PositionMode)position_mode, abs(velocity), step});
 }
 
 void MotorController::StartPath()

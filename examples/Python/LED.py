@@ -1,40 +1,30 @@
 import time
-import DriverComms
-import Messages
-import Serial
+from AxisMessages import *
+from Axis import *
 
-SerialComms = Serial.AxisSerial('/dev/ttyACM0')
+SerialComms = AxisUDP("192.168.12.156", 4568)
 
 
 print("Flashing Error")
-msg = DriverComms.SetU8(Messages.MessageTypes.SetLedState, 1)
-SerialComms.send_message(msg)
+SetLedState(SerialComms, FLASH_ERROR)
 time.sleep(2)
 print("Setting LED state to solid")
-msg = DriverComms.SetU8(Messages.MessageTypes.SetLedState, 5)
-SerialComms.send_message(msg)
+SetLedState(SerialComms, SOLID)
 print("Setting LED color to blue")
-msg = DriverComms.SetLedColor(Messages.MessageTypes.SetLedColor, 0, 0, 255)
-SerialComms.send_message(msg)
+SetLedColor(SerialComms, {0, 0, 255})
 time.sleep(2)
 print("Setting LED color to green")
-msg = DriverComms.SetLedColor(Messages.MessageTypes.SetLedColor, 0, 255, 0)
-SerialComms.send_message(msg)
+SetLedColor(SerialComms, {0, 255, 0})
 time.sleep(2)
 print("Setting LED color to red")
-msg = DriverComms.SetLedColor(Messages.MessageTypes.SetLedColor, 255, 0, 0)
-SerialComms.send_message(msg)
+SetLedColor(SerialComms, {255, 0, 0})
 time.sleep(2)
 print("Setting LED color to white")
-msg = DriverComms.SetLedColor(Messages.MessageTypes.SetLedColor, 251, 253, 255)
-SerialComms.send_message(msg)
+SetLedColor(SerialComms, {255, 255, 255})
 time.sleep(1)
-msg = DriverComms.SetLedColor(Messages.MessageTypes.GetLedColor, 0, 0, 0)
-SerialComms.send_message(msg)
-ret = SerialComms.wait_serial_message()
-print("Received LED color: R: {}, G: {}, B: {}".format(ret[4], ret[5], ret[6]))
+print(GetLedColor(SerialComms).ledColor)
+#print("Received LED color: R: {}, G: {}, B: {}".format(ret[4], ret[5], ret[6]))
 time.sleep(1)
 print("Setting LED state to off")
-msg = DriverComms.SetU8(Messages.MessageTypes.SetLedState, 0)
-SerialComms.send_message(msg)
+SetLedState(SerialComms, OFF)
 time.sleep(1)

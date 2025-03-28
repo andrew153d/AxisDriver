@@ -9,7 +9,7 @@
 #include "DeviceManager/DeviceManager.h"
 #include "FlashStorage/FlashStorage.h"
 #include "AxisEthernet/AxisEthernet.h"
-#include "Messages.h"
+#include "AxisMessages.h"
 #include <cstdint>
 #include "Wire.h"
 #include "SPI.h"

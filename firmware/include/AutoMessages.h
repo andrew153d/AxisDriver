@@ -1,5 +1,5 @@
 #pragma once
-#include <Arduino.h>
+
 #define FIRMWARE_VERSION "1.0.0.0"
 
 #define PACKEDSTRUCT struct __attribute__((packed))
@@ -13,43 +13,6 @@ public:
     virtual float GetVelocityDegreesPerSecond();
     virtual float GetPositionDegrees();
 };
-enum class MessageTypes : uint16_t
-{
-	GetVersionId = 0x0,
-	SetI2CAddressId = 0x1,
-	GetI2CAddressId = 0x2,
-	SetEthernetAddressId = 0x3,
-	GetEthernetAddressId = 0x4,
-	SetEthernetPortId = 0x5,
-	GetEthernetPortId = 0x6,
-	GetMacAddressId = 0x7,
-	SaveSettingsId = 0x8,
-	SetLedStateId = 0x9,
-	GetLedStateId = 0xA,
-	SetLedColorId = 0xB,
-	GetLedColorId = 0xC,
-	SetHomeDirectionId = 0xD,
-	GetHomeDirectionId = 0xE,
-	HomeId = 0xF,
-	SetMotorStateId = 0x10,
-	GetMotorStateId = 0x11,
-	SetMotorBrakeId = 0x12,
-	GetMotorBrakeId = 0x13,
-	SetMaxSpeedId = 0x14,
-	GetMaxSpeedId = 0x15,
-	SetAccelerationId = 0x16,
-	GetAccelerationId = 0x17,
-	SetCurrentPositionId = 0x18,
-	GetCurrentPositionId = 0x19,
-	SetTargetPositionId = 0x1A,
-	GetTargetPositionId = 0x1B,
-	SetRelativeTargetPositionId = 0x1C,
-	SetVelocityId = 0x1D,
-	GetVelocityId = 0x1E,
-	SetVelocityAndStepsId = 0x1F,
-	StartPathId = 0x20,
-};
-
 enum class LedStates{
 	OFF = 0x0,
 	FLASH_ERROR = 0x1,
@@ -83,12 +46,16 @@ enum class HomeDirection{
 
 PACKEDSTRUCT Header
 {
+	Header header;
 	uint16_t message_type;
 	uint16_t body_size;
+	Footer footer;
 };
 PACKEDSTRUCT Footer
 {
+	Header header;
 	uint16_t checksum;
+	Footer footer;
 };
 PACKEDSTRUCT U8Message
 {

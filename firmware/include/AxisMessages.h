@@ -23,7 +23,7 @@ enum class MessageTypes : uint16_t
 	SetEthernetPortId = 0x5,
 	GetEthernetPortId = 0x6,
 	GetMacAddressId = 0x7,
-	SaveSettingsId = 0x8,
+	SaveConfigurationId = 0x8,
 	SetLedStateId = 0x9,
 	GetLedStateId = 0xA,
 	SetLedColorId = 0xB,
@@ -81,6 +81,11 @@ enum class HomeDirection{
 	COUNTERCLOCKWISE = 0x1,
 };
 
+enum class PositionMode{
+	ABSOLUTE = 0x0,
+	RELATIVE = 0x1,
+};
+
 PACKEDSTRUCT Header
 {
 	uint16_t message_type;
@@ -128,10 +133,9 @@ PACKEDSTRUCT MacAddressMessage
 {
 	Header header;
 	uint8_t mac[6];
-	uint32_t mac2;
 	Footer footer;
 };
-typedef U8Message SaveSettingsMessage;
+typedef U8Message SaveConfigurationMessage;
 typedef U8Message LedStateMessage;
 PACKEDSTRUCT LedColorMessage
 {
@@ -154,6 +158,7 @@ PACKEDSTRUCT VelocityAndStepsMessage
 	Header header;
 	int32_t velocity;
 	int32_t steps;
+	uint8_t positionMode;
 	Footer footer;
 };
 typedef U8Message StartPathMessage;

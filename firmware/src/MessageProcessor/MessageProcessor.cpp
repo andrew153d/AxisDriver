@@ -39,33 +39,34 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
 
   //DEBUG_PRINTF("Received message type: 0x%x\n", hdr->message_type);
 
-  switch (hdr->message_type)
+  switch ((MessageTypes)hdr->message_type)
   {
-  case MessageTypes::SetLedColor:
+  case MessageTypes::SetLedColorId:
   {
-    SetLedColorMessage *msg = (SetLedColorMessage *)recv_bytes;
+    LedColorMessage *msg = (LedColorMessage *)recv_bytes;
     // DEBUG_PRINTF("Setting LED color to: R=%d, G=%d, B=%d\n", msg->ledColor.r, msg->ledColor.g, msg->ledColor.b);
-    addrLedController.SetLEDColor(CRGB(msg->ledColor.r, msg->ledColor.g, msg->ledColor.b));
+    addrLedController.SetLEDColor(CRGB(msg->ledColor[0], msg->ledColor[1], msg->ledColor[2]));
     break;
   }
 
-  case MessageTypes::GetLedColor:
+  case MessageTypes::GetLedColorId:
   {
-    GetLedColorMessage *msg = (GetLedColorMessage *)recv_bytes;
-    msg->header.message_type = MessageTypes::GetLedColor;
-    msg->header.body_size = sizeof(GetLedColorMessage::ledColor);
-    msg->ledColor.r = addrLedController.GetLedColor().r;
-    msg->ledColor.g = addrLedController.GetLedColor().g;
-    msg->ledColor.b = addrLedController.GetLedColor().b;
+    LedColorMessage *msg = (LedColorMessage *)recv_bytes;
+    msg->header.message_type = (uint16_t)MessageTypes::GetLedColorId;
+    msg->header.body_size = sizeof(LedColorMessage::ledColor);
+    msg->ledColor[0] = addrLedController.GetLedColor().r;
+    msg->ledColor[1] = addrLedController.GetLedColor().g;
+    msg->ledColor[2] = addrLedController.GetLedColor().b;
     msg->footer.checksum = 0;
-    SendMsg(recv_bytes, sizeof(GetLedColorMessage));
+    SendMsg(recv_bytes, sizeof(LedColorMessage));
     break;
   }
 
-  case MessageTypes::GetVersion:
+  case MessageTypes::GetVersionId:
   {
     VersionMessage *msg = (VersionMessage *)&send_buffer[0];
-    msg->header.message_type = MessageTypes::GetVersion;
+    
+    msg->header.message_type = (uint16_t)MessageTypes::GetVersionId;
     msg->header.body_size = sizeof(VersionMessage::value);
     uint8_t *v_buf = (uint8_t *)&msg->value;
     sscanf(FIRMWARE_VERSION, "%u.%u.%u.%u", &v_buf[0], &v_buf[1], &v_buf[2], &v_buf[3]);
@@ -75,17 +76,17 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     break;
   }
 
-  case MessageTypes::SetI2CAddress:
+  case MessageTypes::SetI2CAddressId:
   {
     I2CAddressMessage *msg = (I2CAddressMessage *)recv_bytes;
     FlashStorage::GetI2CSettings()->address = msg->value;
     break;
   }
 
-  case MessageTypes::GetI2CAddress:
+  case MessageTypes::GetI2CAddressId:
   {
     I2CAddressMessage *msg = (I2CAddressMessage *)&send_buffer[0];
-    msg->header.message_type = MessageTypes::GetI2CAddress;
+    msg->header.message_type = (uint16_t)MessageTypes::GetI2CAddressId;
     msg->header.body_size = sizeof(I2CAddressMessage::value);
     msg->value = FlashStorage::GetI2CSettings()->address;
     msg->footer.checksum = 0;
@@ -94,28 +95,28 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     break;
   }
 
-  case MessageTypes::SetEthernetAddress:
+  case MessageTypes::SetEthernetAddressId:
   {
-    IPAddressMessage *msg = (IPAddressMessage *)recv_bytes;
+    EthernetAddressMessage *msg = (EthernetAddressMessage *)recv_bytes;
     FlashStorage::GetEthernetSettings()->ip_address = msg->value;
     // DEBUG_PRINT("Setting IP Address: ");
     // DEBUG_PRINTLN(IPAddress(msg->value));
     break;
   }
 
-  case MessageTypes::GetEthernetAddress:
+  case MessageTypes::GetEthernetAddressId:
   {
-    IPAddressMessage *msg = (IPAddressMessage *)&send_buffer[0];
-    msg->header.message_type = MessageTypes::GetEthernetAddress;
-    msg->header.body_size = sizeof(IPAddressMessage::value);
+    EthernetAddressMessage *msg = (EthernetAddressMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetEthernetAddressId;
+    msg->header.body_size = sizeof(EthernetAddressMessage::value);
     msg->value = FlashStorage::GetEthernetSettings()->ip_address;
     msg->footer.checksum = 0;
-    SendMsg(send_buffer, sizeof(IPAddressMessage));
+    SendMsg(send_buffer, sizeof(EthernetAddressMessage));
     // DEBUG_PRINTF("Sending IP Address: 0x%x\n", sizeof(IPAddressMessage));
     break;
   }
 
-  case MessageTypes::SetEthernetPort:
+  case MessageTypes::SetEthernetPortId:
   {
     EthernetPortMessage *msg = (EthernetPortMessage *)recv_bytes;
     FlashStorage::GetEthernetSettings()->port = (uint16_t)(msg->value);
@@ -123,196 +124,197 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     break;
   }
 
-  case MessageTypes::GetEthernetPort:
+  case MessageTypes::GetEthernetPortId:
   {
     EthernetPortMessage *msg = (EthernetPortMessage *)&send_buffer[0];
-    msg->header.message_type = MessageTypes::GetEthernetPort;
+    msg->header.message_type = (uint16_t)MessageTypes::GetEthernetPortId;
     msg->header.body_size = sizeof(EthernetPortMessage::value);
     msg->value = FlashStorage::GetEthernetSettings()->port;
     msg->footer.checksum = 0;
     SendMsg(send_buffer, sizeof(EthernetPortMessage));
-    // DEBUG_PRINTF("Sending Port: %d\n", FlashStorage::GetEthernetSettings()->port);
+    DEBUG_PRINTF("Sending Port: %d\n", msg->value);
     // DEBUG_PRINTF("Port msg size: %d\n", sizeof(EthernetPortMessage));
     break;
   }
 
-  case MessageTypes::GetMacAddress:
+  case MessageTypes::GetMacAddressId:
   {
-    MACAddressMessage *msg = (MACAddressMessage *)&send_buffer[0];
-    msg->header.message_type = MessageTypes::GetMacAddress;
-    msg->header.body_size = sizeof(MACAddressMessage::mac);
+    MacAddressMessage *msg = (MacAddressMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetMacAddressId;
+    msg->header.body_size = sizeof(MacAddressMessage::mac);
     memcpy(&(msg->mac[0]), FlashStorage::GetMacAddress(), 6);
     msg->footer.checksum = 0;
-    SendMsg(send_buffer, sizeof(MACAddressMessage));
+    SendMsg(send_buffer, sizeof(MacAddressMessage));
     break;
   }
 
-  case MessageTypes::SaveSettings:
+  case MessageTypes::SaveConfigurationId:
   {
     FlashStorage::WriteFlash();
     // DEBUG_PRINTLN("Writing flash");
     break;
   }
 
-  case MessageTypes::SetMotorState:
+  case MessageTypes::SetMotorStateId:
   {
-    SetMotorStateMessage *msg = (SetMotorStateMessage *)recv_bytes;
+    MotorStateMessage *msg = (MotorStateMessage *)recv_bytes;
     // DEBUG_PRINTF("Setting Motor State to: %d\n", msg->value);
     motorController.SetMotorState((MotorStates)msg->value);
     break;
   }
 
-  case MessageTypes::GetMotorState:
+  case MessageTypes::GetMotorStateId:
   {
-    GetMotorStateMessage *msg = (GetMotorStateMessage *)&send_buffer[0];
-    msg->header.message_type = MessageTypes::GetMotorState;
-    msg->header.body_size = sizeof(GetMotorStateMessage::value);
+    MotorStateMessage *msg = (MotorStateMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetMotorStateId;
+    msg->header.body_size = sizeof(MotorStateMessage::value);
     msg->value = (uint8_t)motorController.GetMotorState();
     msg->footer.checksum = 0;
-    SendMsg(send_buffer, sizeof(GetMotorStateMessage));
+    SendMsg(send_buffer, sizeof(MotorStateMessage));
     // DEBUG_PRINTF("Sending Motor State: %d\n", (uint8_t)motorController.GetMotorState());
     break;
   }
 
-  case MessageTypes::SetMotorBrake:
+  case MessageTypes::SetMotorBrakeId:
   {
-    SetMotorBrakeMessage *msg = (SetMotorBrakeMessage *)&recv_bytes[0];
+    MotorBrakeMessage *msg = (MotorBrakeMessage *)&recv_bytes[0];
     motorController.SetMotorBraking((MotorBrake)msg->value);
     break;
   }
 
-  case MessageTypes::SetMaxSpeed:
+  case MessageTypes::SetMaxSpeedId:
   {
-    SetMaxSpeedMessage *msg = (SetMaxSpeedMessage *)&recv_bytes[0];
+    MaxSpeedMessage *msg = (MaxSpeedMessage *)&recv_bytes[0];
     motorController.SetMaxSpeed(msg->value);
     break;
   }
 
-  case MessageTypes::GetMaxSpeed:
+  case MessageTypes::GetMaxSpeedId:
   {
-    GetMaxSpeedMessage *msg = (GetMaxSpeedMessage *)&send_buffer[0];
-    msg->header.message_type = MessageTypes::GetMaxSpeed;
-    msg->header.body_size = sizeof(GetMaxSpeedMessage::value);
+    MaxSpeedMessage *msg = (MaxSpeedMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetMaxSpeedId;
+    msg->header.body_size = sizeof(MaxSpeedMessage::value);
     msg->value = motorController.GetMaxSpeed();
     msg->footer.checksum = 0;
-    SendMsg(send_buffer, sizeof(GetPositionMessage));
+    SendMsg(send_buffer, sizeof(CurrentPositionMessage));
     break;
   }
 
-  case MessageTypes::SetAcceleration:
+  case MessageTypes::SetAccelerationId:
   {
-    SetAccelerationMessage *msg = (SetAccelerationMessage *)&recv_bytes[0];
+    AccelerationMessage *msg = (AccelerationMessage *)&recv_bytes[0];
     motorController.SetAcceleration(msg->value);
     break;
   }
 
-  case MessageTypes::GetAcceleration:
+  case MessageTypes::GetAccelerationId:
   {
-    GetAccelerationMessage *msg = (GetAccelerationMessage *)&send_buffer[0];
-    msg->header.message_type = MessageTypes::GetAcceleration;
-    msg->header.body_size = sizeof(GetAccelerationMessage::value);
+    AccelerationMessage *msg = (AccelerationMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetAccelerationId;
+    msg->header.body_size = sizeof(AccelerationMessage::value);
     msg->value = motorController.GetAcceleration();
     msg->footer.checksum = 0;
-    SendMsg(send_buffer, sizeof(GetAccelerationMessage));
+    SendMsg(send_buffer, sizeof(AccelerationMessage));
     break;
   }
 
-  case MessageTypes::SetPosition:
+  case MessageTypes::SetCurrentPositionId:
   {
-    SetPositionMessage *msg = (SetPositionMessage *)&recv_bytes[0];
+    CurrentPositionMessage *msg = (CurrentPositionMessage *)&recv_bytes[0];
     motorController.SetPosition(msg->value);
     break;
   }
 
-  case MessageTypes::GetPosition:
+  case MessageTypes::GetCurrentPositionId:
   {
-    GetPositionMessage *msg = (GetPositionMessage*)send_buffer;
-    msg->header.message_type = MessageTypes::GetPosition;
-    msg->header.body_size = sizeof(GetPositionMessage::value);
+    DEBUG_PRINTLN("Getting Current Position");
+    CurrentPositionMessage *msg = (CurrentPositionMessage*)send_buffer;
+    msg->header.message_type = (uint16_t)MessageTypes::GetCurrentPositionId;
+    msg->header.body_size = sizeof(CurrentPositionMessage::value);
     msg->value = motorController.GetPosition();
     msg->footer.checksum = 0;
-    SendMsg(send_buffer, sizeof(GetPositionMessage));
+    SendMsg(send_buffer, sizeof(CurrentPositionMessage));
     break;
   }
 
-  case MessageTypes::SetTargetPosition:
+  case MessageTypes::SetTargetPositionId:
   {
-    SetTargetPositionMessage *msg = (SetTargetPositionMessage *)recv_bytes;
-    // DEBUG_PRINTF("Setting Motor Position to: %f\n", msg->value);
+    TargetPositionMessage *msg = (TargetPositionMessage *)recv_bytes;
+    //DEBUG_PRINTF("Setting Motor Position to: %f\n", msg->value);
     motorController.SetPositionTarget(msg->value);
     break;
   }
 
-  case MessageTypes::GetTargetPosition:
-  {
-    GetPositionMessage *msg = (GetPositionMessage *)&send_buffer[0];
-    msg->header.message_type = MessageTypes::GetTargetPosition;
-    msg->header.body_size = sizeof(GetPositionMessage::value);
-    msg->value = motorController.GetPositionTarget();
-    msg->footer.checksum = 0;
-    SendMsg(send_buffer, sizeof(GetPositionMessage));
-    // DEBUG_PRINTF("Sending Motor Position: %f\n", motorController.GetPositionTarget());
-    break;
-  }
+  // case MessageTypes::GetTargetPositionId:
+  // {
+  //   PositionMessage *msg = (GetPositionMessage *)&send_buffer[0];
+  //   msg->header.message_type = (uint16_t)MessageTypes::GetTargetPositionId;
+  //   msg->header.body_size = sizeof(GetPositionMessage::value);
+  //   msg->value = motorController.GetPositionTarget();
+  //   msg->footer.checksum = 0;
+  //   SendMsg(send_buffer, sizeof(GetPositionMessage));
+  //   // DEBUG_PRINTF("Sending Motor Position: %f\n", motorController.GetPositionTarget());
+  //   break;
+  // }
 
-  case MessageTypes::SetTargetPositionRelative:
+  case MessageTypes::SetRelativeTargetPositionId:
   {
-    SetTargetRelativePositionMessage *msg = (SetTargetRelativePositionMessage *)recv_bytes;
+    RelativeTargetPositionMessage *msg = (RelativeTargetPositionMessage *)recv_bytes;
     motorController.SetPositionTargetRelative(msg->value);
     //DEBUG_PRINTF("Setting Motor Position Relative: %f\n", msg->value);
     break;
   }
 
-  case MessageTypes::SetVelocity:
+  case MessageTypes::SetVelocityId:
   {
-    SetVelocityMessage *msg = (SetVelocityMessage *)recv_bytes;
+    VelocityMessage *msg = (VelocityMessage *)recv_bytes;
     motorController.SetVelocityTarget(msg->value);
     // DEBUG_PRINTF("Setting Motor Velocity to: %d\n", msg->value);
     break;
   }
 
-  case MessageTypes::GetVelocity:
+  case MessageTypes::GetVelocityId:
   {
-    GetVelocityMessage *msg = (GetVelocityMessage *)&send_buffer[0];
-    msg->header.message_type = MessageTypes::GetVelocity;
-    msg->header.body_size = sizeof(GetVelocityMessage::value);
+    VelocityMessage *msg = (VelocityMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetVelocityId;
+    msg->header.body_size = sizeof(VelocityMessage::value);
     msg->value = motorController.GetVelocityTarget();
     msg->footer.checksum = 0;
-    SendMsg(send_buffer, sizeof(GetVelocityMessage));
+    SendMsg(send_buffer, sizeof(VelocityMessage));
     break;
   }
 
-  case MessageTypes::SetHomeDirection:
+  case MessageTypes::SetHomeDirectionId:
   {
-    SetHomeDirectionMessage *msg = (SetHomeDirectionMessage *)recv_bytes;
+    HomeDirectionMessage *msg = (HomeDirectionMessage *)recv_bytes;
     motorController.SetHomeDirection((HomeDirection)msg->value);
     break;
   }
 
-  case MessageTypes::GetHomeDirection:
+  case MessageTypes::GetHomeDirectionId:
   {
-    GetHomeDirectionMessage *msg = (GetHomeDirectionMessage *)&send_buffer[0];
-    msg->header.message_type = MessageTypes::GetHomeDirection;
-    msg->header.body_size = sizeof(GetHomeDirectionMessage::value);
+    HomeDirectionMessage *msg = (HomeDirectionMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetHomeDirectionId;
+    msg->header.body_size = sizeof(HomeDirectionMessage::value);
     msg->value = (uint8_t)motorController.GetHomeDirection();
     msg->footer.checksum = 0;
-    SendMsg(send_buffer, sizeof(GetHomeDirectionMessage));
+    SendMsg(send_buffer, sizeof(HomeDirectionMessage));
     break;
   }
 
-  case MessageTypes::Home:
+  case MessageTypes::HomeId:
     motorController.Home();
     break;
 
-  case MessageTypes::SetVelocityAndSteps:
+  case MessageTypes::SetVelocityAndStepsId:
   {
-    SetVelocityAndStepsMessage *msg = (SetVelocityAndStepsMessage *)&recv_bytes[0];
-    motorController.AddVelocityStep(msg->velocity, msg->steps);
-    // DEBUG_PRINTF("Velocity: %x, Steps: %x", msg->velocity, msg->steps);
+    VelocityAndStepsMessage *msg = (VelocityAndStepsMessage *)&recv_bytes[0];
+    motorController.AddVelocityStep(msg->velocity, msg->steps, msg->positionMode);
+    //DEBUG_PRINTF("Velocity: %d, Steps: %d, Position Mode: %d\n", msg->velocity, msg->steps, msg->positionMode);
     break;
   }
 
-  case MessageTypes::StartPath:
+  case MessageTypes::StartPathId:
     motorController.StartPath();
     break;
 

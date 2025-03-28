@@ -23,6 +23,23 @@ from Axis import *
 import struct\n
 """
 
+def GetStructFormat(type):
+    if type == "uint8_t":
+        return 'B'
+    if type == "int8_t":
+        return 'b'
+    if type == "uint16_t":
+        return 'H'
+    if type == "int16_t":
+        return 'h'
+    if type == "uint32_t":
+        return 'I'
+    if type == "int32_t":
+        return 'i'
+    if type == "double":
+        return 'd'
+    return None
+
 def GetBytes(size:str):
     if(size.find("[")!=-1):
         arr_len = int(size[size.find('[')+1:size.find(']')])
@@ -162,15 +179,16 @@ def GeneratePythonCustomClass(msg):
     for field in msg['fields']:
         ret_string += f"\t\tself.{field['name']} = {field['name']}\n"
     ret_string += "\n"
-
+    # struct.pack('<i', vel) + struct.pack('<i', steps)
     # serialize
     ret_string += "\tdef serialize(self):\n"
     ret_string += "\t\tret = bytearray(0)\n"
     for field in msg['fields']:
         if(field['type'].find('[')!=-1):
-            ret_string += f"\t\tret += self.{field['name']}\n"
-        else:
-            ret_string += f"\t\tret += self.{field['name']}.to_bytes({GetBytes(field['type'])}, 'little')\n"
+            ret_string += f"\t\tret += bytearray(self.{field['name']})\n"
+        else:   
+            ret_string += f"\t\tret += struct.pack('<{GetStructFormat(field['type'])}', self.{field['name']})#self.{field['name']}.to_bytes({GetBytes(field['type'])}, 'little')\n"
+            #ret_string += f"\t\tret += self.{field['name']}.to_bytes({GetBytes(field['type'])}, 'little')\n"
     ret_string += "\t\treturn ret\n\n"
 
     #deserialize
@@ -178,7 +196,10 @@ def GeneratePythonCustomClass(msg):
     ret_string += "\tdef deserialize(cls, byte_array):\n"
     counter = 0
     for field in msg['fields']:
-        ret_string += f"\t\t{field['name']} = {ConvertCTypeToPythonType(field['type'])}.from_bytes(byte_array[{counter}:{GetBytes(field['type'])+counter}], 'little')\n"
+        if(field['type'].find('[')!=-1):
+            ret_string += f"\t\t{field['name']} = {ConvertCTypeToPythonType(field['type'])}(byte_array[{counter}:{GetBytes(field['type'])+counter}])\n"
+        else:
+            ret_string += f"\t\t{field['name']} = {ConvertCTypeToPythonType(field['type'])}.from_bytes(byte_array[{counter}:{GetBytes(field['type'])+counter}], 'little')\n"
         counter += GetBytes(field['type'])
     ret_string += f"\t\tmsg = cls("
     ret_string += ", ".join([field['name'] for field in msg['fields']])
@@ -229,7 +250,14 @@ def GeneratePythonGetter(msg_id, msg_def, predefined):
     ret_string = ""
     ret_string += f"def {getter_fun}(axis:Axis"
     ret_string += ", timeout = 0.1):\n"
-    ret_string += f"\tsend_msg = {message_class}({msg_id}, 0)\n"
+    ret_string += f"\tsend_msg = {message_class}({msg_id}"
+    print(msg_def)
+    if(msg_def['type'] == 'Custom'):
+        for field in msg_def['fields']:
+            ret_string += f", 0"
+    else:
+        ret_string += ", 0"
+    ret_string += ")\n"
     
     ret_string += f"\taxis.send_message(send_msg.serialize())\n"
     ret_string += f"\tret = axis.wait_message(timeout)\n"
@@ -245,23 +273,27 @@ def GeneratePythonGetter(msg_id, msg_def, predefined):
 def GeneratePythonSetter(msg_id, msg_def, predefined):
     setter_fun = msg_id.replace("Id","")
     message_class = msg_id.replace("Id","").replace('Get', '').replace('Set', '')+'Message'
-    body_class = ''
-    if(msg_def['type'] == 'Custom'):
-        body_class += f"{msg['name'].split('Message')[0]}Body"
-    elif msg_def['type'] != 'Base':
-        body_class += f"{msg_def['type']}"
-    
-    print(body_class)
-    
+    body_class = f"{msg['name'].split('Message')[0]}Body" if msg_def['type'] == 'Custom' else msg_def.get('type', '')
+    print(msg_def)
     ret_string = ""
-    ret_string += f"def {setter_fun}(axis:Axis, body:"
-    ret_string += body_class
-        
+    ret_string += f"def {setter_fun}(axis:Axis, "
+    
+    if(msg_def['type'] == 'Custom'):
+        ret_string += ", ".join([field['name'] for field in msg_def['fields']])
+    else:
+        ret_string += "value"
+    
     ret_string += "):\n"
-    ret_string += f"\tsend_msg = {message_class}({msg_id}, 0)\n"
+    
+    ret_string += f"\tsend_msg = {message_class}({msg_id}, "
+    if(msg_def['type'] == 'Custom'):
+        ret_string += ", ".join([field['name'] for field in msg_def['fields']])
+    else:
+        ret_string += "value"
+    ret_string += ")\n"
     # for field in msg_def['fields']:
     #     print(field)
-    ret_string += f"\tsend_msg.body = body\n"
+    #ret_string += f"\tsend_msg.body = body\n"
     ret_string += f"\taxis.send_message(send_msg.serialize())\n"
     ret_string += "\n"
     
@@ -315,11 +347,11 @@ def GenerateCppCustomClass(msg):
     return ret_string
     return ret_string
 
-with open("interface.json", "r") as file:
+with open("AxisMessages.json", "r") as file:
     messages = json.load(file)
 
-python_file = open("examples/Python/automessages.py", "w")
-cpp_file = open("firmware/include/Messages.h", "w")
+python_file = open("examples/Python/AxisMessages.py", "w")
+cpp_file = open("firmware/include/AxisMessages.h", "w")
 
 python_file.write(Python_Header)
 cpp_file.write(CPP_Header)

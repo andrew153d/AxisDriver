@@ -8,7 +8,7 @@
         "SetEthernetPortId",
         "GetEthernetPortId",
         "GetMacAddressId",
-        "SaveSettingsId",
+        "SaveConfigurationId",
         "SetLedStateId",
         "GetLedStateId",
         "SetLedColorId",
@@ -61,6 +61,10 @@
         "HomeDirection": [
             "CLOCKWISE",
             "COUNTERCLOCKWISE"
+        ],
+        "PositionMode": [
+            "ABSOLUTE",
+            "RELATIVE"
         ]
     },
     "Messages": [
@@ -179,15 +183,11 @@
                 {
                     "name": "mac",
                     "type": "uint8_t[6]"
-                },
-                {
-                    "name": "mac2",
-                    "type": "uint32_t"
                 }
             ]
         },
         {
-            "name": "SaveSettingsMessage",
+            "name": "SaveConfigurationMessage",
             "type": "U8Message"
         },
         {
@@ -255,6 +255,10 @@
                 {
                     "name": "steps",
                     "type": "int32_t"
+                },
+                {
+                    "name": "positionMode",
+                    "type": "uint8_t"
                 }
             ]
         },

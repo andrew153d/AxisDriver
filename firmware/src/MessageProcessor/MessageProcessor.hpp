@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "Messages.h"
+#include "AxisMessages.h"
 #include <ArduinoJson.h>
 #include "Task/Task.h"
 

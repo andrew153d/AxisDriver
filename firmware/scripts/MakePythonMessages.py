@@ -1,5 +1,6 @@
 import re
 import os
+exit()
 # Path to the input and output files
 input_file = os.path.join("firmware", "include", "Messages.h")
 output_file = os.path.join("examples", "Python", "Messages.py")
