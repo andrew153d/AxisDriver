@@ -382,7 +382,15 @@ HomeDirection MotorController::GetHomeDirection()
 {
   return homeDirection;
 }
+void MotorController::SetHomingSpeed(uint32_t speed)
+{
+  homing_speed_ = speed;
+}
 
+uint32_t MotorController::GetHomingSpeed()
+{
+  return homing_speed_;
+}
 void MotorController::Home()
 {
   SetMotorState(MotorStates::HOME);
