@@ -141,6 +141,8 @@ public:
 
     void SetHomeDirection(HomeDirection direction);
     HomeDirection GetHomeDirection();
+    void SetHomingSpeed(uint32_t speed);
+    uint32_t GetHomingSpeed();
     void Home();
 
     void PrintErrorsToSerial();

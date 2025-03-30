@@ -302,6 +302,25 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     break;
   }
 
+  case MessageTypes::SetHomeSpeedId:
+  {
+    HomeSpeedMessage *msg = (HomeSpeedMessage *)&recv_bytes[0];
+    motorController.SetHomingSpeed(msg->value);
+    // DEBUG_PRINTF("Setting Home Speed to: %d\n", msg->value);
+    break;
+  }
+
+  case MessageTypes::GetHomeSpeedId:
+  {
+    HomeSpeedMessage *msg = (HomeSpeedMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetHomeSpeedId;
+    msg->header.body_size = sizeof(HomeSpeedMessage::value);
+    msg->value = motorController.GetHomingSpeed();
+    msg->footer.checksum = 0;
+    SendMsg(send_buffer, sizeof(HomeSpeedMessage));
+    break;
+  }
+
   case MessageTypes::HomeId:
     motorController.Home();
     break;

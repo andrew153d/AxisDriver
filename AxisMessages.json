@@ -15,6 +15,8 @@
         "GetLedColorId",
         "SetHomeDirectionId",
         "GetHomeDirectionId",
+        "SetHomeSpeedId",
+        "GetHomeSpeedId",
         "HomeId",
         "SetMotorStateId",
         "GetMotorStateId",
@@ -207,6 +209,10 @@
         {
             "name": "HomeDirectionMessage",
             "type": "U8Message"
+        },
+        {
+            "name": "HomeSpeedMessage",
+            "type": "U32Message"
         },
         {
             "name": "HomeMessage",
