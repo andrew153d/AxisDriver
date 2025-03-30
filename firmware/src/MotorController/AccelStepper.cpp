@@ -41,11 +41,11 @@ void AccelStepper::move(long relative)
 boolean AccelStepper::runSpeed()
 {
     // Dont do anything unless we actually have a step interval
-    if (!_stepInterval)
+    if (!_stepInterval_us)
 	return false;
 
     unsigned long time = micros();   
-    if (time - _lastStepTime >= _stepInterval)
+    if (time - _lastStepTime >= _stepInterval_us)
     {
 	if (_direction == DIRECTION_CW)
 	{
@@ -90,7 +90,7 @@ void AccelStepper::setCurrentPosition(long position)
 {
     _targetPos = _currentPos = position;
     _step_counter = 0;
-    _stepInterval = 0;
+    _stepInterval_us = 0;
     _speed = 0.0;
 }
 
@@ -104,10 +104,10 @@ unsigned long AccelStepper::computeNewSpeed()
     if (distanceTo == 0 && stepsToStop <= 1)
     {
 	// We are at the target and its time to stop
-	_stepInterval = 0;
+	_stepInterval_us = 0;
 	_speed = 0.0;
 	_step_counter = 0;
-	return _stepInterval;
+	return _stepInterval_us;
     }
 
     if (distanceTo > 0)
@@ -159,7 +159,7 @@ unsigned long AccelStepper::computeNewSpeed()
 	_cn = max(_cn, _cmin); 
     }
     _step_counter++;
-    _stepInterval = _cn;
+    _stepInterval_us = _cn;
     _speed = 1000000.0 / _cn;
     if (_direction == DIRECTION_CCW)
 	_speed = -_speed;
@@ -175,7 +175,7 @@ unsigned long AccelStepper::computeNewSpeed()
     Serial.println(stepsToStop);
     Serial.println("-----");
 #endif
-    return _stepInterval;
+    return _stepInterval_us;
 }
 
 // Run the motor to implement speed and acceleration in order to proceed to the target position
@@ -198,7 +198,7 @@ AccelStepper::AccelStepper(uint8_t interface, uint8_t pin1, uint8_t pin2, uint8_
     _maxSpeed = 0.0;
     _acceleration = 0.0;
     _sqrt_twoa = 1.0;
-    _stepInterval = 0;
+    _stepInterval_us = 0;
     _minPulseWidth = 1;
     _enablePin = 0xff;
     _lastStepTime = 0;
@@ -234,7 +234,7 @@ AccelStepper::AccelStepper(void (*forward)(), void (*backward)())
     _maxSpeed = 0.0;
     _acceleration = 0.0;
     _sqrt_twoa = 1.0;
-    _stepInterval = 0;
+    _stepInterval_us = 0;
     _minPulseWidth = 1;
     _enablePin = 0xff;
     _lastStepTime = 0;
@@ -311,10 +311,10 @@ void AccelStepper::setSpeed(float speed)
         return;
     speed = constrain(speed, -_maxSpeed, _maxSpeed);
     if (speed == 0.0)
-	_stepInterval = 0;
+	_stepInterval_us = 0;
     else
     {
-	_stepInterval = fabs(1000000.0 / speed);
+	_stepInterval_us = fabs(1000000.0 / speed);
 	_direction = (speed > 0.0) ? DIRECTION_CW : DIRECTION_CCW;
     }
     _speed = speed;

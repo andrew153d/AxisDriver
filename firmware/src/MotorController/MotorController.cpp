@@ -82,6 +82,14 @@ void init_timer()
     ;
 }
 
+void SetTimerIntervalUs(unsigned long interval_us)
+{
+  // Set the timer period (TOP value) for the timer
+  TC0->COUNT16.CC[0].reg = US_TO_TIMER_COUNT(interval_us);
+  while (TC0->COUNT16.SYNCBUSY.bit.CC0)
+    ;
+}
+
 void MotorController::OnStart()
 {
 
@@ -210,6 +218,14 @@ void MotorController::OnTimer()
   }
   case MotorStates::IDLE_ON:
     break;
+  }
+  unsigned long new_int = stepper.GetStepIntervalUs();
+  if(new_int == 0)
+  {
+    SetTimerIntervalUs(100);
+  }else
+  {
+    SetTimerIntervalUs(new_int);
   }
 }
 

@@ -17,12 +17,17 @@
 
 #define US_PER_SEC 1000000
 #define TIMER_FREQ 10000 // ticks per second
-#define TIMER_COUNT (48000000 / 8 / TIMER_FREQ)
+#define TIMER_PERIOD (1.0/TIMER_FREQ) // 1ms period
+constexpr uint32_t TIMER_COUNT = (48000000 / 8) * TIMER_PERIOD;
+#define US_TO_TIMER_COUNT(us) (48000000 / 8) * (us) / 1000000
+
+
 #define TICKS_PER_US TIMER_FREQ / US_PER_SEC
 
 static_assert(TIMER_COUNT > 0 && TIMER_COUNT < 0xFFFF, "TIMER_COUNT must be greater than 0 and less than 0xFFFF");
 
 #define DOUBLE_BUF_SIZE 1024
+
 
 enum HomeState
 {
