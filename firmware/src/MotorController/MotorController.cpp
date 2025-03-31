@@ -136,6 +136,11 @@ void MotorController::OnTimer()
     break;
   case MotorStates::POSITION:
     stepper.run();
+    if(stepper.distanceToGo() == 0)
+    {
+      // DEBUG_PRINTF("Position reached: %ld\n", stepper.currentPosition());
+      SetMotorState(MotorStates::IDLE_ON);
+    }
     break;
   case MotorStates::VELOCITY:
     stepper.runSpeed();
@@ -186,6 +191,7 @@ void MotorController::OnTimer()
       DEBUG_PRINTLN("Homing complete");
       stepper.setSpeed(0);
       driver.setStallGuardThreshold(0);
+      home_state_ = true;
       SetMotorState(MotorStates::IDLE_ON);
       }
     else
@@ -201,7 +207,7 @@ void MotorController::OnTimer()
     break;
   }
   unsigned long new_int = stepper.GetStepIntervalUs();
-  if (new_int <= 10 || new_int > 10000)
+  if (new_int <= 10 || new_int > 1000000)
   {
     SetTimerIntervalUs(1000);
     // DEBUG_PRINTF("MotorController: Step interval is 0, setting to 100us\n");
@@ -388,6 +394,11 @@ void MotorController::SetHomeThreshold(uint16_t threshold)
 uint16_t MotorController::GetHomeThreshold()
 {
   return homing_threshold;
+}
+
+bool MotorController::GetHomeState()
+{
+  return home_state_;
 }
 
 void MotorController::Home()

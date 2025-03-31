@@ -91,10 +91,10 @@ public:
     uint32_t target_velocity_duration = 0;
     uint32_t target_velocity_timer = 0;
 
-    HomeState home_state_ = HomeState::RUN1;
     uint32_t homing_speed_ = DEFAULT_HOMING_SPEED;
     bool homing_direction = DEFAULT_HOMING_DIRECTION;
     uint16_t homing_threshold = DEFAULT_HOMING_THRESHOLD;
+    bool home_state_ = false;
     
     int error_flag;
     uint32_t state_change_time_;
@@ -148,10 +148,14 @@ public:
 
     void SetHomeDirection(HomeDirection direction);
     HomeDirection GetHomeDirection();
+    
     void SetHomingSpeed(uint32_t speed);
     uint32_t GetHomingSpeed();
+
     void SetHomeThreshold(uint16_t threshold);
     uint16_t GetHomeThreshold();
+    
+    bool GetHomeState();
     void Home();
     
 

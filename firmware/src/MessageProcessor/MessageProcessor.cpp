@@ -340,6 +340,18 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     break;
   }
 
+  case MessageTypes::GetHomedStateId:
+  {
+    HomedStateMessage *msg = (HomedStateMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetHomedStateId;
+    msg->header.body_size = sizeof(HomedStateMessage::value);
+    msg->value = (uint8_t)motorController.GetHomeState();
+    msg->footer.checksum = 0;
+    SendMsg(send_buffer, sizeof(HomedStateMessage));
+    DEBUG_PRINTF("Sending Homed State: %d\n", msg->value);
+    break;
+  }
+
   case MessageTypes::HomeId:
     motorController.Home();
     break;

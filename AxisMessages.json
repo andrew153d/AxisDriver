@@ -19,6 +19,7 @@
         "GetHomeThresholdId",
         "SetHomeSpeedId",
         "GetHomeSpeedId",
+        "GetHomedStateId",
         "HomeId",
         "SetMotorStateId",
         "GetMotorStateId",
@@ -219,6 +220,10 @@
         {
             "name": "HomeThresholdMessage",
             "type": "U32Message"
+        },
+        {
+            "name": "HomedStateMessage",
+            "type": "U8Message"
         },
         {
             "name": "HomeMessage",

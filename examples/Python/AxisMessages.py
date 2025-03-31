@@ -21,24 +21,25 @@ SetHomeThresholdId = 0xF
 GetHomeThresholdId = 0x10
 SetHomeSpeedId = 0x11
 GetHomeSpeedId = 0x12
-HomeId = 0x13
-SetMotorStateId = 0x14
-GetMotorStateId = 0x15
-SetMotorBrakeId = 0x16
-GetMotorBrakeId = 0x17
-SetMaxSpeedId = 0x18
-GetMaxSpeedId = 0x19
-SetAccelerationId = 0x1A
-GetAccelerationId = 0x1B
-SetCurrentPositionId = 0x1C
-GetCurrentPositionId = 0x1D
-SetTargetPositionId = 0x1E
-GetTargetPositionId = 0x1F
-SetRelativeTargetPositionId = 0x20
-SetVelocityId = 0x21
-GetVelocityId = 0x22
-SetVelocityAndStepsId = 0x23
-StartPathId = 0x24
+GetHomedStateId = 0x13
+HomeId = 0x14
+SetMotorStateId = 0x15
+GetMotorStateId = 0x16
+SetMotorBrakeId = 0x17
+GetMotorBrakeId = 0x18
+SetMaxSpeedId = 0x19
+GetMaxSpeedId = 0x1A
+SetAccelerationId = 0x1B
+GetAccelerationId = 0x1C
+SetCurrentPositionId = 0x1D
+GetCurrentPositionId = 0x1E
+SetTargetPositionId = 0x1F
+GetTargetPositionId = 0x20
+SetRelativeTargetPositionId = 0x21
+SetVelocityId = 0x22
+GetVelocityId = 0x23
+SetVelocityAndStepsId = 0x24
+StartPathId = 0x25
 
 
 #LedStates
@@ -467,6 +468,30 @@ class HomeThresholdMessage:
 		msg.footer = footer
 		return msg
 
+class HomedStateMessage: 
+	def __init__(self, msg_id, value):
+		self.body = U8Message(value)
+		self.header = Header(msg_id, 1)
+		self.footer = Footer(sum(self.body.serialize())%0xFFFF)
+
+	def serialize(self):
+		ret = bytearray(0)
+		ret += self.header.serialize()
+		ret += self.body.serialize()
+		ret += self.footer.serialize()
+		return ret
+
+	@classmethod
+	def deserialize(cls, byte_array):
+		header = Header.deserialize(byte_array[0:4])
+		body = U8Message.deserialize(byte_array[4:5])
+		footer = Footer.deserialize(byte_array[5:7])
+		msg = cls(header.message_type, body.value)
+		msg.body = body
+		msg.header = header
+		msg.footer = footer
+		return msg
+
 class HomeMessage: 
 	def __init__(self, msg_id, value):
 		self.body = U32Message(value)
@@ -884,6 +909,16 @@ def GetHomeSpeed(axis:Axis, timeout = 0.1):
 	ret = axis.wait_message(timeout)
 	if(ret[0]==GetHomeSpeedId):
 		msg = HomeSpeedMessage.deserialize(ret)
+		return msg.body
+	else:
+		 return None
+
+def GetHomedState(axis:Axis, timeout = 0.1):
+	send_msg = HomedStateMessage(GetHomedStateId, 0)
+	axis.send_message(send_msg.serialize())
+	ret = axis.wait_message(timeout)
+	if(ret[0]==GetHomedStateId):
+		msg = HomedStateMessage.deserialize(ret)
 		return msg.body
 	else:
 		 return None
