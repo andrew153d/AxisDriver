@@ -15,6 +15,8 @@
         "GetLedColorId",
         "SetHomeDirectionId",
         "GetHomeDirectionId",
+        "SetHomeThresholdId",
+        "GetHomeThresholdId",
         "SetHomeSpeedId",
         "GetHomeSpeedId",
         "HomeId",
@@ -212,6 +214,10 @@
         },
         {
             "name": "HomeSpeedMessage",
+            "type": "U32Message"
+        },
+        {
+            "name": "HomeThresholdMessage",
             "type": "U32Message"
         },
         {

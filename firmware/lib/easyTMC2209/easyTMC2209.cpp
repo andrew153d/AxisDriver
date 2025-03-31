@@ -574,8 +574,8 @@ void easyTMC2209::initialize(long serial_baud_rate,
   getSettings();
   setOperationModeToSerial(serial_address);
   
-  useInternalSenseResistors();
-  disableAnalogCurrentScaling();
+  useInternalSenseResistors(); //using external sense resistors
+  disableAnalogCurrentScaling(); //No voltage divider on vref, use programmed current values
 
   chopper_config_.vsense = 1;
 

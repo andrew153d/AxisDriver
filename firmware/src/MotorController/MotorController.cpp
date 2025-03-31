@@ -181,50 +181,34 @@ void MotorController::OnTimer()
   }
   case MotorStates::HOME:
   {
-    switch (home_state_)
+    if (digitalRead(MOTOR_DIAG))
     {
-    case HomeState::RUN1:
+      DEBUG_PRINTLN("Homing complete");
+      stepper.setSpeed(0);
+      driver.setStallGuardThreshold(0);
+      SetMotorState(MotorStates::IDLE_ON);
+      }
+    else
+      {
 
-      stepper.setSpeed((homeDirection == HomeDirection::CLOCKWISE) ? (float)homing_speed_ * -1 : (float)homing_speed_);
+      stepper.setSpeed((homing_direction) ? homing_speed_ : -1.0f*(float)homing_speed_);
       stepper.runSpeed();
-      if ((millis() - state_change_time_ > 300) && abs(encoder_ptr->GetVelocityDegreesPerSecond()) < 1)
-      {
-        home_state_ = HomeState::BACKUP;
-        stepper.setCurrentPosition(0);
-        stepper.move(degreesToSteps((homeDirection == HomeDirection::CLOCKWISE) ? 10 : -10));
-      }
-      break;
-    case HomeState::BACKUP:
-      stepper.run();
-      if (abs(stepper.distanceToGo()) < 1)
-      {
-        home_state_ = HomeState::RUN2;
-        stepper.setSpeed((homeDirection == HomeDirection::CLOCKWISE) ? (float)homing_speed_ / 2 * -1 : (float)homing_speed_ / 2);
-        state_change_time_ = millis();
-      }
-
-      break;
-    case HomeState::RUN2:
-      stepper.runSpeed();
-      if ((millis() - state_change_time_ > 400) && abs(encoder_ptr->GetVelocityDegreesPerSecond()) < 1)
-      {
-        SetMotorState(MotorStates::IDLE_ON);
-        stepper.setCurrentPosition(0);
-        home_state_ = HomeState::RUN1;
-      }
-      break;
     }
+
     break;
   }
   case MotorStates::IDLE_ON:
     break;
   }
   unsigned long new_int = stepper.GetStepIntervalUs();
-  if(new_int == 0)
+  if (new_int <= 10 || new_int > 10000)
   {
-    SetTimerIntervalUs(100);
-  }else
+    SetTimerIntervalUs(1000);
+    // DEBUG_PRINTF("MotorController: Step interval is 0, setting to 100us\n");
+  }
+  else
   {
+    // DEBUG_PRINTF("MotorController: Step interval is %ld\n", new_int);
     SetTimerIntervalUs(new_int);
   }
 }
@@ -263,7 +247,9 @@ void MotorController::SetMotorState(MotorStates state)
     break;
   case MotorStates::HOME:
     stepper.enableOutputs();
-    driver.setRunCurrent(25);
+    stepper.setSpeed((homing_direction) ? homing_speed_ : -1.0f*(float)homing_speed_);
+    stepper.runSpeed();
+    driver.setStallGuardThreshold(homing_threshold);
     break;
   case MotorStates::IDLE_ON:
     stepper.enableOutputs();
@@ -375,12 +361,13 @@ uint32_t MotorController::GetErrors()
 
 void MotorController::SetHomeDirection(HomeDirection direction)
 {
-  homeDirection = direction;
+  homing_direction = (bool)direction;
+
 }
 
 HomeDirection MotorController::GetHomeDirection()
 {
-  return homeDirection;
+  return (HomeDirection)homing_direction;
 }
 void MotorController::SetHomingSpeed(uint32_t speed)
 {
@@ -391,6 +378,18 @@ uint32_t MotorController::GetHomingSpeed()
 {
   return homing_speed_;
 }
+
+void MotorController::SetHomeThreshold(uint16_t threshold)
+{
+  homing_threshold = threshold;
+  driver.setStallGuardThreshold(threshold);
+}
+
+uint16_t MotorController::GetHomeThreshold()
+{
+  return homing_threshold;
+}
+
 void MotorController::Home()
 {
   SetMotorState(MotorStates::HOME);

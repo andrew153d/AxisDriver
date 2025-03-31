@@ -58,7 +58,7 @@ def GetBytes(size:str):
         return 4
     if size == "double":
         return 8
-    print(size)
+    #print(size)
     return 0
 
 def ConvertCTypeToPythonType(input_type):
@@ -251,7 +251,7 @@ def GeneratePythonGetter(msg_id, msg_def, predefined):
     ret_string += f"def {getter_fun}(axis:Axis"
     ret_string += ", timeout = 0.1):\n"
     ret_string += f"\tsend_msg = {message_class}({msg_id}"
-    print(msg_def)
+    #print(msg_def)
     if(msg_def['type'] == 'Custom'):
         for field in msg_def['fields']:
             ret_string += f", 0"
@@ -274,7 +274,7 @@ def GeneratePythonSetter(msg_id, msg_def, predefined):
     setter_fun = msg_id.replace("Id","")
     message_class = msg_id.replace("Id","").replace('Get', '').replace('Set', '')+'Message'
     body_class = f"{msg['name'].split('Message')[0]}Body" if msg_def['type'] == 'Custom' else msg_def.get('type', '')
-    print(msg_def)
+    #print(msg_def)
     ret_string = ""
     ret_string += f"def {setter_fun}(axis:Axis, "
     

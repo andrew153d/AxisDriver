@@ -30,26 +30,28 @@ enum class MessageTypes : uint16_t
 	GetLedColorId = 0xC,
 	SetHomeDirectionId = 0xD,
 	GetHomeDirectionId = 0xE,
-	SetHomeSpeedId = 0xF,
-	GetHomeSpeedId = 0x10,
-	HomeId = 0x11,
-	SetMotorStateId = 0x12,
-	GetMotorStateId = 0x13,
-	SetMotorBrakeId = 0x14,
-	GetMotorBrakeId = 0x15,
-	SetMaxSpeedId = 0x16,
-	GetMaxSpeedId = 0x17,
-	SetAccelerationId = 0x18,
-	GetAccelerationId = 0x19,
-	SetCurrentPositionId = 0x1A,
-	GetCurrentPositionId = 0x1B,
-	SetTargetPositionId = 0x1C,
-	GetTargetPositionId = 0x1D,
-	SetRelativeTargetPositionId = 0x1E,
-	SetVelocityId = 0x1F,
-	GetVelocityId = 0x20,
-	SetVelocityAndStepsId = 0x21,
-	StartPathId = 0x22,
+	SetHomeThresholdId = 0xF,
+	GetHomeThresholdId = 0x10,
+	SetHomeSpeedId = 0x11,
+	GetHomeSpeedId = 0x12,
+	HomeId = 0x13,
+	SetMotorStateId = 0x14,
+	GetMotorStateId = 0x15,
+	SetMotorBrakeId = 0x16,
+	GetMotorBrakeId = 0x17,
+	SetMaxSpeedId = 0x18,
+	GetMaxSpeedId = 0x19,
+	SetAccelerationId = 0x1A,
+	GetAccelerationId = 0x1B,
+	SetCurrentPositionId = 0x1C,
+	GetCurrentPositionId = 0x1D,
+	SetTargetPositionId = 0x1E,
+	GetTargetPositionId = 0x1F,
+	SetRelativeTargetPositionId = 0x20,
+	SetVelocityId = 0x21,
+	GetVelocityId = 0x22,
+	SetVelocityAndStepsId = 0x23,
+	StartPathId = 0x24,
 };
 
 enum class LedStates{
@@ -147,6 +149,7 @@ PACKEDSTRUCT LedColorMessage
 };
 typedef U8Message HomeDirectionMessage;
 typedef U32Message HomeSpeedMessage;
+typedef U32Message HomeThresholdMessage;
 typedef U32Message HomeMessage;
 typedef U8Message MotorStateMessage;
 typedef U8Message MotorBrakeMessage;

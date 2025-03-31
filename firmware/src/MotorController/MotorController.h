@@ -14,6 +14,7 @@
 
 #define DEFAULT_HOMING_SPEED 100
 #define DEFAULT_HOMING_DIRECTION 1
+#define DEFAULT_HOMING_THRESHOLD 2
 
 #define US_PER_SEC 1000000
 #define TIMER_FREQ 10000 // ticks per second
@@ -66,7 +67,6 @@ public:
     AccelStepper stepper;
 
     MotorStates controlMode;
-    HomeDirection homeDirection = HomeDirection::CLOCKWISE;
     MotorBrake motorBrake;
     String modeString = "";
 
@@ -94,6 +94,8 @@ public:
     HomeState home_state_ = HomeState::RUN1;
     uint32_t homing_speed_ = DEFAULT_HOMING_SPEED;
     bool homing_direction = DEFAULT_HOMING_DIRECTION;
+    uint16_t homing_threshold = DEFAULT_HOMING_THRESHOLD;
+    
     int error_flag;
     uint32_t state_change_time_;
 
@@ -148,7 +150,10 @@ public:
     HomeDirection GetHomeDirection();
     void SetHomingSpeed(uint32_t speed);
     uint32_t GetHomingSpeed();
+    void SetHomeThreshold(uint16_t threshold);
+    uint16_t GetHomeThreshold();
     void Home();
+    
 
     void PrintErrorsToSerial();
 };

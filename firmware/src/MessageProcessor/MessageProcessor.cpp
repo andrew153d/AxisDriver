@@ -321,6 +321,25 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     break;
   }
 
+  case MessageTypes::SetHomeThresholdId:
+  {
+    HomeThresholdMessage *msg = (HomeThresholdMessage *)&recv_bytes[0];
+    motorController.SetHomeThreshold(msg->value);
+    // DEBUG_PRINTF("Setting Home Threshold to: %d\n", msg->value);
+    break;
+  }
+
+  case MessageTypes::GetHomeThresholdId:
+  {
+    HomeThresholdMessage *msg = (HomeThresholdMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetHomeThresholdId;
+    msg->header.body_size = sizeof(HomeThresholdMessage::value);
+    msg->value = motorController.GetHomeThreshold();
+    msg->footer.checksum = 0;
+    SendMsg(send_buffer, sizeof(HomeThresholdMessage));
+    break;
+  }
+
   case MessageTypes::HomeId:
     motorController.Home();
     break;
