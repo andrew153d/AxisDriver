@@ -91,9 +91,10 @@ public:
     uint32_t target_velocity_duration = 0;
     uint32_t target_velocity_timer = 0;
 
-    uint32_t homing_speed_ = DEFAULT_HOMING_SPEED;
-    bool homing_direction = DEFAULT_HOMING_DIRECTION;
+    int32_t homing_speed_ = DEFAULT_HOMING_SPEED;
+    int homing_direction = DEFAULT_HOMING_DIRECTION;
     uint16_t homing_threshold = DEFAULT_HOMING_THRESHOLD;
+    bool reached_speed_ = false;
     bool home_state_ = false;
     
     int error_flag;

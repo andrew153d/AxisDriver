@@ -59,7 +59,9 @@ void EncoderController::OnRun()
 
 
     raw_shaft_angle = Wrap0to360(degrees(Tlv493dMagnetic3DSensor.getAzimuth()));
-    //Serial.printf("%8.1f\n", raw_shaft_angle);
+    //round to 1 decimal place
+    raw_shaft_angle = roundf(raw_shaft_angle * 10.0f) / 10.0f;
+    //Serial.printf("%8.5f\n", raw_shaft_angle);
     // load the sliding window filter
     // to avoid invalid values at the ends, apply an offset
     

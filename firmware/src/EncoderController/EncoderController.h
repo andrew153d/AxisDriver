@@ -23,8 +23,8 @@ private:
 
     // testing using a sliding window filter
     float sliding_window_center = 0, prev_sliding_window_center;
-    float sliding_window_radius = 0.5; // amplitude of noise when sensor is still
-    float sliding_window_alpha = 0.02;
+    float sliding_window_radius = 0.4; // amplitude of noise when sensor is still
+    float sliding_window_alpha = 0.4;
 
     float raw_shaft_angle = 0;
     float smoothed_shaft_angle;

@@ -136,7 +136,7 @@ void MotorController::OnTimer()
     break;
   case MotorStates::POSITION:
     stepper.run();
-    if(stepper.distanceToGo() == 0)
+    if (stepper.distanceToGo() == 0)
     {
       // DEBUG_PRINTF("Position reached: %ld\n", stepper.currentPosition());
       SetMotorState(MotorStates::IDLE_ON);
@@ -186,19 +186,28 @@ void MotorController::OnTimer()
   }
   case MotorStates::HOME:
   {
-    if (digitalRead(MOTOR_DIAG))
+    float currentVelocityDegPerSec = encoder_ptr->GetVelocityDegreesPerSecond()*homing_direction;
+    float homing_limit = (homing_speed_ * 360) / (200 * 8) * 0.5f; // 0.5 is the ratio of the encoder to the motor
+    // DEBUG_PRINTF("Velocity: %f, Homing speed: %f\n", vel, deg_per_second);
+    if (currentVelocityDegPerSec > homing_limit || currentVelocityDegPerSec < -2)
+    {
+      reached_speed_ = true;
+    }
+
+    if ((currentVelocityDegPerSec > homing_limit || !reached_speed_))
+    {
+      stepper.setSpeed(homing_direction*homing_speed_);
+      stepper.runSpeed();
+    }
+    else
     {
       DEBUG_PRINTLN("Homing complete");
       stepper.setSpeed(0);
       driver.setStallGuardThreshold(0);
       home_state_ = true;
+      reached_speed_ = false;
       SetMotorState(MotorStates::IDLE_ON);
-      }
-    else
-      {
-
-      stepper.setSpeed((homing_direction) ? homing_speed_ : -1.0f*(float)homing_speed_);
-      stepper.runSpeed();
+      DEBUG_PRINTF("Homing complete\n");
     }
 
     break;
@@ -253,7 +262,8 @@ void MotorController::SetMotorState(MotorStates state)
     break;
   case MotorStates::HOME:
     stepper.enableOutputs();
-    stepper.setSpeed((homing_direction) ? homing_speed_ : -1.0f*(float)homing_speed_);
+    stepper.setSpeed(homing_direction*homing_speed_);
+
     stepper.runSpeed();
     driver.setStallGuardThreshold(homing_threshold);
     break;
@@ -367,8 +377,7 @@ uint32_t MotorController::GetErrors()
 
 void MotorController::SetHomeDirection(HomeDirection direction)
 {
-  homing_direction = (bool)direction;
-
+  homing_direction = ((bool)direction)?1:-1;
 }
 
 HomeDirection MotorController::GetHomeDirection()
