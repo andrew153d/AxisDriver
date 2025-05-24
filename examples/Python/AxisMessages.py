@@ -398,7 +398,7 @@ class LedColorMessage:
 
 class HomeDirectionMessage: 
 	def __init__(self, msg_id, value):
-		self.body = U8Message(value)
+		self.body = S8Message(value)
 		self.header = Header(msg_id, 1)
 		self.footer = Footer(sum(self.body.serialize())%0xFFFF)
 
@@ -412,7 +412,7 @@ class HomeDirectionMessage:
 	@classmethod
 	def deserialize(cls, byte_array):
 		header = Header.deserialize(byte_array[0:4])
-		body = U8Message.deserialize(byte_array[4:5])
+		body = S8Message.deserialize(byte_array[4:5])
 		footer = Footer.deserialize(byte_array[5:7])
 		msg = cls(header.message_type, body.value)
 		msg.body = body

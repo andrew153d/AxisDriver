@@ -63,7 +63,7 @@
             "STRONG_BRAKING",
             "BRAKING"
         ],
-        "HomeDirection": [
+        "HomeDirection": [ 
             "CLOCKWISE",
             "COUNTERCLOCKWISE"
         ],
@@ -211,7 +211,7 @@
         },
         {
             "name": "HomeDirectionMessage",
-            "type": "U8Message"
+            "type": "S8Message"
         },
         {
             "name": "HomeSpeedMessage",

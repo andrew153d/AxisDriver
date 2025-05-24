@@ -29,12 +29,13 @@ static_assert(TIMER_COUNT > 0 && TIMER_COUNT < 0xFFFF, "TIMER_COUNT must be grea
 
 #define DOUBLE_BUF_SIZE 1024
 
+#define SENSORLESS_HOMING
 
 enum HomeState
 {
-    RUN1,
+    ROUGH,
     BACKUP,
-    RUN2
+    FINE
 };
 
 union MotorError
@@ -91,12 +92,18 @@ public:
     uint32_t target_velocity_duration = 0;
     uint32_t target_velocity_timer = 0;
 
+    //    Homing
+    bool reached_speed_ = false;
+    bool home_state_ = false;
+    HomeState home_step = ROUGH;
     int32_t homing_speed_ = DEFAULT_HOMING_SPEED;
     int homing_direction = DEFAULT_HOMING_DIRECTION;
     uint16_t homing_threshold = DEFAULT_HOMING_THRESHOLD;
-    bool reached_speed_ = false;
-    bool home_state_ = false;
+    float homing_coarse_limit_;
+    float homing_fine_limit_;
     
+
+
     int error_flag;
     uint32_t state_change_time_;
 

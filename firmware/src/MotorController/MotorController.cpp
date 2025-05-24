@@ -88,6 +88,7 @@ void SetTimerIntervalUs(unsigned long interval_us)
   TC0->COUNT16.CC[0].reg = US_TO_TIMER_COUNT(interval_us);
   while (TC0->COUNT16.SYNCBUSY.bit.CC0)
     ;
+  // DEBUG_PRINTF("Set timer interval to %lu us\n", US_TO_TIMER_COUNT(interval_us));
 }
 
 void MotorController::OnStart()
@@ -160,16 +161,14 @@ void MotorController::OnTimer()
 
       // Done stepping, on to the next
       auto this_move = velocity_steps.front();
-      //DEBUG_PRINTF("Current End: %ld, current position: %ld new step: %d\n", velocity_step_end, stepper.currentPosition(), this_move.step);
+      // DEBUG_PRINTF("Current End: %ld, current position: %ld new step: %d\n", velocity_step_end, stepper.currentPosition(), this_move.step);
       if (this_move.positionMode == PositionMode::ABSOLUTE)
       {
         velocity_step_end = this_move.step;
-        //DEBUG_PRINTF("New absolute target %ld\n", velocity_step_end);
       }
       else if (this_move.positionMode == PositionMode::RELATIVE)
       {
         velocity_step_end = stepper.currentPosition() + this_move.step;
-        //DEBUG_PRINTF("New relative target %ld\n", velocity_step_end);
       }
       if (stepper.currentPosition() > velocity_step_end)
       {
@@ -181,35 +180,67 @@ void MotorController::OnTimer()
       }
       velocity_steps.pop_front();
     }
-      stepper.runSpeed();
+    stepper.runSpeed();
     break;
   }
   case MotorStates::HOME:
   {
-    float currentVelocityDegPerSec = encoder_ptr->GetVelocityDegreesPerSecond()*homing_direction;
-    float homing_limit = (homing_speed_ * 360) / (200 * 8) * 0.5f; // 0.5 is the ratio of the encoder to the motor
-    // DEBUG_PRINTF("Velocity: %f, Homing speed: %f\n", vel, deg_per_second);
-    if (currentVelocityDegPerSec > homing_limit || currentVelocityDegPerSec < -2)
-    {
-      reached_speed_ = true;
-    }
+    float currentVelocityDegPerSec = encoder_ptr->GetVelocityDegreesPerSecond() * homing_direction;
+    homing_coarse_limit_ = homing_direction * ((homing_speed_ * 360) / (200 * 8)) * 0.5f;
 
-    if ((currentVelocityDegPerSec > homing_limit || !reached_speed_))
+    switch (home_step)
     {
-      stepper.setSpeed(homing_direction*homing_speed_);
-      stepper.runSpeed();
-    }
-    else
+    case ROUGH:
     {
-      DEBUG_PRINTLN("Homing complete");
-      stepper.setSpeed(0);
-      driver.setStallGuardThreshold(0);
-      home_state_ = true;
-      reached_speed_ = false;
-      SetMotorState(MotorStates::IDLE_ON);
-      DEBUG_PRINTF("Homing complete\n");
-    }
+      if (!reached_speed_ && (abs(currentVelocityDegPerSec) > abs(homing_coarse_limit_) || currentVelocityDegPerSec < -2))
+      {
+        reached_speed_ = true;
+      }
 
+      if ((abs(currentVelocityDegPerSec) > abs(homing_coarse_limit_) || !reached_speed_))
+      {
+        stepper.setSpeed(homing_direction * homing_speed_);
+        stepper.runSpeed();
+      }
+      else
+      {
+        stepper.setSpeed(0);
+        stepper.move(homing_direction * -50);
+        home_step = BACKUP;
+      }
+      break;
+    }
+    case BACKUP:
+    {
+      stepper.run();
+      if (stepper.distanceToGo() == 0 && abs(encoder_ptr->GetVelocityDegreesPerSecond()) < 1)
+      {
+        homing_fine_limit_ = ((abs(encoder_ptr->GetUpdateRate()) / 2) * 360) / (200 * 8) * 0.3f * homing_direction;
+        home_step = FINE;
+        reached_speed_ = false;
+      }
+      break;
+    }
+    case FINE:
+    {
+      if (abs(currentVelocityDegPerSec) > abs(homing_fine_limit_) && !reached_speed_)
+      {
+        reached_speed_ = true;
+      }
+
+      if (abs(currentVelocityDegPerSec) > abs(homing_fine_limit_) || !reached_speed_)
+      {
+        stepper.setSpeed(homing_direction * abs(encoder_ptr->GetUpdateRate()) / 2);
+        stepper.runSpeed();
+      }
+      else
+      {
+        stepper.setSpeed(0);
+        SetMotorState(MotorStates::IDLE_ON);
+      }
+      break;
+    }
+    }
     break;
   }
   case MotorStates::IDLE_ON:
@@ -219,18 +250,16 @@ void MotorController::OnTimer()
   if (new_int <= 10 || new_int > 1000000)
   {
     SetTimerIntervalUs(1000);
-    // DEBUG_PRINTF("MotorController: Step interval is 0, setting to 100us\n");
   }
   else
   {
-    // DEBUG_PRINTF("MotorController: Step interval is %ld\n", new_int);
     SetTimerIntervalUs(new_int);
   }
 }
 
 void MotorController::OnRun()
 {
-  return;
+  
 }
 
 void MotorController::SetMotorState(MotorStates state)
@@ -257,15 +286,17 @@ void MotorController::SetMotorState(MotorStates state)
       velocity_step_end = stepper.currentPosition();
       // DEBUG_PRINTF("Starting Velocity Step at %ld\n", velocity_step_end);
     }
-    driver.setRunCurrent(100);
+    driver.setAllCurrentValues(100, 0, 0);
     stepper.enableOutputs();
     break;
   case MotorStates::HOME:
     stepper.enableOutputs();
-    stepper.setSpeed(homing_direction*homing_speed_);
-
+    stepper.setSpeed(homing_direction * homing_speed_);
     stepper.runSpeed();
-    driver.setStallGuardThreshold(homing_threshold);
+    home_step = ROUGH;
+    reached_speed_ = false;
+    home_state_ = false;
+    // driver.setStallGuardThreshold(homing_threshold);
     break;
   case MotorStates::IDLE_ON:
     stepper.enableOutputs();
@@ -313,7 +344,6 @@ uint32_t MotorController::GetAcceleration()
 void MotorController::SetPosition(double position)
 {
   stepper.setCurrentPosition((long)position);
-  //DEBUG_PRINTF("Setting position to %f, stepper position: %ld\n", position, stepper.currentPosition());
 }
 
 double MotorController::GetPosition()
@@ -343,6 +373,7 @@ double MotorController::GetPositionTarget()
 
 void MotorController::SetVelocityTarget(double velocity)
 {
+  DEBUG_PRINTF("Setting velocity target: %f\n", velocity);
   stepper.enableOutputs();
   controlMode = MotorStates::VELOCITY;
   target_velocity = velocity;
@@ -377,7 +408,7 @@ uint32_t MotorController::GetErrors()
 
 void MotorController::SetHomeDirection(HomeDirection direction)
 {
-  homing_direction = ((bool)direction)?1:-1;
+  homing_direction = ((bool)direction) ? 1 : -1;
 }
 
 HomeDirection MotorController::GetHomeDirection()

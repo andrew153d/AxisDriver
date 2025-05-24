@@ -12,6 +12,7 @@ class IEncoderInterface
 public:
     virtual float GetVelocityDegreesPerSecond();
     virtual float GetPositionDegrees();
+	virtual float GetUpdateRate();
 };
 enum class MessageTypes : uint16_t
 {
@@ -148,7 +149,7 @@ PACKEDSTRUCT LedColorMessage
 	uint8_t ledColor[3];
 	Footer footer;
 };
-typedef U8Message HomeDirectionMessage;
+typedef S8Message HomeDirectionMessage;
 typedef U32Message HomeSpeedMessage;
 typedef U32Message HomeThresholdMessage;
 typedef U8Message HomedStateMessage;

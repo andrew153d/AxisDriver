@@ -14,6 +14,7 @@ class IEncoderInterface
 public:
     virtual float GetVelocityDegreesPerSecond();
     virtual float GetPositionDegrees();
+	virtual float GetUpdateRate();
 };
 """
 
@@ -86,8 +87,11 @@ def GeneratePythonEnum(enum_name, enum_def):
     ret_string += f"#{enum_name}\n"
     
     count = 0x00
-    for defi in enum_def:
-        ret_string += f"{defi} = 0x{count:X}\n"
+    for enum_member in enum_def:
+        if(enum_member.find('=')!=-1):
+            ret_string += f"{enum_member.split('=')[0].strip()} = {enum_member.split('=')[1].strip()}\n"
+        else:
+            ret_string += f"{enum_member} = 0x{count:X}\n"
         count = count + 1
     ret_string+="\n"
     return ret_string
@@ -306,8 +310,12 @@ def GenerateCppEnum(enum_name, enum_def):
     ret_string += "{\n"
     
     count = 0x00
-    for defi in enum_def:
-        ret_string += f"\t{defi} = 0x{count:X},\n"
+    for enum_member in enum_def:
+        if(enum_member.find('=')!=-1):
+            print(enum_member)
+            ret_string += f"\t{enum_member.split('=')[0].strip()} = {enum_member.split('=')[1].strip()},\n"
+        else:
+            ret_string += f"\t{enum_member} = 0x{count:X},\n"
         count = count + 1
     ret_string+="};\n\n"
     return ret_string
