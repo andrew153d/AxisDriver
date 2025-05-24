@@ -7,6 +7,10 @@
 #include "FlashStorage/FlashStorage.h"
 #include "DebugPrinter.h"
 #include <EthernetUdp.h> 
+#include <Ethernet.h>
+#include <ArduinoHA.h>
+
+
 
 class W5500UdpClient : public EthernetUDP
 {
