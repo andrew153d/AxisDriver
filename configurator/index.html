@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Axis Driver Configurator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Axis Driver Configurator</h1>
+    <button id="connectBtn">Connect to Device</button>
+    <div id="status">Not connected</div>
+    <form id="settingsForm" style="display:none;">
+        <h2>Ethernet Settings</h2>
+        <label>Port: <input type="number" id="eth_port" /></label><br>
+        <label>IP Address: <input type="text" id="eth_ip" /></label><br>
+        <h2>I2C Settings</h2>
+        <label>Address: <input type="number" id="i2c_address" /></label><br>
+        <h2>Motor Settings</h2>
+        <label>Max Speed: <input type="number" id="motor_max_speed" /></label><br>
+        <h2>HA Settings</h2>
+        <label>HA Mode: <input type="text" id="ha_mode" /></label><br>
+        <button type="button" id="readBtn">Read Settings</button>
+        <button type="button" id="writeBtn">Write Settings</button>
+    </form>
+    <script src="main.js"></script>
+</body>
+</html>
