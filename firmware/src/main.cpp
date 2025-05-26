@@ -8,7 +8,8 @@
 #include "EncoderController/EncoderController.h"
 #include "DeviceManager/DeviceManager.h"
 #include "FlashStorage/FlashStorage.h"
-#include "AxisEthernet/AxisEthernet.h"
+#include "EthernetHAT/AxisEthernet.h"
+#include "EthernetHAT/AxisMqtt.h"
 #include "AxisMessages.h"
 #include <cstdint>
 #include "Wire.h"
@@ -91,6 +92,7 @@ void setup()
 
   messageProcessor.AddExternalInterface(&serialTextInterface);
   messageProcessor.AddExternalInterface(&AEthernet);
+  messageProcessor.AddExternalInterface(&mqttTask);
 
   manager.AddTask(&serialTextInterface);
   manager.AddTask(&messageProcessor);
@@ -118,13 +120,15 @@ void setup()
 void EvaluateHatType()
 {
   // check for the the ethernet hat
-     AEthernet.Start();
+  AEthernet.Start();
 
   if (AEthernet.IsPresent())
   {
     addrLedController.AddLedStep(CRGB::Purple, 100);
     addrLedController.AddLedStep(CRGB::Black, 100);
     manager.AddTask(&AEthernet);
+    mqttTask.Start();
+    manager.AddTask(&mqttTask);
   }
   else
   {

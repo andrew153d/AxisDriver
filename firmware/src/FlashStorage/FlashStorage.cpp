@@ -208,6 +208,11 @@ namespace FlashStorage
         return &FlashStorageData->MotorSettings;
     }
 
+    HASettingsStruct *GetHASettings()
+    {
+        return &FlashStorageData->HASettings;
+    }
+
     uint8_t *GetBuffer()
     {
         return &current_settings_buffer[0];

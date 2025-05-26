@@ -22,13 +22,40 @@ struct __attribute__ ((packed)) MotorSettingsStruct
 {
     uint8_t placeholder_settings;
 };
+enum class HAMode : uint8_t
+{
+    NONE = 0,
+    VELOCITY_SWITCH = 1,
+    POSITION_SWITCH = 2,
+    VELOCITY_SLIDER = 3,
+    POSITION_SLIDER = 4,
+};
+struct __attribute__ ((packed)) HASettingsStruct
+{
+    uint8_t enable;
+    HAMode mode;
+    uint8_t ha_ip_address[4];
+    float velocity_switch_on_speed;
+    float velocity_switch_off_speed;
+    float position_switch_on_position;
+    float position_switch_off_position;
+    float velocity_slider_min;
+    float velocity_slider_max;
+    float position_slider_min;
+    float position_slider_max;
+    char mqtt_user[32];
+    char mqtt_password[32];
+    char mqtt_name[32];
+    char mqtt_icon[32];
+};
 
 struct __attribute__ ((packed)) FlashStorageStruct
 {
     EthernetSettingsStruct EthernetSettings;
     I2CSettingsStruct I2CSettings;
     MotorSettingsStruct MotorSettings;
-    uint8_t empty[248];
+    HASettingsStruct HASettings;
+    uint8_t empty[82];
 };
 
 static_assert(sizeof(FlashStorageStruct) == 256, "Incorrect flash struct size");
@@ -62,6 +89,7 @@ namespace FlashStorage
     EthernetSettingsStruct* GetEthernetSettings();
     I2CSettingsStruct* GetI2CSettings();
     MotorSettingsStruct* GetMotorSettings();
+    HASettingsStruct* GetHASettings();
     uint8_t* GetBuffer();
 
     void WriteFlash();
