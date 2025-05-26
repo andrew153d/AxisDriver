@@ -30,7 +30,7 @@ void MQTTTask::OnStart()
 
     ha_settings = FlashStorage::GetHASettings();
 
-    ha_settings->mode = HAMode::VELOCITY_SWITCH; // Default mode
+    ha_settings->mode = HAMode::POSITION_SWITCH; // Default mode
 
     strncpy(ha_settings->mqtt_user, "MQTT_User", sizeof(ha_settings->mqtt_user) - 1);
     ha_settings->mqtt_user[sizeof(ha_settings->mqtt_user) - 1] = '\0';
@@ -43,6 +43,9 @@ void MQTTTask::OnStart()
 
     strncpy(ha_settings->mqtt_icon, "mdi:bowl", sizeof(ha_settings->mqtt_icon) - 1);
     ha_settings->mqtt_icon[sizeof(ha_settings->mqtt_icon) - 1] = '\0';
+
+    ha_settings->velocity_switch_on_speed = 400;
+    ha_settings->position_switch_on_position = 900;
 
     DEBUG_PRINTF("HA Settings:\n");
     DEBUG_PRINTF("  enable: %d\n", ha_settings->enable);
@@ -64,6 +67,8 @@ void MQTTTask::OnStart()
     DEBUG_PRINTF("  mqtt_password: %s\n", ha_settings->mqtt_password);
     DEBUG_PRINTF("  mqtt_name: %s\n", ha_settings->mqtt_name);
     DEBUG_PRINTF("  mqtt_icon: %s\n", ha_settings->mqtt_icon);
+
+    device->setName(ha_settings->mqtt_name);
 
     switch (ha_settings->mode)
     {
@@ -151,7 +156,12 @@ void MQTTTask::OnVelocitySwitchCommand(bool state)
     if (velocity_switch != nullptr)
     {
         velocity_switch->setState(state);
-        DEBUG_PRINTF("Velocity switch state changed to: %d\n", state);
+        VelocityMessage msg;
+        msg.header.message_type = (uint16_t)MessageTypes::SetVelocityId;
+        msg.header.body_size = sizeof(msg.value);
+        msg.value = state ? ha_settings->velocity_switch_on_speed : ha_settings->velocity_switch_off_speed;
+        msg.footer.checksum = 0;
+        HandleIncomingMsg((uint8_t *)&msg, sizeof(msg));
     }
 }
 
@@ -160,7 +170,12 @@ void MQTTTask::OnPositionSwitchCommand(bool state)
     if (position_switch != nullptr)
     {
         position_switch->setState(state);
-        DEBUG_PRINTF("Position switch state changed to: %d\n", state);
+        TargetPositionMessage msg;
+        msg.header.message_type = (uint16_t)MessageTypes::SetTargetPositionId;
+        msg.header.body_size = sizeof(msg.value);
+        msg.value = state ? ha_settings->position_switch_on_position : ha_settings->position_switch_off_position;
+        msg.footer.checksum = 0;
+        HandleIncomingMsg((uint8_t *)&msg, sizeof(msg));
     }
 }
 
@@ -195,6 +210,7 @@ void MQTTTask::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size)
 }
 
 void MQTTTask::SendMsg(uint8_t *send_bytes, uint32_t send_bytes_size) {
+
 };
 
 void MQTTTask::OnStop()
