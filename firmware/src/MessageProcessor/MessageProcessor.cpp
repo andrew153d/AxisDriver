@@ -4,6 +4,18 @@
 #include "FlashStorage/FlashStorage.h"
 #include "MotorController/MotorController.h"
 #include "Ethernet.h"
+
+uint16_t calculateChecksum(uint8_t *data, uint32_t size)
+{
+    uint16_t checksum = 0;
+    for (uint32_t i = 0; i < size; i++)
+    {
+        checksum += data[i];
+        //DEBUG_PRINTF("Adding byte %u: %02x, sum: %u\n", i, data[i], checksum);
+    }
+    return checksum % 0xFFFF;
+}
+
 MessageProcessor::MessageProcessor(uint32_t period)
 {
   executionPeriod = period;
@@ -54,10 +66,11 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     LedColorMessage *msg = (LedColorMessage *)recv_bytes;
     msg->header.message_type = (uint16_t)MessageTypes::GetLedColorId;
     msg->header.body_size = sizeof(LedColorMessage::ledColor);
+    msg->header.sync_bytes = SYNC_BYTES;
     msg->ledColor[0] = addrLedController.GetLedColor().r;
     msg->ledColor[1] = addrLedController.GetLedColor().g;
     msg->ledColor[2] = addrLedController.GetLedColor().b;
-    msg->footer.checksum = 0;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(LedColorMessage) - sizeof(msg->footer.checksum));
     SendMsg(recv_bytes, sizeof(LedColorMessage));
     break;
   }
@@ -68,10 +81,11 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     
     msg->header.message_type = (uint16_t)MessageTypes::GetVersionId;
     msg->header.body_size = sizeof(VersionMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
     uint8_t *v_buf = (uint8_t *)&msg->value;
     sscanf(FIRMWARE_VERSION, "%u.%u.%u.%u", &v_buf[0], &v_buf[1], &v_buf[2], &v_buf[3]);
     // DEBUG_PRINTF("0x%8X\n", msg->value);
-    msg->footer.checksum = 0;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(VersionMessage) - sizeof(msg->footer.checksum));
     SendMsg(send_buffer, sizeof(VersionMessage));
     break;
   }
@@ -88,8 +102,9 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     I2CAddressMessage *msg = (I2CAddressMessage *)&send_buffer[0];
     msg->header.message_type = (uint16_t)MessageTypes::GetI2CAddressId;
     msg->header.body_size = sizeof(I2CAddressMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
     msg->value = FlashStorage::GetI2CSettings()->address;
-    msg->footer.checksum = 0;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(I2CAddressMessage) - sizeof(msg->footer.checksum));
     // DEBUG_PRINTF("Sending I2C Address: 0x%x\n", msg->value);
     SendMsg(send_buffer, sizeof(I2CAddressMessage));
     break;
@@ -109,8 +124,9 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     EthernetAddressMessage *msg = (EthernetAddressMessage *)&send_buffer[0];
     msg->header.message_type = (uint16_t)MessageTypes::GetEthernetAddressId;
     msg->header.body_size = sizeof(EthernetAddressMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
     msg->value = FlashStorage::GetEthernetSettings()->ip_address;
-    msg->footer.checksum = 0;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(EthernetAddressMessage) - sizeof(msg->footer.checksum));
     SendMsg(send_buffer, sizeof(EthernetAddressMessage));
     // DEBUG_PRINTF("Sending IP Address: 0x%x\n", sizeof(IPAddressMessage));
     break;
@@ -129,10 +145,11 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     EthernetPortMessage *msg = (EthernetPortMessage *)&send_buffer[0];
     msg->header.message_type = (uint16_t)MessageTypes::GetEthernetPortId;
     msg->header.body_size = sizeof(EthernetPortMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
     msg->value = FlashStorage::GetEthernetSettings()->port;
-    msg->footer.checksum = 0;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(EthernetPortMessage) - sizeof(msg->footer.checksum));
     SendMsg(send_buffer, sizeof(EthernetPortMessage));
-    DEBUG_PRINTF("Sending Port: %d\n", msg->value);
+    //DEBUG_PRINTF("Sending Port: %d\n", msg->value);
     // DEBUG_PRINTF("Port msg size: %d\n", sizeof(EthernetPortMessage));
     break;
   }
@@ -142,8 +159,9 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     MacAddressMessage *msg = (MacAddressMessage *)&send_buffer[0];
     msg->header.message_type = (uint16_t)MessageTypes::GetMacAddressId;
     msg->header.body_size = sizeof(MacAddressMessage::mac);
+    msg->header.sync_bytes = SYNC_BYTES;
     memcpy(&(msg->mac[0]), FlashStorage::GetMacAddress(), 6);
-    msg->footer.checksum = 0;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(MacAddressMessage) - sizeof(msg->footer.checksum));
     SendMsg(send_buffer, sizeof(MacAddressMessage));
     break;
   }
@@ -168,8 +186,9 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     MotorStateMessage *msg = (MotorStateMessage *)&send_buffer[0];
     msg->header.message_type = (uint16_t)MessageTypes::GetMotorStateId;
     msg->header.body_size = sizeof(MotorStateMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
     msg->value = (uint8_t)motorController.GetMotorState();
-    msg->footer.checksum = 0;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(MotorStateMessage) - sizeof(msg->footer.checksum));
     SendMsg(send_buffer, sizeof(MotorStateMessage));
     // DEBUG_PRINTF("Sending Motor State: %d\n", (uint8_t)motorController.GetMotorState());
     break;
@@ -194,8 +213,9 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     MaxSpeedMessage *msg = (MaxSpeedMessage *)&send_buffer[0];
     msg->header.message_type = (uint16_t)MessageTypes::GetMaxSpeedId;
     msg->header.body_size = sizeof(MaxSpeedMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
     msg->value = motorController.GetMaxSpeed();
-    msg->footer.checksum = 0;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(MaxSpeedMessage) - sizeof(msg->footer.checksum));
     SendMsg(send_buffer, sizeof(CurrentPositionMessage));
     break;
   }
@@ -212,8 +232,9 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     AccelerationMessage *msg = (AccelerationMessage *)&send_buffer[0];
     msg->header.message_type = (uint16_t)MessageTypes::GetAccelerationId;
     msg->header.body_size = sizeof(AccelerationMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
     msg->value = motorController.GetAcceleration();
-    msg->footer.checksum = 0;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(AccelerationMessage) - sizeof(msg->footer.checksum));
     SendMsg(send_buffer, sizeof(AccelerationMessage));
     break;
   }
@@ -231,8 +252,9 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     CurrentPositionMessage *msg = (CurrentPositionMessage*)send_buffer;
     msg->header.message_type = (uint16_t)MessageTypes::GetCurrentPositionId;
     msg->header.body_size = sizeof(CurrentPositionMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
     msg->value = motorController.GetPosition();
-    msg->footer.checksum = 0;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(CurrentPositionMessage) - sizeof(msg->footer.checksum));
     SendMsg(send_buffer, sizeof(CurrentPositionMessage));
     break;
   }
@@ -278,8 +300,9 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     VelocityMessage *msg = (VelocityMessage *)&send_buffer[0];
     msg->header.message_type = (uint16_t)MessageTypes::GetVelocityId;
     msg->header.body_size = sizeof(VelocityMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
     msg->value = motorController.GetVelocityTarget();
-    msg->footer.checksum = 0;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(VelocityMessage) - sizeof(msg->footer.checksum));
     SendMsg(send_buffer, sizeof(VelocityMessage));
     break;
   }
@@ -296,8 +319,9 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     HomeDirectionMessage *msg = (HomeDirectionMessage *)&send_buffer[0];
     msg->header.message_type = (uint16_t)MessageTypes::GetHomeDirectionId;
     msg->header.body_size = sizeof(HomeDirectionMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
     msg->value = (uint8_t)motorController.GetHomeDirection();
-    msg->footer.checksum = 0;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(HomeDirectionMessage) - sizeof(msg->footer.checksum));
     SendMsg(send_buffer, sizeof(HomeDirectionMessage));
     break;
   }
@@ -315,8 +339,9 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     HomeSpeedMessage *msg = (HomeSpeedMessage *)&send_buffer[0];
     msg->header.message_type = (uint16_t)MessageTypes::GetHomeSpeedId;
     msg->header.body_size = sizeof(HomeSpeedMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
     msg->value = motorController.GetHomingSpeed();
-    msg->footer.checksum = 0;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(HomeSpeedMessage) - sizeof(msg->footer.checksum));
     SendMsg(send_buffer, sizeof(HomeSpeedMessage));
     break;
   }
@@ -334,8 +359,9 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     HomeThresholdMessage *msg = (HomeThresholdMessage *)&send_buffer[0];
     msg->header.message_type = (uint16_t)MessageTypes::GetHomeThresholdId;
     msg->header.body_size = sizeof(HomeThresholdMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
     msg->value = motorController.GetHomeThreshold();
-    msg->footer.checksum = 0;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(HomeThresholdMessage) - sizeof(msg->footer.checksum));
     SendMsg(send_buffer, sizeof(HomeThresholdMessage));
     break;
   }
@@ -345,8 +371,9 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     HomedStateMessage *msg = (HomedStateMessage *)&send_buffer[0];
     msg->header.message_type = (uint16_t)MessageTypes::GetHomedStateId;
     msg->header.body_size = sizeof(HomedStateMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
     msg->value = (uint8_t)motorController.GetHomeState();
-    msg->footer.checksum = 0;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(HomedStateMessage) - sizeof(msg->footer.checksum));
     SendMsg(send_buffer, sizeof(HomedStateMessage));
     DEBUG_PRINTF("Sending Homed State: %d\n", msg->value);
     break;
@@ -367,7 +394,291 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
   case MessageTypes::StartPathId:
     motorController.StartPath();
     break;
+  case MessageTypes::SetHAEnableId:
+  {
+    HAEnableMessage *msg = (HAEnableMessage *)recv_bytes;
+    FlashStorage::GetHASettings()->enable = msg->value;
+    break;
+  }
 
+  case MessageTypes::GetHAEnableId:
+  {
+    HAEnableMessage *msg = (HAEnableMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetHAEnableId;
+    msg->header.body_size = sizeof(HAEnableMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
+    msg->value = FlashStorage::GetHASettings()->enable;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(HAEnableMessage) - sizeof(msg->footer.checksum));
+    SendMsg(send_buffer, sizeof(HAEnableMessage));
+    break;
+  }
+
+  case MessageTypes::SetHAModeId:
+  {
+    HAModeMessage *msg = (HAModeMessage *)recv_bytes;
+    FlashStorage::GetHASettings()->mode = (HAMode)msg->value;
+    break;
+  }
+
+  case MessageTypes::GetHAModeId:
+  {
+    HAModeMessage *msg = (HAModeMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetHAModeId;
+    msg->header.body_size = sizeof(HAModeMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
+    msg->value = (uint8_t)FlashStorage::GetHASettings()->mode;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(HAModeMessage) - sizeof(msg->footer.checksum));
+    SendMsg(send_buffer, sizeof(HAModeMessage));
+    break;
+  }
+
+  case MessageTypes::SetHAIpAddressId:
+  {
+    HAIpAddressMessage *msg = (HAIpAddressMessage *)recv_bytes;
+    memcpy(FlashStorage::GetHASettings()->ha_ip_address, msg->ha_ip_address, 4);
+    break;
+  }
+
+  case MessageTypes::GetHAIpAddressId:
+  {
+    HAIpAddressMessage *msg = (HAIpAddressMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetHAIpAddressId;
+    msg->header.body_size = sizeof(HAIpAddressMessage::ha_ip_address);
+    msg->header.sync_bytes = SYNC_BYTES;
+    memcpy(msg->ha_ip_address, FlashStorage::GetHASettings()->ha_ip_address, 4);
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(HAIpAddressMessage) - sizeof(msg->footer.checksum));
+    SendMsg(send_buffer, sizeof(HAIpAddressMessage));
+    break;
+  }
+
+  case MessageTypes::SetHAVelocitySwitchOnSpeedId:
+  {
+    HAVelocitySwitchOnSpeedMessage *msg = (HAVelocitySwitchOnSpeedMessage *)recv_bytes;
+    FlashStorage::GetHASettings()->velocity_switch_on_speed = msg->value;
+    break;
+  }
+
+  case MessageTypes::GetHAVelocitySwitchOnSpeedId:
+  {
+    HAVelocitySwitchOnSpeedMessage *msg = (HAVelocitySwitchOnSpeedMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetHAVelocitySwitchOnSpeedId;
+    msg->header.body_size = sizeof(HAVelocitySwitchOnSpeedMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
+    msg->value = FlashStorage::GetHASettings()->velocity_switch_on_speed;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(HAVelocitySwitchOnSpeedMessage) - sizeof(msg->footer.checksum));
+    SendMsg(send_buffer, sizeof(HAVelocitySwitchOnSpeedMessage));
+    break;
+  }
+
+  case MessageTypes::SetHAVelocitySwitchOffSpeedId:
+  {
+    HAVelocitySwitchOffSpeedMessage *msg = (HAVelocitySwitchOffSpeedMessage *)recv_bytes;
+    FlashStorage::GetHASettings()->velocity_switch_off_speed = msg->value;
+    break;
+  }
+
+  case MessageTypes::GetHAVelocitySwitchOffSpeedId:
+  {
+    HAVelocitySwitchOffSpeedMessage *msg = (HAVelocitySwitchOffSpeedMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetHAVelocitySwitchOffSpeedId;
+    msg->header.body_size = sizeof(HAVelocitySwitchOffSpeedMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
+    msg->value = FlashStorage::GetHASettings()->velocity_switch_off_speed;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(HAVelocitySwitchOffSpeedMessage) - sizeof(msg->footer.checksum));
+    SendMsg(send_buffer, sizeof(HAVelocitySwitchOffSpeedMessage));
+    break;
+  }
+
+  case MessageTypes::SetHAPositionSwitchOnPositionId:
+  {
+    HAPositionSwitchOnPositionMessage *msg = (HAPositionSwitchOnPositionMessage *)recv_bytes;
+    FlashStorage::GetHASettings()->position_switch_on_position = msg->value;
+    break;
+  }
+
+  case MessageTypes::GetHAPositionSwitchOnPositionId:
+  {
+    HAPositionSwitchOnPositionMessage *msg = (HAPositionSwitchOnPositionMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetHAPositionSwitchOnPositionId;
+    msg->header.body_size = sizeof(HAPositionSwitchOnPositionMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
+    msg->value = FlashStorage::GetHASettings()->position_switch_on_position;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(HAPositionSwitchOnPositionMessage) - sizeof(msg->footer.checksum));
+    SendMsg(send_buffer, sizeof(HAPositionSwitchOnPositionMessage));
+    break;
+  }
+
+  case MessageTypes::SetHAPositionSwitchOffPositionId:
+  {
+    HAPositionSwitchOffPositionMessage *msg = (HAPositionSwitchOffPositionMessage *)recv_bytes;
+    FlashStorage::GetHASettings()->position_switch_off_position = msg->value;
+    break;
+  }
+
+  case MessageTypes::GetHAPositionSwitchOffPositionId:
+  {
+    HAPositionSwitchOffPositionMessage *msg = (HAPositionSwitchOffPositionMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetHAPositionSwitchOffPositionId;
+    msg->header.body_size = sizeof(HAPositionSwitchOffPositionMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
+    msg->value = FlashStorage::GetHASettings()->position_switch_off_position;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(HAPositionSwitchOffPositionMessage) - sizeof(msg->footer.checksum));
+    SendMsg(send_buffer, sizeof(HAPositionSwitchOffPositionMessage));
+    break;
+  }
+
+  case MessageTypes::SetHAVelocitySliderMinId:
+  {
+    HAVelocitySliderMinMessage *msg = (HAVelocitySliderMinMessage *)recv_bytes;
+    FlashStorage::GetHASettings()->velocity_slider_min = msg->value;
+    break;
+  }
+
+  case MessageTypes::GetHAVelocitySliderMinId:
+  {
+    HAVelocitySliderMinMessage *msg = (HAVelocitySliderMinMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetHAVelocitySliderMinId;
+    msg->header.body_size = sizeof(HAVelocitySliderMinMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
+    msg->value = FlashStorage::GetHASettings()->velocity_slider_min;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(HAVelocitySliderMinMessage) - sizeof(msg->footer.checksum));
+    SendMsg(send_buffer, sizeof(HAVelocitySliderMinMessage));
+    break;
+  }
+
+  case MessageTypes::SetHAVelocitySliderMaxId:
+  {
+    HAVelocitySliderMaxMessage *msg = (HAVelocitySliderMaxMessage *)recv_bytes;
+    FlashStorage::GetHASettings()->velocity_slider_max = msg->value;
+    break;
+  }
+
+  case MessageTypes::GetHAVelocitySliderMaxId:
+  {
+    HAVelocitySliderMaxMessage *msg = (HAVelocitySliderMaxMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetHAVelocitySliderMaxId;
+    msg->header.body_size = sizeof(HAVelocitySliderMaxMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
+    msg->value = FlashStorage::GetHASettings()->velocity_slider_max;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(HAVelocitySliderMaxMessage) - sizeof(msg->footer.checksum));
+    SendMsg(send_buffer, sizeof(HAVelocitySliderMaxMessage));
+    break;
+  }
+
+  case MessageTypes::SetHAPositionSliderMinId:
+  {
+    HAPositionSliderMinMessage *msg = (HAPositionSliderMinMessage *)recv_bytes;
+    FlashStorage::GetHASettings()->position_slider_min = msg->value;
+    break;
+  }
+
+  case MessageTypes::GetHAPositionSliderMinId:
+  {
+    HAPositionSliderMinMessage *msg = (HAPositionSliderMinMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetHAPositionSliderMinId;
+    msg->header.body_size = sizeof(HAPositionSliderMinMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
+    msg->value = FlashStorage::GetHASettings()->position_slider_min;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(HAPositionSliderMinMessage) - sizeof(msg->footer.checksum));
+    SendMsg(send_buffer, sizeof(HAPositionSliderMinMessage));
+    break;
+  }
+
+  case MessageTypes::SetHAPositionSliderMaxId:
+  {
+    HAPositionSliderMaxMessage *msg = (HAPositionSliderMaxMessage *)recv_bytes;
+    FlashStorage::GetHASettings()->position_slider_max = msg->value;
+    break;
+  }
+
+  case MessageTypes::GetHAPositionSliderMaxId:
+  {
+    HAPositionSliderMaxMessage *msg = (HAPositionSliderMaxMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetHAPositionSliderMaxId;
+    msg->header.body_size = sizeof(HAPositionSliderMaxMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
+    msg->value = FlashStorage::GetHASettings()->position_slider_max;
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(HAPositionSliderMaxMessage) - sizeof(msg->footer.checksum));
+    SendMsg(send_buffer, sizeof(HAPositionSliderMaxMessage));
+    break;
+  }
+
+  case MessageTypes::SetHAMqttUserId:
+  {
+    HAMqttUserMessage *msg = (HAMqttUserMessage *)recv_bytes;
+    
+    strncpy(FlashStorage::GetHASettings()->mqtt_user, (char*)msg->value, sizeof(FlashStorage::GetHASettings()->mqtt_user));
+    break;
+  }
+
+  case MessageTypes::GetHAMqttUserId:
+  {
+    HAMqttUserMessage *msg = (HAMqttUserMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetHAMqttUserId;
+    msg->header.body_size = sizeof(HAMqttUserMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
+    strncpy((char*)msg->value, FlashStorage::GetHASettings()->mqtt_user, sizeof(msg->value));
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(HAMqttUserMessage) - sizeof(msg->footer.checksum));
+    SendMsg(send_buffer, sizeof(HAMqttUserMessage));
+    break;
+  }
+
+  case MessageTypes::SetHAMqttPasswordId:
+  {
+    HAMqttPasswordMessage *msg = (HAMqttPasswordMessage *)recv_bytes;
+    strncpy(FlashStorage::GetHASettings()->mqtt_password, (char*)msg->value, sizeof(FlashStorage::GetHASettings()->mqtt_password));
+    break;
+  }
+
+  case MessageTypes::GetHAMqttPasswordId:
+  {
+    HAMqttPasswordMessage *msg = (HAMqttPasswordMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetHAMqttPasswordId;
+    msg->header.body_size = sizeof(HAMqttPasswordMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
+    strncpy((char*)msg->value, FlashStorage::GetHASettings()->mqtt_password, sizeof(msg->value));
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(HAMqttPasswordMessage) - sizeof(msg->footer.checksum));
+    SendMsg(send_buffer, sizeof(HAMqttPasswordMessage));
+    break;
+  }
+
+  case MessageTypes::SetHAMqttNameId:
+  {
+    HAMqttNameMessage *msg = (HAMqttNameMessage *)recv_bytes;
+    strncpy(FlashStorage::GetHASettings()->mqtt_name, (char*)msg->value, sizeof(FlashStorage::GetHASettings()->mqtt_name));
+    break;
+  }
+
+  case MessageTypes::GetHAMqttNameId:
+  {
+    HAMqttNameMessage *msg = (HAMqttNameMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetHAMqttNameId;
+    msg->header.body_size = sizeof(HAMqttNameMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
+    strncpy((char*)msg->value, FlashStorage::GetHASettings()->mqtt_name, sizeof(msg->value));
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(HAMqttNameMessage) - sizeof(msg->footer.checksum));
+    SendMsg(send_buffer, sizeof(HAMqttNameMessage));
+    break;
+  }
+
+  case MessageTypes::SetHAMqttIconId:
+  {
+    HAMqttIconMessage *msg = (HAMqttIconMessage *)recv_bytes;
+    strncpy(FlashStorage::GetHASettings()->mqtt_icon, (char*)msg->value, sizeof(FlashStorage::GetHASettings()->mqtt_icon));
+    break;
+  }
+
+  case MessageTypes::GetHAMqttIconId:
+  {
+    HAMqttIconMessage *msg = (HAMqttIconMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetHAMqttIconId;
+    msg->header.body_size = sizeof(HAMqttIconMessage::value);
+    msg->header.sync_bytes = SYNC_BYTES;
+    strncpy((char*)msg->value, FlashStorage::GetHASettings()->mqtt_icon, sizeof(msg->value));
+    msg->footer.checksum = calculateChecksum((uint8_t *)&msg->header, sizeof(HAMqttIconMessage) - sizeof(msg->footer.checksum));
+    SendMsg(send_buffer, sizeof(HAMqttIconMessage));
+    break;
+  }
   default:
     DEBUG_PRINTF("Unable to handle message type: 0x%x", hdr->message_type);
     break;
@@ -394,6 +705,7 @@ void MessageProcessor::SendMsg(uint8_t *send_bytes, uint32_t send_bytes_size)
 {
   if(last_interface_!=nullptr)
   {
+    //DEBUG_PRINTF("Sending message with checksum 0x%x\n", calculateChecksum(send_bytes, send_bytes_size-FOOTER_SIZE));
     last_interface_->SendMsg(send_bytes, send_bytes_size);
     return;
   }

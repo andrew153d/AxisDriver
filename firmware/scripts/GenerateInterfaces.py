@@ -150,9 +150,11 @@ def GeneratePythonBaseClass(msg):
     ret_string += "\tdef serialize(self):\n"
     ret_string += "\t\tret = bytearray(0)\n"
     for field in msg['fields']:
-        #bytearray(struct.pack('d', 100*8))
-        if field['type'] == 'double':
-            ret_string += f"\t\tret += bytearray(struct.pack('d', self.value))\n"
+        if field['type'].find('[') != -1:
+            # For byte arrays, just append as bytearray
+            ret_string += f"\t\tret += bytearray(self.{field['name']})\n"
+        elif field['type'] == 'double':
+            ret_string += f"\t\tret += bytearray(struct.pack('d', self.{field['name']}))\n"
         else:
             ret_string += f"\t\tret += self.{field['name']}.to_bytes({GetBytes(field['type'])}, 'little')\n"
     ret_string += "\t\treturn ret\n\n"
@@ -162,12 +164,12 @@ def GeneratePythonBaseClass(msg):
     ret_string += "\tdef deserialize(cls, byte_array):\n"
     counter = 0
     for field in msg['fields']:
-        if(field['type']!='double'):
+        if field['type'].find('[')!=-1:
+            ret_string += f"\t\t{field['name']} = byte_array[{counter}:{GetBytes(field['type'])+counter}]\n"
+        elif(field['type']!='double'):
             ret_string += f"\t\t{field['name']} = {ConvertCTypeToPythonType(field['type'])}.from_bytes(byte_array[{counter}:{GetBytes(field['type'])+counter}], 'little')\n"
         else:
             ret_string += f"\t\t{field['name']} = struct.unpack('d', byte_array[{counter}:{GetBytes(field['type'])+counter}])[0]\n"
-            #struct.unpack('d', message[4:12])[0]
-            
         counter += GetBytes(field['type'])
     ret_string += "\t\treturn cls("
     ret_string += ", ".join([field['name'] for field in msg['fields']])
@@ -197,8 +199,8 @@ def GeneratePythonPredefinedClass(msg, predefined):
     #deserialize
     ret_string += "\t@classmethod\n"
     ret_string += "\tdef deserialize(cls, byte_array):\n"
-    ret_string += "\t\theader = Header.deserialize(byte_array[0:HEADER_SIZE])\n"
-    ret_string += f"\t\tbody = {msg['type']}.deserialize(byte_array[HEADER_SIZE:{HEADER_SIZE+body_size}])\n"
+    ret_string += f"\t\theader = Header.deserialize(byte_array[0:{HEADER_SIZE}])\n"
+    ret_string += f"\t\tbody = {msg['type']}.deserialize(byte_array[{HEADER_SIZE}:{HEADER_SIZE+body_size}])\n"
     ret_string += f"\t\tfooter = Footer.deserialize(byte_array[{HEADER_SIZE+body_size}:{HEADER_SIZE+body_size+FOOTER_SIZE}])\n"
     ret_string += f"\t\tmsg = cls(header.message_type, body.value)\n"
     ret_string += f"\t\tmsg.body = body\n"
@@ -238,10 +240,12 @@ def GeneratePythonCustomClass(msg):
     ret_string += "\tdef deserialize(cls, byte_array):\n"
     counter = 0
     for field in msg['fields']:
-        if(field['type'].find('[')!=-1):
-            ret_string += f"\t\t{field['name']} = {ConvertCTypeToPythonType(field['type'])}(byte_array[{counter}:{GetBytes(field['type'])+counter}])\n"
-        else:
+        if field['type'].find('[')!=-1:
+            ret_string += f"\t\t{field['name']} = byte_array[{counter}:{GetBytes(field['type'])+counter}]\n"
+        elif(field['type']!='double'):
             ret_string += f"\t\t{field['name']} = {ConvertCTypeToPythonType(field['type'])}.from_bytes(byte_array[{counter}:{GetBytes(field['type'])+counter}], 'little')\n"
+        else:
+            ret_string += f"\t\t{field['name']} = struct.unpack('d', byte_array[{counter}:{GetBytes(field['type'])+counter}])[0]\n"
         counter += GetBytes(field['type'])
     ret_string += f"\t\tmsg = cls("
     ret_string += ", ".join([field['name'] for field in msg['fields']])
@@ -271,9 +275,9 @@ def GeneratePythonCustomClass(msg):
     #deserialize
     ret_string += "\t@classmethod\n"
     ret_string += "\tdef deserialize(cls, byte_array):\n"
-    ret_string += "\t\theader = Header.deserialize(byte_array[0:4])\n"
-    ret_string += f"\t\tbody = {msg['name'].split('Message')[0]}Body.deserialize(byte_array[4:{4+body_size}])\n"
-    ret_string += f"\t\tfooter = Footer.deserialize(byte_array[{4+body_size}:{4+body_size+2}])\n"
+    ret_string += f"\t\theader = Header.deserialize(byte_array[0:{HEADER_SIZE}])\n"
+    ret_string += f"\t\tbody = {msg['name'].split('Message')[0]}Body.deserialize(byte_array[{HEADER_SIZE}:{HEADER_SIZE+body_size}])\n"
+    ret_string += f"\t\tfooter = Footer.deserialize(byte_array[{HEADER_SIZE+body_size}:{HEADER_SIZE+body_size+2}])\n"
     ret_string += f"\t\tmsg = cls(header.message_type"
     for field in msg['fields']:
         ret_string += f", body.{field['name']}"
@@ -290,7 +294,7 @@ def GeneratePythonGetter(msg_id, msg_def, predefined):
     message_class = msg_id.replace("Id","").replace('Get', '').replace('Set', '')+'Message'
     
     ret_string = ""
-    ret_string += f"def {getter_fun}(axis:Axis"
+    ret_string += f"def {getter_fun}(axis:'Axis'"
     ret_string += ", timeout = 0.1):\n"
     ret_string += f"\tsend_msg = {message_class}({msg_id}"
     #print(msg_def)
@@ -318,8 +322,8 @@ def GeneratePythonSetter(msg_id, msg_def, predefined):
     body_class = f"{msg['name'].split('Message')[0]}Body" if msg_def['type'] == 'Custom' else msg_def.get('type', '')
     #print(msg_def)
     ret_string = ""
-    ret_string += f"def {setter_fun}(axis:Axis, "
-    
+    ret_string += f"def {setter_fun}(axis:'Axis', "
+
     if(msg_def['type'] == 'Custom'):
         ret_string += ", ".join([field['name'] for field in msg_def['fields']])
     else:
@@ -409,148 +413,154 @@ def GenerateJsEnum(enum_name, enum_def):
     ret_string += "});\n\n"
     return ret_string
 
-def GenerateJsBaseClass(msg):
-    #make a build and a parse function for the message structure
-    isHeaderFooter = msg['name'] == "Header" or msg['name'] == "Footer"
-    ret_string = ""
-    ret_string += f"// {msg['name']} message builder\n"
-    if isHeaderFooter:
-        ret_string += f"function build{msg['name']}("
-    else:
-        ret_string += f"function build{msg['name']}(msgId, "
-    for field in msg['fields']:
-        ret_string += f"{field['name']}, "
-    ret_string = ret_string[:-2] + ") {\n"
-    ret_string += "\tconst totalLength = "
-    if isHeaderFooter:
-        ret_string += str(sum([GetBytes(field['type']) for field in msg['fields']]))
-    else:
-        ret_string += str(sum([GetBytes(field['type']) for field in msg['fields']]) + (HEADER_SIZE+FOOTER_SIZE))
-    ret_string += ";\n"
-    ret_string += "\tlet offset = 0;\n"
+def GenerateJsClass(msg):
+    """
+    Generates JavaScript builder and parser functions for a message structure.
+    """
+    isHeaderFooter = msg['name'] in ("Header", "Footer")
+    fields = msg['fields']
+    field_names = [f"{field['name']}" for field in fields]
+    total_field_bytes = sum(GetBytes(field['type']) for field in fields)
+    total_length = total_field_bytes if isHeaderFooter else total_field_bytes + (HEADER_SIZE + FOOTER_SIZE)
 
-    ret_string += "\tconst buffer = new Uint8Array(totalLength);\n"
-    ret_string += "\tconst view = new DataView(buffer.buffer);\n"
+    # Builder function
+    args = ", ".join(field_names) if isHeaderFooter else "msgId, " + ", ".join(field_names)
+    ret = []
+    ret.append(f"// {msg['name']} message builder")
+    ret.append(f"function build{msg['name']}({args}) {{")
+    ret.append(f"\tconst totalLength = {total_length};")
+    ret.append("\tlet offset = 0;")
+    ret.append("\tconst buffer = new Uint8Array(totalLength);")
+    ret.append("\tconst view = new DataView(buffer.buffer);")
 
     if not isHeaderFooter:
-        ret_string += "\tconst headerBytes = buildHeader(SYNC_BYTES, msgId, totalLength-(HEADER_SIZE+FOOTER_SIZE));\n"
-        ret_string += f"\tbuffer.set(headerBytes, offset);\n"
-        ret_string += "\toffset += headerBytes.length;\n"
+        ret.append("\tconst headerBytes = buildHeader(SYNC_BYTES, msgId, totalLength-(HEADER_SIZE+FOOTER_SIZE));")
+        ret.append("\tbuffer.set(headerBytes, offset);")
+        ret.append("\toffset += headerBytes.length;")
 
-    for field in msg['fields']:
-        ret_string += f"\tview.set{ConvertCTypeToJsType(field['type'])}(offset, {field['name']}, true);\n"
-        ret_string += f"\toffset += {GetBytes(field['type'])};\n"
+    for field in fields:
+        js_type = ConvertCTypeToJsType(field['type'])
+        if(field['type'].find('[') != -1):
+            ret.append(f"\tbuffer.set{js_type}(offset, {field['name']}, true);")
+        else:
+            ret.append(f"\tview.set{js_type}(offset, {field['name']}, true);")
+        ret.append(f"\toffset += {GetBytes(field['type'])};")
 
-    if not isHeaderFooter:  
-        ret_string += "\tconst footerBytes = buildFooter(0);\n"
-        ret_string += "\tbuffer.set(footerBytes, offset);\n"
+    if not isHeaderFooter:
+        ret.append("\tconst footerBytes = buildFooter(0);")
+        ret.append("\tbuffer.set(footerBytes, offset);")
+
+    ret.append("\treturn buffer;")
+    ret.append("}\n")
+
+    # Parser function
+    ret.append(f"// {msg['name']} message parser")
+    ret.append(f"function parse{msg['name']}(buffer){{")
+    ret.append("\tconst dv = new DataView(buffer);")
+    ret.append("\tlet offset = 0;")
+
+    if not isHeaderFooter:
+        ret.append("\tconst syncBytes = dv.getUint32(offset, true);")
+        ret.append("\toffset += 4;")
+        ret.append("\tconst messageType = dv.getUint16(offset, true);")
+        ret.append("\toffset += 2;")
+        ret.append("\tconst bodySize = dv.getUint16(offset, true);")
+        ret.append("\toffset += 2;")
+
+    for field in fields:
+        js_type = ConvertCTypeToJsType(field['type'])
+        if(field['type'].find('[') != -1):
+            js_type = ConvertCTypeToJsType(field['type'].split('[')[0])
+            ret.append(f"\tconst {field['name']} = new {js_type}Array(dv.buffer, offset, {GetBytes(field['type'])});")
+        else:
+            ret.append(f"\tconst {field['name']} = dv.get{js_type}(offset, true);")
+        ret.append(f"\toffset += {GetBytes(field['type'])};")
+
+    if not isHeaderFooter:
+        ret.append("\tconst checksum = dv.getUint16(offset, true);")
+        ret.append("\toffset += 2;")
+
+    # Return object
+    ret.append("\treturn {")
+    if not isHeaderFooter:
+        ret.append("\tmessageType, bodySize, ")
+    ret.append("\t, ".join(field_names))
+    if not isHeaderFooter:
+        ret.append("\t, checksum")
+    ret.append("\t};")
+    ret.append("}\n")
+
+    return "\n".join(ret)
+
+# def GenerateJsCustomClass(msg):
+#    #make a build and a parse function for the message structure
+#     isHeaderFooter = msg['name'] == "Header" or msg['name'] == "Footer"
+#     ret_string = ""
+#     ret_string += f"// {msg['name']} message builder\n"
+#     ret_string += f"function build{msg['name']}("
+#     for field in msg['fields']:
+#         ret_string += f"{field['name']}, "
+#     ret_string = ret_string[:-2] + ") {\n"
+#     ret_string += "\tconst totalLength = "
+#     if isHeaderFooter:
+#         ret_string += str(sum([GetBytes(field['type']) for field in msg['fields']]))
+#     else:
+#         ret_string += str(sum([GetBytes(field['type']) for field in msg['fields']]) + (HEADER_SIZE+FOOTER_SIZE))
+#     ret_string += ";\n"
+#     ret_string += "\tlet offset = 0;\n"
+
+#     ret_string += "\tconst buffer = new Uint8Array(totalLength);\n"
+#     ret_string += "\tconst view = new DataView(buffer);\n"
+
+#     if not isHeaderFooter:
+#         ret_string += "\tconst headerBytes = buildHeader(0, 0);\n"
+#         ret_string += f"\tbuffer.set(offset, headerBytes);\n"
+#         ret_string += "\toffset += headerBytes.length;\n"
+
+#     for field in msg['fields']:
+#         ret_string += f"\tview.set{ConvertCTypeToJsType(field['type'])}(offset, {field['name']}, true);\n"
+#         ret_string += f"\toffset += {GetBytes(field['type'])};\n"
+
+#     if not isHeaderFooter:  
+#         ret_string += "\tconst footerBytes = buildFooter(0);\n"
+#         ret_string += "\tbuffer.set(footerBytes, offset);\n"
         
-    ret_string += "\treturn buffer;\n"
-    ret_string += "}\n"
+#     ret_string += "\treturn buffer;\n"
+#     ret_string += "}\n"
     
-    # make the parser
-    ret_string += f"// {msg['name']} message parser\n"
-    ret_string += f"function parse{msg['name']}(buffer){{\n"
-    ret_string += "\tconst dv = new DataView(buffer);\n\tlet offset = 0;\n"
+#     # make the parser
+#     ret_string += f"// {msg['name']} message parser\n"
+#     ret_string += f"function parse{msg['name']}(buffer){{\n"
+#     ret_string += "\tconst dv = new DataView(buffer);\n\tlet offset = 0;\n"
 
-    if not isHeaderFooter:
-        ret_string += "\tconst syncBytes = dv.getUint32(offset, true);\n"
-        ret_string += "\toffset += 4;\n"
-        ret_string += "\tconst messageType = dv.getUint16(offset, true);\n"
-        ret_string += "\toffset += 2;\n"
-        ret_string += "\tconst bodySize = dv.getUint16(offset, true);\n"
-        ret_string += "\toffset += 2;\n"
 
-    for field in msg['fields']:
-        ret_string += f"\tconst {field['name']} = dv.get{ConvertCTypeToJsType(field['type'])}(offset, true);\n"
-        ret_string += f"\toffset += {GetBytes(field['type'])};\n"
 
-    if not isHeaderFooter:  
-        ret_string += "\tconst checksum = dv.getUint16(offset, true);\n"
-        ret_string += "\toffset += 2;\n"
+#     if not isHeaderFooter:
+#         ret_string += "\tconst messageType = dv.getUint16(offset, true);\n"
+#         ret_string += "\toffset += 2;\n"
+#         ret_string += "\tconst bodySize = dv.getUint16(offset, true);\n"
+#         ret_string += "\toffset += 2;\n"
+
+#     for field in msg['fields']:
+#         ret_string += f"\tconst {field['name']} = dv.get{ConvertCTypeToJsType(field['type'])}(offset, true);\n"
+#         ret_string += f"\toffset += {GetBytes(field['type'])};\n"
+
+#     if not isHeaderFooter:  
+#         ret_string += "\tconst checksum = dv.getUint16(offset, true);\n"
+#         ret_string += "\toffset += 2;\n"
         
     
-    ret_string += "\treturn {"
-    if not isHeaderFooter:
-        ret_string += f"messageType, bodySize, "
-    for field in msg['fields']:
-        ret_string += f"{field['name']}, "
-    ret_string = ret_string[:-2]
-    if not isHeaderFooter:
-        ret_string += ", checksum"
-    ret_string += "}\n}\n"
+#     ret_string += "\treturn {"
+#     if not isHeaderFooter:
+#         ret_string += f"messageType, bodySize, "
+#     for field in msg['fields']:
+#         ret_string += f"{field['name']}, "
+#     ret_string = ret_string[:-2]
+#     if not isHeaderFooter:
+#         ret_string += ", checksum"
+#     ret_string += "}\n}\n"
 
-    return ret_string
-
-def GenerateJsCustomClass(msg):
-   #make a build and a parse function for the message structure
-    isHeaderFooter = msg['name'] == "Header" or msg['name'] == "Footer"
-    ret_string = ""
-    ret_string += f"// {msg['name']} message builder\n"
-    ret_string += f"function build{msg['name']}("
-    for field in msg['fields']:
-        ret_string += f"{field['name']}, "
-    ret_string = ret_string[:-2] + ") {\n"
-    ret_string += "\tconst totalLength = "
-    if isHeaderFooter:
-        ret_string += str(sum([GetBytes(field['type']) for field in msg['fields']]))
-    else:
-        ret_string += str(sum([GetBytes(field['type']) for field in msg['fields']]) + (HEADER_SIZE+FOOTER_SIZE))
-    ret_string += ";\n"
-    ret_string += "\tlet offset = 0;\n"
-
-    ret_string += "\tconst buffer = new Uint8Array(totalLength);\n"
-    ret_string += "\tconst view = new DataView(buffer);\n"
-
-    if not isHeaderFooter:
-        ret_string += "\tconst headerBytes = buildHeader(0, 0);\n"
-        ret_string += f"\tbuffer.set(offset, headerBytes);\n"
-        ret_string += "\toffset += headerBytes.length;\n"
-
-    for field in msg['fields']:
-        ret_string += f"\tview.set{ConvertCTypeToJsType(field['type'])}(offset, {field['name']}, true);\n"
-        ret_string += f"\toffset += {GetBytes(field['type'])};\n"
-
-    if not isHeaderFooter:  
-        ret_string += "\tconst footerBytes = buildFooter(0);\n"
-        ret_string += "\tbuffer.set(footerBytes, offset);\n"
-        
-    ret_string += "\treturn buffer;\n"
-    ret_string += "}\n"
-    
-    # make the parser
-    ret_string += f"// {msg['name']} message parser\n"
-    ret_string += f"function parse{msg['name']}(buffer){{\n"
-    ret_string += "\tconst dv = new DataView(buffer);\n\tlet offset = 0;\n"
-
-
-
-    if not isHeaderFooter:
-        ret_string += "\tconst messageType = dv.getUint16(offset, true);\n"
-        ret_string += "\toffset += 2;\n"
-        ret_string += "\tconst bodySize = dv.getUint16(offset, true);\n"
-        ret_string += "\toffset += 2;\n"
-
-    for field in msg['fields']:
-        ret_string += f"\tconst {field['name']} = dv.get{ConvertCTypeToJsType(field['type'])}(offset, true);\n"
-        ret_string += f"\toffset += {GetBytes(field['type'])};\n"
-
-    if not isHeaderFooter:  
-        ret_string += "\tconst checksum = dv.getUint16(offset, true);\n"
-        ret_string += "\toffset += 2;\n"
-        
-    
-    ret_string += "\treturn {"
-    if not isHeaderFooter:
-        ret_string += f"messageType, bodySize, "
-    for field in msg['fields']:
-        ret_string += f"{field['name']}, "
-    ret_string = ret_string[:-2]
-    if not isHeaderFooter:
-        ret_string += ", checksum"
-    ret_string += "}\n}\n"
-
-    return ret_string
+#     return ret_string
 
 def GenerateJsPredefinedClass(msg, predefined):
     ret_string = ""
@@ -602,12 +612,12 @@ for msg in messages["Messages"]:
     if(msg['type'] == 'Base'):
         python_file.write(GeneratePythonBaseClass(msg))
         cpp_file.write(GenerateCppBaseClass(msg))
-        js_file.write(GenerateJsBaseClass(msg))
+        js_file.write(GenerateJsClass(msg))
         predefined_messages[msg['name']] = msg
     elif(msg['type'] == 'Custom'):
         python_file.write(GeneratePythonCustomClass(msg))
         cpp_file.write(GenerateCppCustomClass(msg))
-        js_file.write(GenerateJsCustomClass(msg))
+        js_file.write(GenerateJsClass(msg))
     else:
         python_file.write(GeneratePythonPredefinedClass(msg, predefined_messages))
         cpp_file.write(GenerateCppPredefinedClass(msg, predefined_messages))

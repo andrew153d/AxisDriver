@@ -37,7 +37,37 @@
         "SetVelocityId",
         "GetVelocityId",
         "SetVelocityAndStepsId",
-        "StartPathId"
+        "StartPathId",
+        "SetHAEnableId",
+        "GetHAEnableId",
+        "SetHAModeId",
+        "GetHAModeId",
+        "SetHAIpAddressId",
+        "GetHAIpAddressId",
+        "SetHAVelocitySwitchOnSpeedId",
+        "GetHAVelocitySwitchOnSpeedId",
+        "SetHAVelocitySwitchOffSpeedId",
+        "GetHAVelocitySwitchOffSpeedId",
+        "SetHAPositionSwitchOnPositionId",
+        "GetHAPositionSwitchOnPositionId",
+        "SetHAPositionSwitchOffPositionId",
+        "GetHAPositionSwitchOffPositionId",
+        "SetHAVelocitySliderMinId",
+        "GetHAVelocitySliderMinId",
+        "SetHAVelocitySliderMaxId",
+        "GetHAVelocitySliderMaxId",
+        "SetHAPositionSliderMinId",
+        "GetHAPositionSliderMinId",
+        "SetHAPositionSliderMaxId",
+        "GetHAPositionSliderMaxId",
+        "SetHAMqttUserId",
+        "GetHAMqttUserId",
+        "SetHAMqttPasswordId",
+        "GetHAMqttPasswordId",
+        "SetHAMqttNameId",
+        "GetHAMqttNameId",
+        "SetHAMqttIconId",
+        "GetHAMqttIconId"
     ],
     "Enums": {
         "LedStates": [
@@ -77,6 +107,10 @@
             "name": "Header",
             "type": "Base",
             "fields": [
+                {
+                    "name": "sync_bytes",
+                    "type": "uint32_t"
+                },
                 {
                     "name": "message_type",
                     "type": "uint16_t"
@@ -144,6 +178,16 @@
                 {
                     "name": "value",
                     "type": "double"
+                }
+            ]
+        },
+        {
+            "name": "StringMessage",
+            "type": "Base",
+            "fields": [
+                {   
+                    "name": "value",
+                    "type": "uint8_t[32]"
                 }
             ]
         },
@@ -282,6 +326,72 @@
         {
             "name": "StartPathMessage",
             "type": "U8Message"
+        },
+        {
+            "name": "HAEnableMessage",
+            "type": "U8Message"
+        },
+        {
+            "name": "HAModeMessage",
+            "type": "U8Message"
+        },
+        {
+            "name": "HAIpAddressMessage",
+            "type": "Custom",
+            "fields": [
+                {
+                    "name": "ha_ip_address",
+                    "type": "uint8_t[4]"
+                }
+            ]
+        },
+        {
+            "name": "HAVelocitySwitchOnSpeedMessage",
+            "type": "DoubleMessage"
+        },
+        {
+            "name": "HAVelocitySwitchOffSpeedMessage",
+            "type": "DoubleMessage"
+        },
+        {
+            "name": "HAPositionSwitchOnPositionMessage",
+            "type": "DoubleMessage"
+        },
+        {
+            "name": "HAPositionSwitchOffPositionMessage",
+            "type": "DoubleMessage"
+        },
+        {
+            "name": "HAVelocitySliderMinMessage",
+            "type": "DoubleMessage"
+        },
+        {
+            "name": "HAVelocitySliderMaxMessage",
+            "type": "DoubleMessage"
+        },
+        {
+            "name": "HAPositionSliderMinMessage",
+            "type": "DoubleMessage"
+        },
+        {
+            "name": "HAPositionSliderMaxMessage",
+            "type": "DoubleMessage"
+        },
+        {
+            "name": "HAMqttUserMessage",
+            "type": "StringMessage"
+        },
+        {
+            "name": "HAMqttPasswordMessage",
+            "type": "StringMessage"
+        },
+        {
+            "name": "HAMqttNameMessage",
+            "type": "StringMessage"
+        },
+        {
+            "name": "HAMqttIconMessage",
+            "type": "StringMessage"
         }
     ]
 }

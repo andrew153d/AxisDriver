@@ -3,7 +3,9 @@
 #define FIRMWARE_VERSION "1.0.0.0"
 
 #define PACKEDSTRUCT struct __attribute__((packed))
-
+#define SYNC_BYTES 0xDEADBABE
+#define HEADER_SIZE 8
+#define FOOTER_SIZE 2
 typedef void (*HandleIncomingMsgPtrType)(uint8_t *recv_bytes, uint32_t recv_bytes_size);
 typedef void (*SendMsgPtrType)(uint8_t *send_bytes, uint32_t send_bytes_size);
 
@@ -12,7 +14,7 @@ class IEncoderInterface
 public:
     virtual float GetVelocityDegreesPerSecond();
     virtual float GetPositionDegrees();
-	virtual float GetUpdateRate();
+    virtual float GetUpdateRate();
 };
 enum class MessageTypes : uint16_t
 {
@@ -54,6 +56,36 @@ enum class MessageTypes : uint16_t
 	GetVelocityId = 0x23,
 	SetVelocityAndStepsId = 0x24,
 	StartPathId = 0x25,
+	SetHAEnableId = 0x26,
+	GetHAEnableId = 0x27,
+	SetHAModeId = 0x28,
+	GetHAModeId = 0x29,
+	SetHAIpAddressId = 0x2A,
+	GetHAIpAddressId = 0x2B,
+	SetHAVelocitySwitchOnSpeedId = 0x2C,
+	GetHAVelocitySwitchOnSpeedId = 0x2D,
+	SetHAVelocitySwitchOffSpeedId = 0x2E,
+	GetHAVelocitySwitchOffSpeedId = 0x2F,
+	SetHAPositionSwitchOnPositionId = 0x30,
+	GetHAPositionSwitchOnPositionId = 0x31,
+	SetHAPositionSwitchOffPositionId = 0x32,
+	GetHAPositionSwitchOffPositionId = 0x33,
+	SetHAVelocitySliderMinId = 0x34,
+	GetHAVelocitySliderMinId = 0x35,
+	SetHAVelocitySliderMaxId = 0x36,
+	GetHAVelocitySliderMaxId = 0x37,
+	SetHAPositionSliderMinId = 0x38,
+	GetHAPositionSliderMinId = 0x39,
+	SetHAPositionSliderMaxId = 0x3A,
+	GetHAPositionSliderMaxId = 0x3B,
+	SetHAMqttUserId = 0x3C,
+	GetHAMqttUserId = 0x3D,
+	SetHAMqttPasswordId = 0x3E,
+	GetHAMqttPasswordId = 0x3F,
+	SetHAMqttNameId = 0x40,
+	GetHAMqttNameId = 0x41,
+	SetHAMqttIconId = 0x42,
+	GetHAMqttIconId = 0x43,
 };
 
 enum class LedStates{
@@ -94,6 +126,7 @@ enum class PositionMode{
 
 PACKEDSTRUCT Header
 {
+	uint32_t sync_bytes;
 	uint16_t message_type;
 	uint16_t body_size;
 };
@@ -129,6 +162,12 @@ PACKEDSTRUCT DoubleMessage
 {
 	Header header;
 	double value;
+	Footer footer;
+};
+PACKEDSTRUCT StringMessage
+{
+	Header header;
+	uint8_t value[32];
 	Footer footer;
 };
 typedef U32Message VersionMessage;
@@ -171,3 +210,23 @@ PACKEDSTRUCT VelocityAndStepsMessage
 	Footer footer;
 };
 typedef U8Message StartPathMessage;
+typedef U8Message HAEnableMessage;
+typedef U8Message HAModeMessage;
+PACKEDSTRUCT HAIpAddressMessage
+{
+	Header header;
+	uint8_t ha_ip_address[4];
+	Footer footer;
+};
+typedef DoubleMessage HAVelocitySwitchOnSpeedMessage;
+typedef DoubleMessage HAVelocitySwitchOffSpeedMessage;
+typedef DoubleMessage HAPositionSwitchOnPositionMessage;
+typedef DoubleMessage HAPositionSwitchOffPositionMessage;
+typedef DoubleMessage HAVelocitySliderMinMessage;
+typedef DoubleMessage HAVelocitySliderMaxMessage;
+typedef DoubleMessage HAPositionSliderMinMessage;
+typedef DoubleMessage HAPositionSliderMaxMessage;
+typedef StringMessage HAMqttUserMessage;
+typedef StringMessage HAMqttPasswordMessage;
+typedef StringMessage HAMqttNameMessage;
+typedef StringMessage HAMqttIconMessage;

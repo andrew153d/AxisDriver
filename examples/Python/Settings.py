@@ -1,78 +1,67 @@
-import time
+
 from AxisMessages import *
 from Axis import *
 
-SerialComms = AxisSerial('/dev/ttyACM0')#AxisUDP("192.168.12.156", 4568)
-
-addr = "192.168.12.156"
-test_addr = 0xAF
-port = 4568
+SerialComms = AxisSerial('/dev/ttyACM0')
 
 
-ret = GetMacAddress(SerialComms).mac
-print(ret)
+def print_ha_ip(ip_bytes):
+    if isinstance(ip_bytes, (bytes, bytearray)) and len(ip_bytes) == 4:
+        print(f"HA IP Address: {ip_bytes[0]}.{ip_bytes[1]}.{ip_bytes[2]}.{ip_bytes[3]}")
+    else:
+        print(f"HA IP Address: {ip_bytes}")
 
-exit()
-print("---------- Testing Version ----------")
+ha_enable = GetHAEnable(SerialComms)
+print(f"HA Enable: {ha_enable.value if ha_enable else 'Failed to get'}")
 
-ret = GetVersion(SerialComms).value
+ha_mode = GetHAMode(SerialComms)
+print(f"HA Mode: {ha_mode.value if ha_mode else 'Failed to get'}")
 
-if ret is not None:
-    major = (ret >> 24) & 0xFF
-    minor = (ret >> 16) & 0xFF
-    patch = (ret >> 8) & 0xFF
-    build = ret & 0xFF
-    print(f"Received Version: {major}.{minor}.{patch}.{build}")
+ha_ip = GetHAIpAddress(SerialComms)
+if ha_ip:
+    print_ha_ip(ha_ip.ha_ip_address)
 else:
-    print("Failed to get version")
+    print("Failed to get HA IP Address")
 
-print("---------- Testing I2C Address ----------")
-print(f"Setting I2C Address to 0x{test_addr:02X}")
-ret = GetI2CAddress(SerialComms).value
-
-if ret is not None:
-    print(f"Received I2C Address: 0x{ret:02X}")
+ha_vel_on = GetHAVelocitySwitchOnSpeed(SerialComms)
+print(f"HA Velocity Switch On Speed: {ha_vel_on.value if ha_vel_on else 'Failed to get'}")
+ha_vel_off = GetHAVelocitySwitchOffSpeed(SerialComms)
+print(f"HA Velocity Switch Off Speed: {ha_vel_off.value if ha_vel_off else 'Failed to get'}")
+ha_pos_on = GetHAPositionSwitchOnPosition(SerialComms)
+print(f"HA Position Switch On Position: {ha_pos_on.value if ha_pos_on else 'Failed to get'}")
+ha_pos_off = GetHAPositionSwitchOffPosition(SerialComms)
+print(f"HA Position Switch Off Position: {ha_pos_off.value if ha_pos_off else 'Failed to get'}")
+ha_vel_min = GetHAVelocitySliderMin(SerialComms)
+print(f"HA Velocity Slider Min: {ha_vel_min.value if ha_vel_min else 'Failed to get'}")
+ha_vel_max = GetHAVelocitySliderMax(SerialComms)
+print(f"HA Velocity Slider Max: {ha_vel_max.value if ha_vel_max else 'Failed to get'}")
+ha_pos_min = GetHAPositionSliderMin(SerialComms)
+print(f"HA Position Slider Min: {ha_pos_min.value if ha_pos_min else 'Failed to get'}")
+ha_pos_max = GetHAPositionSliderMax(SerialComms)
+print(f"HA Position Slider Max: {ha_pos_max.value if ha_pos_max else 'Failed to get'}")
+ha_mqtt_user = GetHAMqttUser(SerialComms)
+if ha_mqtt_user:
+    mqtt_user_str = ha_mqtt_user.value.split(b'\n')[0].decode('utf-8')
+    print(f"HA MQTT User: {mqtt_user_str}")
 else:
-    print("Failed to get I2C address")
-time.sleep(0.01)
-SetI2CAddress(SerialComms, test_addr)
-
-def ip_to_uint32(ip):
-    parts = ip.split('.')
-    return (int(parts[3]) << 24) + (int(parts[2]) << 16) + (int(parts[1]) << 8) + int(parts[0])
-
-print("---------- Testing IP Address ----------")
-
-print(f"Setting IP Address to {addr}")
-ip_uint32 = ip_to_uint32(addr)
-
-ret = GetEthernetAddress(SerialComms).value
-if ret is not None:
-    ip_parts = [
-        (ret >> 24) & 0xFF,
-        (ret >> 16) & 0xFF,
-        (ret >> 8) & 0xFF,
-        ret & 0xFF
-    ]
-    print(f"Received IP Address: {ip_parts[3]}.{ip_parts[2]}.{ip_parts[1]}.{ip_parts[0]}")
+    print("HA MQTT User: Failed to get")
+ha_mqtt_password = GetHAMqttPassword(SerialComms)
+if ha_mqtt_password:
+    mqtt_password_str = ha_mqtt_password.value.split(b'\n')[0].decode('utf-8')
+    print(f"HA MQTT Password: {mqtt_password_str}")
 else:
-    print("Failed to get IP address")
-
-time.sleep(0.1)
-
-SetEthernetAddress(SerialComms, ip_uint32)
-
-print("---------- Testing Port ----------")
-print(f"Setting Port to {port}")
-ret = GetEthernetPort(SerialComms).value
-if ret is not None:
-    print(f"Received Port: {ret}")
+    print("HA MQTT Password: Failed to get")
+ha_mqtt_name = GetHAMqttName(SerialComms)
+if ha_mqtt_name:
+    mqtt_name_str = ha_mqtt_name.value.split(b'\n')[0].decode('utf-8')
+    print(f"HA MQTT Name: {mqtt_name_str}")
 else:
-    print("Failed to get port")
-    
-SetEthernetPort(SerialComms, port)
+    print("HA MQTT Name: Failed to get")
+ha_mqtt_icon = GetHAMqttIcon(SerialComms)
+if ha_mqtt_icon:
+    mqtt_icon_str = ha_mqtt_icon.value.split(b'\n')[0].decode('utf-8')
+    print(f"HA MQTT Icon: {mqtt_icon_str}")
+else:
+    print("HA MQTT Icon: Failed to get")
 
-
-print("Saving Settings")
-SaveConfiguration(SerialComms, 0)
-time.sleep(0.1)
+time.sleep(1)
