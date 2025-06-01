@@ -441,7 +441,7 @@ def GenerateJsClass(msg):
     for field in fields:
         js_type = ConvertCTypeToJsType(field['type'])
         if(field['type'].find('[') != -1):
-            ret.append(f"\tbuffer.set{js_type}(offset, {field['name']}, true);")
+            ret.append(f"\tbuffer.set{js_type}({field['name']}, offset);")
         else:
             ret.append(f"\tview.set{js_type}(offset, {field['name']}, true);")
         ret.append(f"\toffset += {GetBytes(field['type'])};")

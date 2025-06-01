@@ -356,7 +356,7 @@ function buildStringMessage(msgId, value) {
 	const headerBytes = buildHeader(SYNC_BYTES, msgId, totalLength-(HEADER_SIZE+FOOTER_SIZE));
 	buffer.set(headerBytes, offset);
 	offset += headerBytes.length;
-	buffer.set(offset, value, true);
+	buffer.set(value, offset);
 	offset += 32;
 	const footerBytes = buildFooter(0);
 	buffer.set(footerBytes, offset);
@@ -424,7 +424,7 @@ function buildMacAddressMessage(msgId, mac) {
 	const headerBytes = buildHeader(SYNC_BYTES, msgId, totalLength-(HEADER_SIZE+FOOTER_SIZE));
 	buffer.set(headerBytes, offset);
 	offset += headerBytes.length;
-	buffer.set(offset, mac, true);
+	buffer.set(mac, offset);
 	offset += 6;
 	const footerBytes = buildFooter(0);
 	buffer.set(footerBytes, offset);
@@ -476,7 +476,7 @@ function buildLedColorMessage(msgId, ledColor) {
 	const headerBytes = buildHeader(SYNC_BYTES, msgId, totalLength-(HEADER_SIZE+FOOTER_SIZE));
 	buffer.set(headerBytes, offset);
 	offset += headerBytes.length;
-	buffer.set(offset, ledColor, true);
+	buffer.set(ledColor, offset);
 	offset += 3;
 	const footerBytes = buildFooter(0);
 	buffer.set(footerBytes, offset);
@@ -684,7 +684,7 @@ function buildHAIpAddressMessage(msgId, ha_ip_address) {
 	const headerBytes = buildHeader(SYNC_BYTES, msgId, totalLength-(HEADER_SIZE+FOOTER_SIZE));
 	buffer.set(headerBytes, offset);
 	offset += headerBytes.length;
-	buffer.set(offset, ha_ip_address, true);
+	buffer.set(ha_ip_address, offset);
 	offset += 4;
 	const footerBytes = buildFooter(0);
 	buffer.set(footerBytes, offset);

@@ -1,3 +1,80 @@
+// Set Home Assistant parameters event
+const setHaBtn = document.getElementById('setHaBtn');
+if (setHaBtn) {
+  setHaBtn.addEventListener('click', async () => {
+    if (!writer || !port) {
+      printToTerminal('Not connected to device.\n');
+      return;
+    }
+    // Collect values from text boxes
+    const ha_enable = parseInt(document.getElementById('ha_enable').value) || 0;
+    const ha_mode = parseInt(document.getElementById('ha_mode').value) || 0;
+    // IP address as 4 bytes
+    const ha_ip_str = document.getElementById('ha_ip_address').value;
+    const ha_ip_parts = ha_ip_str.split('.').map(x => parseInt(x) || 0);
+    const ha_ip_address = new Uint8Array(4);
+    for (let i = 0; i < 4; ++i) ha_ip_address[i] = ha_ip_parts[i] || 0;
+    const ha_vel_switch_on = parseFloat(document.getElementById('ha_vel_switch_on').value) || 0;
+    const ha_vel_switch_off = parseFloat(document.getElementById('ha_vel_switch_off').value) || 0;
+    const ha_pos_switch_on = parseFloat(document.getElementById('ha_pos_switch_on').value) || 0;
+    const ha_pos_switch_off = parseFloat(document.getElementById('ha_pos_switch_off').value) || 0;
+    const ha_vel_slider_min = parseFloat(document.getElementById('ha_vel_slider_min').value) || 0;
+    const ha_vel_slider_max = parseFloat(document.getElementById('ha_vel_slider_max').value) || 0;
+    const ha_pos_slider_min = parseFloat(document.getElementById('ha_pos_slider_min').value) || 0;
+    const ha_pos_slider_max = parseFloat(document.getElementById('ha_pos_slider_max').value);
+    console.log('HA Settings:', {
+      ha_enable,
+      ha_mode,
+      ha_ip_address: Array.from(ha_ip_address),
+      ha_vel_switch_on,
+      ha_vel_switch_off,
+      ha_pos_switch_on,
+      ha_pos_switch_off,
+      ha_vel_slider_min,
+      ha_vel_slider_max,
+      ha_pos_slider_min,
+      ha_pos_slider_max
+    });
+    // Strings as 32-byte arrays
+    function strToBytes(str) {
+      const encoder = new TextEncoder();
+      const bytes = encoder.encode(str);
+      const arr = new Uint8Array(32);
+      arr.set(bytes.slice(0, 32));
+      return arr;
+    }
+    const ha_mqtt_user = strToBytes(document.getElementById('ha_mqtt_user').value);
+    const ha_mqtt_password = strToBytes(document.getElementById('ha_mqtt_password').value);
+    const ha_mqtt_name = strToBytes(document.getElementById('ha_mqtt_name').value);
+    const ha_mqtt_icon = strToBytes(document.getElementById('ha_mqtt_icon').value);
+
+    // Send all set messages
+    const setMessages = [
+      { builder: buildHAEnableMessage, id: MessageTypes.SetHAEnableId, value: ha_enable },
+      { builder: buildHAModeMessage, id: MessageTypes.SetHAModeId, value: ha_mode },
+      { builder: buildHAIpAddressMessage, id: MessageTypes.SetHAIpAddressId, value: ha_ip_address },
+      { builder: buildHAVelocitySwitchOnSpeedMessage, id: MessageTypes.SetHAVelocitySwitchOnSpeedId, value: ha_vel_switch_on },
+      { builder: buildHAVelocitySwitchOffSpeedMessage, id: MessageTypes.SetHAVelocitySwitchOffSpeedId, value: ha_vel_switch_off },
+      { builder: buildHAPositionSwitchOnPositionMessage, id: MessageTypes.SetHAPositionSwitchOnPositionId, value: ha_pos_switch_on },
+      { builder: buildHAPositionSwitchOffPositionMessage, id: MessageTypes.SetHAPositionSwitchOffPositionId, value: ha_pos_switch_off },
+      { builder: buildHAVelocitySliderMinMessage, id: MessageTypes.SetHAVelocitySliderMinId, value: ha_vel_slider_min },
+      { builder: buildHAVelocitySliderMaxMessage, id: MessageTypes.SetHAVelocitySliderMaxId, value: ha_vel_slider_max },
+      { builder: buildHAPositionSliderMinMessage, id: MessageTypes.SetHAPositionSliderMinId, value: ha_pos_slider_min },
+      { builder: buildHAPositionSliderMaxMessage, id: MessageTypes.SetHAPositionSliderMaxId, value: ha_pos_slider_max },
+      { builder: buildHAMqttUserMessage, id: MessageTypes.SetHAMqttUserId, value: ha_mqtt_user },
+      { builder: buildHAMqttPasswordMessage, id: MessageTypes.SetHAMqttPasswordId, value: ha_mqtt_password },
+      { builder: buildHAMqttNameMessage, id: MessageTypes.SetHAMqttNameId, value: ha_mqtt_name },
+      { builder: buildHAMqttIconMessage, id: MessageTypes.SetHAMqttIconId, value: ha_mqtt_icon },
+    ];
+    for (const msg of setMessages) {
+      let data = msg.builder(msg.id, msg.value);
+      await writer.write(data);
+      await new Promise(resolve => setTimeout(resolve, 100));
+        readLoop(); // Process any incoming messages
+    }
+    printToTerminal('Set messages sent.\n');
+  });
+}
 
 
 // import { MessageTypes, buildEthernetPortMessage, buildEthernetAddressMessage, parseU32Message } from './AxisMessages.js';
@@ -11,21 +88,7 @@ let readBuffer = [];
 let readResolvers = [];
 
 // Create UI for settings
-document.body.innerHTML = `
-  <div style="font-family: monospace; max-width: 700px; margin: 2em auto;">
-    <button id="connectBtn">Connect</button>
-    <span id="status">Disconnected</span>
-    <div id="settings" style="margin-top:2em; display:none;">
-      <h2>Ethernet Settings</h2>
-      <div>Port: <span id="eth_port">-</span></div>
-      <div>IP Address: <span id="eth_ip">-</span></div>
-      <button id="refreshBtn">Read Settings</button>
-    </div>
-    <div style="margin-top:2em;">
-      <textarea id="terminal" rows="10" cols="80" readonly style="width:100%;background:#111;color:#0f0;font-size:1em;"></textarea>
-    </div>
-  </div>
-`;
+
 
 const connectBtn = document.getElementById('connectBtn');
 const statusDiv = document.getElementById('status');
@@ -198,56 +261,71 @@ async function handleMessage(message) {
         printToTerminal(`Ethernet IP Address: ${u32ToIp(ip)}\n`);
     } else if (header.message_type === MessageTypes.GetHAEnableId) {
         const enabled = parseHAEnableMessage(message).value;
+        document.getElementById('ha_enable').value = enabled;
         printToTerminal(`HA Enable: ${enabled}\n`);
     } else if (header.message_type === MessageTypes.GetHAModeId) {
         const mode = parseHAModeMessage(message).value;
+        document.getElementById('ha_mode').value = mode;
         printToTerminal(`HA Mode: ${mode}\n`);
     } else if (header.message_type === MessageTypes.GetHAIpAddressId) {
         const ip = parseHAIpAddressMessage(message).ha_ip_address;
+        document.getElementById('ha_ip_address').value = Array.from(ip).join('.');
         printToTerminal(`HA IP Address: ${Array.from(ip).join('.')}\n`);
     } else if (header.message_type === MessageTypes.GetHAVelocitySwitchOnSpeedId) {
         const val = parseHAVelocitySwitchOnSpeedMessage(message).value;
+        document.getElementById('ha_vel_switch_on').value = val;
         printToTerminal(`HA Velocity Switch On Speed: ${val}\n`);
     } else if (header.message_type === MessageTypes.GetHAVelocitySwitchOffSpeedId) {
         const val = parseHAVelocitySwitchOffSpeedMessage(message).value;
+        document.getElementById('ha_vel_switch_off').value = val;
         printToTerminal(`HA Velocity Switch Off Speed: ${val}\n`);
     } else if (header.message_type === MessageTypes.GetHAPositionSwitchOnPositionId) {
         const val = parseHAPositionSwitchOnPositionMessage(message).value;
+        document.getElementById('ha_pos_switch_on').value = val;
         printToTerminal(`HA Position Switch On Position: ${val}\n`);
     } else if (header.message_type === MessageTypes.GetHAPositionSwitchOffPositionId) {
         const val = parseHAPositionSwitchOffPositionMessage(message).value;
+        document.getElementById('ha_pos_switch_off').value = val;
         printToTerminal(`HA Position Switch Off Position: ${val}\n`);
     } else if (header.message_type === MessageTypes.GetHAVelocitySliderMinId) {
         const val = parseHAVelocitySliderMinMessage(message).value;
+        document.getElementById('ha_vel_slider_min').value = val;
         printToTerminal(`HA Velocity Slider Min: ${val}\n`);
     } else if (header.message_type === MessageTypes.GetHAVelocitySliderMaxId) {
         const val = parseHAVelocitySliderMaxMessage(message).value;
+        document.getElementById('ha_vel_slider_max').value = val;
         printToTerminal(`HA Velocity Slider Max: ${val}\n`);
     } else if (header.message_type === MessageTypes.GetHAPositionSliderMinId) {
         const val = parseHAPositionSliderMinMessage(message).value;
+        document.getElementById('ha_pos_slider_min').value = val;
         printToTerminal(`HA Position Slider Min: ${val}\n`);
     } else if (header.message_type === MessageTypes.GetHAPositionSliderMaxId) {
         const val = parseHAPositionSliderMaxMessage(message).value;
+        document.getElementById('ha_pos_slider_max').value = val;
         printToTerminal(`HA Position Slider Max: ${val}\n`);
     } else if (header.message_type === MessageTypes.GetHAMqttUserId) {
         const user = parseHAMqttUserMessage(message).value;
         const userStr = new TextDecoder().decode(user);
         const zeroIdx = userStr.indexOf('\0');
+        document.getElementById('ha_mqtt_user').value = zeroIdx !== -1 ? userStr.slice(0, zeroIdx) : userStr;
         printToTerminal(`HA MQTT User: ${zeroIdx !== -1 ? userStr.slice(0, zeroIdx) : userStr}\n`);
     } else if (header.message_type === MessageTypes.GetHAMqttPasswordId) {
         const pwd = parseHAMqttPasswordMessage(message).value;
         const pwdStr = new TextDecoder().decode(pwd);
         const zeroIdx = pwdStr.indexOf('\0');
+        document.getElementById('ha_mqtt_password').value = zeroIdx !== -1 ? pwdStr.slice(0, zeroIdx) : pwdStr;
         printToTerminal(`HA MQTT Password: ${zeroIdx !== -1 ? pwdStr.slice(0, zeroIdx) : pwdStr}\n`);
     } else if (header.message_type === MessageTypes.GetHAMqttNameId) {
         const name = parseHAMqttNameMessage(message).value;
         const nameStr = new TextDecoder().decode(name);
         const zeroIdx = nameStr.indexOf('\0');
+        document.getElementById('ha_mqtt_name').value = zeroIdx !== -1 ? nameStr.slice(0, zeroIdx) : nameStr;
         printToTerminal(`HA MQTT Name: ${zeroIdx !== -1 ? nameStr.slice(0, zeroIdx) : nameStr}\n`);
     } else if (header.message_type === MessageTypes.GetHAMqttIconId) {
         const icon = parseHAMqttIconMessage(message).value;
         const iconStr = new TextDecoder().decode(icon);
         const zeroIdx = iconStr.indexOf('\0');
+        document.getElementById('ha_mqtt_icon').value = zeroIdx !== -1 ? iconStr.slice(0, zeroIdx) : iconStr;
         printToTerminal(`HA MQTT Icon: ${zeroIdx !== -1 ? iconStr.slice(0, zeroIdx) : iconStr}\n`);
     } else {
         printToTerminal(`Unknown message type: ${header.message_type}\n`);
