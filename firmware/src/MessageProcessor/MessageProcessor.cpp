@@ -3,6 +3,12 @@
 #include "LedController/LedController.h"
 #include "FlashStorage/FlashStorage.h"
 #include "MotorController/MotorController.h"
+#include "FlatBuffers/AxisMessages_common_generated.h"
+#include "FlatBuffers/AxisMessages_ha_generated.h"
+#include "FlatBuffers/AxisMessages_motor_generated.h"
+#include "FlatBuffers/AxisMessages_led_generated.h"
+#include "FlatBuffers/AxisMessages_settings_generated.h"
+
 #include "Ethernet.h"
 
 uint16_t calculateChecksum(uint8_t *data, uint32_t size)
@@ -45,14 +51,30 @@ void MessageProcessor::HandleJsonMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
 
 void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size)
 {
-  Header *hdr = (Header *)&recv_bytes[0];
+  // Parse FlatBuffer header from bytes
+  flatbuffers::FlatBufferBuilder builder(1024);
+  auto flatbuf_hdr = flatbuffers::GetRoot<AxisDriver::Header>(recv_bytes);
+  if (flatbuf_hdr->sync_bytes() != SYNC_BYTES)
+  {
+    DEBUG_PRINTLN("Invalid sync bytes in message");
+    return;
+  }
 
   // TODO: check for checksum
 
   //DEBUG_PRINTF("Received message type: 0x%x\n", hdr->message_type);
 
-  switch ((MessageTypes)hdr->message_type)
+  switch ((AxisDriver::MessageId)flatbuf_hdr->message_type())
   {
+    case AxisDriver::MessageId::MessageId_SetEthernetPortId:
+    {
+      AxisDriver::EthernetPortMessage *msg = (AxisDriver::EthernetPortMessage *)(recv_bytes+sizeof(AxisDriver::Header));
+      FlashStorage::GetEthernetSettings()->port = msg->value();
+      DEBUG_PRINTF("Setting Ethernet Port: %d\n", FlashStorage::GetEthernetSettings()->port);
+      break;
+    }
+
+    /*
   case MessageTypes::SetLedColorId:
   {
     LedColorMessage *msg = (LedColorMessage *)recv_bytes;
@@ -679,8 +701,9 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     SendMsg(send_buffer, sizeof(HAMqttIconMessage));
     break;
   }
+    */
   default:
-    DEBUG_PRINTF("Unable to handle message type: 0x%x", hdr->message_type);
+    DEBUG_PRINTF("Unable to handle message type: 0x%x", flatbuf_hdr->message_type());
     break;
   }
 }

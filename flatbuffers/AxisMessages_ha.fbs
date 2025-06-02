@@ -1,0 +1,61 @@
+namespace AxisDriver;
+
+table HAEnableMessage {
+  value:ubyte;
+}
+
+table HAModeMessage {
+  value:ubyte;
+}
+
+table HAIpAddressMessage {
+  ha_ip_address:uint;
+}
+
+table HAVelocitySwitchOnSpeedMessage {
+  value:float;
+}
+
+table HAVelocitySwitchOffSpeedMessage {
+  value:float;
+}
+
+table HAPositionSwitchOnPositionMessage {
+  value:float;
+}
+
+table HAPositionSwitchOffPositionMessage {
+  value:float;
+}
+
+table HAVelocitySliderMinMessage {
+  value:float;
+}
+
+table HAVelocitySliderMaxMessage {
+  value:float;
+}
+
+table HAPositionSliderMinMessage {
+  value:float;
+}
+
+table HAPositionSliderMaxMessage {
+  value:float;
+}
+
+table HAMqttUserMessage {
+  value:string;
+}
+
+table HAMqttPasswordMessage {
+  value:string;
+}
+
+table HAMqttNameMessage {
+  value:string;
+}
+
+table HAMqttIconMessage {
+  value:[ubyte];
+}

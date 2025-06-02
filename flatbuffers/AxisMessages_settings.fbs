@@ -1,0 +1,25 @@
+namespace AxisDriver;
+
+table VersionMessage {
+  value:string;
+}
+
+table I2CAddressMessage {
+  value:ubyte;
+}
+
+table EthernetAddressMessage {
+  value:uint;
+}
+
+table EthernetPortMessage {
+  value:uint;
+}
+
+table MacAddressMessage {
+  mac_address:[ubyte];
+}
+
+table SaveConfigurationMessage {
+  value:ubyte;
+}

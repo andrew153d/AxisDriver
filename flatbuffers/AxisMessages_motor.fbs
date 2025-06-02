@@ -1,0 +1,63 @@
+namespace AxisDriver;
+
+table HomeDirectionMessage {
+  value:byte;
+}
+
+table HomeSpeedMessage {
+  value:uint;
+}
+
+table HomeThresholdMessage {
+  value:uint;
+}
+
+table HomedStateMessage {
+  value:bool;
+}
+
+table HomeMessage {
+  value:uint;
+}
+
+table MotorStateMessage {
+  value:ubyte;
+}
+
+table MotorBrakeMessage {
+  value:ubyte;
+}
+
+table MaxSpeedMessage {
+  value:uint;
+}
+
+table AccelerationMessage {
+  value:uint;
+}
+
+table CurrentPositionMessage {
+  value:float;
+}
+
+table TargetPositionMessage {
+  value:float;
+}
+
+table RelativeTargetPositionMessage {
+  value:float;
+}
+
+table VelocityMessage {
+  value:float;
+}
+
+table VelocityAndStepsMessage {
+  velocity:int;
+  steps:int;
+  position_mode:ubyte;
+}
+
+table StartPathMessage {
+  value:ubyte;
+}

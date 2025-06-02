@@ -1,0 +1,9 @@
+namespace AxisDriver;
+
+table LedStateMessage {
+  value:ubyte;
+}
+
+table LedColorMessage {
+  led_color:[ubyte];
+}

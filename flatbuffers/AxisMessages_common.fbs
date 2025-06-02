@@ -1,0 +1,92 @@
+namespace AxisDriver;
+
+enum LedStates : byte { OFF, FLASH_ERROR, ERROR, BOOTUP, RAINBOW, SOLID, MAX_VALUE }
+enum MotorStates : byte { OFF, POSITION, VELOCITY, VELOCITY_STEP, IDLE_ON, HOME }
+enum MotorBrake : byte { NORMAL, FREEWHEELING, STRONG_BRAKING, BRAKING }
+enum HomeDirection : byte { CLOCKWISE, COUNTERCLOCKWISE }
+enum PositionMode : byte { ABSOLUTE, RELATIVE }
+
+enum MessageId : byte {
+  GetVersionId,
+  SetI2CAddressId,
+  GetI2CAddressId,
+  SetEthernetAddressId,
+  GetEthernetAddressId,
+  SetEthernetPortId,
+  GetEthernetPortId,
+  GetMacAddressId,
+  SaveConfigurationId,
+  SetLedStateId,
+  GetLedStateId,
+  SetLedColorId,
+  GetLedColorId,
+  SetHomeDirectionId,
+  GetHomeDirectionId,
+  SetHomeThresholdId,
+  GetHomeThresholdId,
+  SetHomeSpeedId,
+  GetHomeSpeedId,
+  GetHomedStateId,
+  HomeId,
+  SetMotorStateId,
+  GetMotorStateId,
+  SetMotorBrakeId,
+  GetMotorBrakeId,
+  SetMaxSpeedId,
+  GetMaxSpeedId,
+  SetAccelerationId,
+  GetAccelerationId,
+  SetCurrentPositionId,
+  GetCurrentPositionId,
+  SetTargetPositionId,
+  GetTargetPositionId,
+  SetRelativeTargetPositionId,
+  SetVelocityId,
+  GetVelocityId,
+  SetVelocityAndStepsId,
+  StartPathId,
+  SetHAEnableId,
+  GetHAEnableId,
+  SetHAModeId,
+  GetHAModeId,
+  SetHAIpAddressId,
+  GetHAIpAddressId,
+  SetHAVelocitySwitchOnSpeedId,
+  GetHAVelocitySwitchOnSpeedId,
+  SetHAVelocitySwitchOffSpeedId,
+  GetHAVelocitySwitchOffSpeedId,
+  SetHAPositionSwitchOnPositionId,
+  GetHAPositionSwitchOnPositionId,
+  SetHAPositionSwitchOffPositionId,
+  GetHAPositionSwitchOffPositionId,
+  SetHAVelocitySliderMinId,
+  GetHAVelocitySliderMinId,
+  SetHAVelocitySliderMaxId,
+  GetHAVelocitySliderMaxId,
+  SetHAPositionSliderMinId,
+  GetHAPositionSliderMinId,
+  SetHAPositionSliderMaxId,
+  GetHAPositionSliderMaxId,
+  SetHAMqttUserId,
+  GetHAMqttUserId,
+  SetHAMqttPasswordId,
+  GetHAMqttPasswordId,
+  SetHAMqttNameId,
+  GetHAMqttNameId,
+  SetHAMqttIconId,
+  GetHAMqttIconId
+}
+
+struct HeaderStruct {
+  sync_bytes:uint (id: 0);
+  message_type:ushort (id: 1);
+  body_size:ushort (id: 2);
+}
+
+table Header {
+  header:Header;
+}
+
+table Footer {
+  checksum:ushort;
+}
