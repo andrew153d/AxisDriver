@@ -1,0 +1,130 @@
+
+syntax = "proto3";
+
+package AxisDriver;
+
+// LED states
+enum LedStates {
+  OFF = 0;
+  FLASH_ERROR = 1;
+  ERROR = 2;
+  BOOTUP = 3;
+  RAINBOW = 4;
+  SOLID = 5;
+  MAX_VALUE = 6;
+}
+
+// Motor states
+enum MotorStates {
+  MOTOR_OFF = 0;
+  POSITION = 1;
+  VELOCITY = 2;
+  VELOCITY_STEP = 3;
+  IDLE_ON = 4;
+  HOME = 5;
+}
+
+// Motor brake modes
+enum MotorBrake {
+  NORMAL = 0;
+  FREEWHEELING = 1;
+  STRONG_BRAKING = 2;
+  BRAKING = 3;
+}
+
+// Home direction
+enum HomeDirection {
+  CLOCKWISE = 0;
+  COUNTERCLOCKWISE = 1;
+}
+
+// Position mode
+enum PositionMode {
+  ABSOLUTE = 0;
+  RELATIVE = 1;
+}
+
+// Message IDs
+enum MessageId {
+  GetVersionId = 0;
+  SetI2CAddressId = 1;
+  GetI2CAddressId = 2;
+  SetEthernetAddressId = 3;
+  GetEthernetAddressId = 4;
+  SetEthernetPortId = 5;
+  GetEthernetPortId = 6;
+  GetMacAddressId = 7;
+  SaveConfigurationId = 8;
+  SetLedStateId = 9;
+  GetLedStateId = 10;
+  SetLedColorId = 11;
+  GetLedColorId = 12;
+  SetHomeDirectionId = 13;
+  GetHomeDirectionId = 14;
+  SetHomeThresholdId = 15;
+  GetHomeThresholdId = 16;
+  SetHomeSpeedId = 17;
+  GetHomeSpeedId = 18;
+  GetHomedStateId = 19;
+  HomeId = 20;
+  SetMotorStateId = 21;
+  GetMotorStateId = 22;
+  SetMotorBrakeId = 23;
+  GetMotorBrakeId = 24;
+  SetMaxSpeedId = 25;
+  GetMaxSpeedId = 26;
+  SetAccelerationId = 27;
+  GetAccelerationId = 28;
+  SetCurrentPositionId = 29;
+  GetCurrentPositionId = 30;
+  SetTargetPositionId = 31;
+  GetTargetPositionId = 32;
+  SetRelativeTargetPositionId = 33;
+  SetVelocityId = 34;
+  GetVelocityId = 35;
+  SetVelocityAndStepsId = 36;
+  StartPathId = 37;
+  SetHAEnableId = 38;
+  GetHAEnableId = 39;
+  SetHAModeId = 40;
+  GetHAModeId = 41;
+  SetHAIpAddressId = 42;
+  GetHAIpAddressId = 43;
+  SetHAVelocitySwitchOnSpeedId = 44;
+  GetHAVelocitySwitchOnSpeedId = 45;
+  SetHAVelocitySwitchOffSpeedId = 46;
+  GetHAVelocitySwitchOffSpeedId = 47;
+  SetHAPositionSwitchOnPositionId = 48;
+  GetHAPositionSwitchOnPositionId = 49;
+  SetHAPositionSwitchOffPositionId = 50;
+  GetHAPositionSwitchOffPositionId = 51;
+  SetHAVelocitySliderMinId = 52;
+  GetHAVelocitySliderMinId = 53;
+  SetHAVelocitySliderMaxId = 54;
+  GetHAVelocitySliderMaxId = 55;
+  SetHAPositionSliderMinId = 56;
+  GetHAPositionSliderMinId = 57;
+  SetHAPositionSliderMaxId = 58;
+  GetHAPositionSliderMaxId = 59;
+  SetHAMqttUserId = 60;
+  GetHAMqttUserId = 61;
+  SetHAMqttPasswordId = 62;
+  GetHAMqttPasswordId = 63;
+  SetHAMqttNameId = 64;
+  GetHAMqttNameId = 65;
+  SetHAMqttIconId = 66;
+  GetHAMqttIconId = 67;
+}
+
+// Header structure
+message Header {
+  uint32 sync_bytes = 1;
+  MessageId message_type = 2;
+  uint32 body_size = 3;
+}
+
+
+// Footer message
+message Footer {
+  uint32 checksum = 1;
+}

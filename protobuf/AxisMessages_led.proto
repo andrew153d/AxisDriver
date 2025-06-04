@@ -1,0 +1,5 @@
+syntax = "proto3";
+package AxisDriver;
+
+message LedStateMessage { uint32 value = 1; }
+message LedColorMessage { repeated uint32 led_color = 1; }

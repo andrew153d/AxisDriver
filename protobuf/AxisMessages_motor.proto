@@ -1,0 +1,22 @@
+syntax = "proto3";
+package AxisDriver;
+
+message HomeDirectionMessage { int32 value = 1; }
+message HomeSpeedMessage { uint32 value = 1; }
+message HomeThresholdMessage { uint32 value = 1; }
+message HomedStateMessage { bool value = 1; }
+message HomeMessage { uint32 value = 1; }
+message MotorStateMessage { uint32 value = 1; }
+message MotorBrakeMessage { uint32 value = 1; }
+message MaxSpeedMessage { uint32 value = 1; }
+message AccelerationMessage { uint32 value = 1; }
+message CurrentPositionMessage { float value = 1; }
+message TargetPositionMessage { float value = 1; }
+message RelativeTargetPositionMessage { float value = 1; }
+message VelocityMessage { float value = 1; }
+message VelocityAndStepsMessage {
+  int32 velocity = 1;
+  int32 steps = 2;
+  uint32 position_mode = 3;
+}
+message StartPathMessage { uint32 value = 1; }

@@ -1,0 +1,18 @@
+syntax = "proto3";
+package AxisDriver;
+
+message HAEnableMessage { uint32 value = 1; }
+message HAModeMessage { uint32 value = 1; }
+message HAIpAddressMessage { uint32 ha_ip_address = 1; }
+message HAVelocitySwitchOnSpeedMessage { float value = 1; }
+message HAVelocitySwitchOffSpeedMessage { float value = 1; }
+message HAPositionSwitchOnPositionMessage { float value = 1; }
+message HAPositionSwitchOffPositionMessage { float value = 1; }
+message HAVelocitySliderMinMessage { float value = 1; }
+message HAVelocitySliderMaxMessage { float value = 1; }
+message HAPositionSliderMinMessage { float value = 1; }
+message HAPositionSliderMaxMessage { float value = 1; }
+message HAMqttUserMessage { string value = 1; }
+message HAMqttPasswordMessage { string value = 1; }
+message HAMqttNameMessage { string value = 1; }
+message HAMqttIconMessage { repeated uint32 value = 1; }

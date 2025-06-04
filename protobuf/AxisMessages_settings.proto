@@ -1,0 +1,9 @@
+syntax = "proto3";
+package AxisDriver;
+
+message VersionMessage { string value = 1; }
+message I2CAddressMessage { uint32 value = 1; }
+message EthernetAddressMessage { uint32 value = 1; }
+message EthernetPortMessage { uint32 value = 1; }
+message MacAddressMessage { repeated uint32 mac_address = 1; }
+message SaveConfigurationMessage { uint32 value = 1; }
