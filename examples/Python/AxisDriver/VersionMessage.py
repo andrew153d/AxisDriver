@@ -25,23 +25,49 @@ class VersionMessage(object):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # VersionMessage
-    def Value(self):
+    def Major(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
+            return self._tab.Get(flatbuffers.number_types.Uint16Flags, o + self._tab.Pos)
+        return 0
+
+    # VersionMessage
+    def Minor(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Uint16Flags, o + self._tab.Pos)
+        return 0
+
+    # VersionMessage
+    def Patch(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Uint16Flags, o + self._tab.Pos)
+        return 0
 
 def VersionMessageStart(builder):
-    builder.StartObject(1)
+    builder.StartObject(3)
 
 def Start(builder):
     VersionMessageStart(builder)
 
-def VersionMessageAddValue(builder, value):
-    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(value), 0)
+def VersionMessageAddMajor(builder, major):
+    builder.PrependUint16Slot(0, major, 0)
 
-def AddValue(builder, value):
-    VersionMessageAddValue(builder, value)
+def AddMajor(builder, major):
+    VersionMessageAddMajor(builder, major)
+
+def VersionMessageAddMinor(builder, minor):
+    builder.PrependUint16Slot(1, minor, 0)
+
+def AddMinor(builder, minor):
+    VersionMessageAddMinor(builder, minor)
+
+def VersionMessageAddPatch(builder, patch):
+    builder.PrependUint16Slot(2, patch, 0)
+
+def AddPatch(builder, patch):
+    VersionMessageAddPatch(builder, patch)
 
 def VersionMessageEnd(builder):
     return builder.EndObject()

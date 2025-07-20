@@ -51,28 +51,71 @@ void MessageProcessor::HandleJsonMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
 
 void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size)
 {
-  // Parse FlatBuffer header from bytes
-  flatbuffers::FlatBufferBuilder builder(1024);
-  auto flatbuf_hdr = flatbuffers::GetRoot<AxisDriver::Header>(recv_bytes);
-  if (flatbuf_hdr->sync_bytes() != SYNC_BYTES)
-  {
-    DEBUG_PRINTLN("Invalid sync bytes in message");
+  // New message format:
+  // [4 bytes: header_size][Header flatbuffer][4 bytes: body_size][Body flatbuffer][Footer flatbuffer]
+  if (recv_bytes_size < 8) {
+    DEBUG_PRINTF("Message too short to contain header and body sizes\n");
     return;
   }
 
-  // TODO: check for checksum
+  uint32_t offset = 0;
+  uint32_t* header_size = (uint32_t *)(recv_bytes + offset);
+  offset += 4;
+  if (recv_bytes_size < offset + *header_size + 4) {
+    DEBUG_PRINTF("Message too short for header size\n");
+    return;
+  }
 
-  //DEBUG_PRINTF("Received message type: 0x%x\n", hdr->message_type);
+  // Parse header
+  auto flatbuf_hdr = flatbuffers::GetRoot<AxisDriver::Header>(recv_bytes + offset);
+  if (flatbuf_hdr->sync_bytes() != SYNC_BYTES) {
+    DEBUG_PRINTF("Invalid sync bytes in message: 0x%08X\n", flatbuf_hdr->sync_bytes());
+    for (uint32_t i = 0; i < recv_bytes_size; ++i) {
+      DEBUG_PRINTF("%02X ", recv_bytes[i]);
+    }
+    DEBUG_PRINTF("\n");
+    return;
+  }
+  offset += *header_size;
+
+  // Parse body size
+  uint32_t* body_size = (uint32_t *)(recv_bytes + offset);
+  offset += 4;
+  if (recv_bytes_size < offset + *body_size) {
+    DEBUG_PRINTF("Message too short for body size\n");
+    return;
+  }
+
+  // Parse body
+  const uint8_t* body_ptr = recv_bytes + offset;
+  offset += *body_size;
+
+  // Parse footer
+  if (recv_bytes_size < offset) {
+    DEBUG_PRINTF("Message too short for footer\n");
+    return;
+  }
+  const uint8_t* footer_ptr = recv_bytes + offset;
+  // Optionally, parse footer as flatbuffer if needed
 
   switch ((AxisDriver::MessageId)flatbuf_hdr->message_type())
   {
-    case AxisDriver::MessageId::MessageId_SetEthernetPortId:
+    case AxisDriver::MessageId::MessageId_GetVersionId:
     {
-      AxisDriver::EthernetPortMessage *msg = (AxisDriver::EthernetPortMessage *)(recv_bytes+sizeof(AxisDriver::Header));
-      FlashStorage::GetEthernetSettings()->port = msg->value();
-      DEBUG_PRINTF("Setting Ethernet Port: %d\n", FlashStorage::GetEthernetSettings()->port);
+      auto msg = flatbuffers::GetRoot<AxisDriver::VersionMessage>(body_ptr);
+      DEBUG_PRINTF("GetVersion Message received: Major=%d, Minor=%d, Patch=%d\n",
+                   msg->major(), msg->minor(), msg->patch());
+      // Handle GetVersion logic here
       break;
     }
+
+    // case AxisDriver::MessageId::MessageId_SetEthernetPortId:
+    // {
+    //   AxisDriver::EthernetPortMessage *msg = (AxisDriver::EthernetPortMessage *)(recv_bytes+sizeof(AxisDriver::Header));
+    //   FlashStorage::GetEthernetSettings()->port = msg->value();
+    //   DEBUG_PRINTF("Setting Ethernet Port: %d\n", FlashStorage::GetEthernetSettings()->port);
+    //   break;
+    // }
 
     /*
   case MessageTypes::SetLedColorId:

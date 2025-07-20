@@ -25,27 +25,36 @@ class Header(object):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # Header
-    def Header(self):
+    def SyncBytes(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
-            x = self._tab.Indirect(o + self._tab.Pos)
-            from AxisDriver.Header import Header
-            obj = Header()
-            obj.Init(self._tab.Bytes, x)
-            return obj
-        return None
+            return self._tab.Get(flatbuffers.number_types.Uint32Flags, o + self._tab.Pos)
+        return 0
+
+    # Header
+    def MessageType(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Uint16Flags, o + self._tab.Pos)
+        return 0
 
 def HeaderStart(builder):
-    builder.StartObject(1)
+    builder.StartObject(2)
 
 def Start(builder):
     HeaderStart(builder)
 
-def HeaderAddHeader(builder, header):
-    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(header), 0)
+def HeaderAddSyncBytes(builder, syncBytes):
+    builder.PrependUint32Slot(0, syncBytes, 0)
 
-def AddHeader(builder, header):
-    HeaderAddHeader(builder, header)
+def AddSyncBytes(builder, syncBytes):
+    HeaderAddSyncBytes(builder, syncBytes)
+
+def HeaderAddMessageType(builder, messageType):
+    builder.PrependUint16Slot(1, messageType, 0)
+
+def AddMessageType(builder, messageType):
+    HeaderAddMessageType(builder, messageType)
 
 def HeaderEnd(builder):
     return builder.EndObject()

@@ -1,7 +1,9 @@
 namespace AxisDriver;
 
 table VersionMessage {
-  value:string;
+  major:ushort;
+  minor:ushort;
+  patch:ushort;
 }
 
 table I2CAddressMessage {

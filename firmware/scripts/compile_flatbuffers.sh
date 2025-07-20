@@ -2,7 +2,7 @@
 
 # set a cpp destination directory
 SCRIPT_DIR=$(dirname "$0")
-CPP_DESTINATION=$SCRIPT_DIR/../firmware/include/FlatBuffers
+CPP_DESTINATION=$SCRIPT_DIR/../include/FlatBuffers
 PYTHON_DESTINATION=$SCRIPT_DIR/../../examples/Python/
 
 

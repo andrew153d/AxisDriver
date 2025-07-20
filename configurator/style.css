@@ -1,28 +1,194 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 2em;
+/* Modern Axis Driver Configurator Styles */
+:root {
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --secondary: #f3f4f6;
+    --background: #f9fafb;
+    --card-bg: #fff;
+    --border: #e5e7eb;
+    --radius: 12px;
+    --font: 'Inter', system-ui, sans-serif;
+    --text: #222;
+    --muted: #6b7280;
+    --success: #22c55e;
+    --danger: #ef4444;
 }
 
-h1 {
-    color: #2c3e50;
+html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--background);
+    font-family: var(--font);
+    color: var(--text);
+    min-height: 100vh;
 }
 
-#status {
-    margin: 1em 0;
+.container {
+    max-width: 800px;
+    margin: 2em auto;
+    padding: 1.5em;
 }
 
-form {
-    border: 1px solid #ccc;
-    padding: 1em;
-    border-radius: 8px;
-    max-width: 400px;
+header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 2em;
+}
+
+header h1 {
+    font-size: 2.2em;
+    font-weight: 600;
+    margin-bottom: 0.5em;
+    letter-spacing: -1px;
+}
+
+.connection-bar {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+}
+
+.status {
+    font-weight: 600;
+    padding: 0.2em 0.8em;
+    border-radius: var(--radius);
+    background: var(--secondary);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    transition: background 0.2s, color 0.2s;
+}
+
+.status.connected {
+    background: var(--success);
+    color: #fff;
+    border: none;
+}
+
+.status.disconnected {
+    background: var(--danger);
+    color: #fff;
+    border: none;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    gap: 2em;
+}
+
+.card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    padding: 2em 1.5em;
+    border: 1px solid var(--border);
+    margin-bottom: 1em;
+}
+
+.card h2 {
+    margin-top: 0;
+    font-size: 1.3em;
+    font-weight: 600;
+    margin-bottom: 1em;
+}
+
+.settings-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.7em;
+    font-size: 1.05em;
+}
+
+.value {
+    font-family: monospace;
+    color: var(--primary);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1em 2em;
 }
 
 label {
-    display: block;
-    margin: 0.5em 0;
+    display: flex;
+    flex-direction: column;
+    font-size: 0.98em;
+    font-weight: 500;
+    color: var(--muted);
+    gap: 0.3em;
+}
+
+input[type="text"] {
+    padding: 0.5em 0.7em;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 1em;
+    background: var(--secondary);
+    color: var(--text);
+    transition: border 0.2s;
+}
+
+input[type="text"]:focus {
+    border: 1.5px solid var(--primary);
+    outline: none;
+    background: #fff;
 }
 
 button {
-    margin: 0.5em 0.5em 0.5em 0;
+    padding: 0.6em 1.4em;
+    border-radius: var(--radius);
+    border: none;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    margin-top: 1em;
+}
+
+button.primary {
+    background: var(--primary);
+    color: #fff;
+}
+
+button.primary:hover {
+    background: var(--primary-hover);
+}
+
+button.secondary {
+    background: var(--secondary);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+}
+
+button.secondary:hover {
+    background: var(--primary);
+    color: #fff;
+}
+
+.terminal-section textarea {
+    width: 100%;
+    background: #18181b;
+    color: #0f0;
+    font-family: 'Fira Mono', 'Consolas', monospace;
+    font-size: 1em;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 1em;
+    resize: vertical;
+    min-height: 180px;
+    box-sizing: border-box;
+}
+
+@media (max-width: 700px) {
+    .container {
+        padding: 0.5em;
+    }
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    .card {
+        padding: 1em 0.5em;
+    }
 }

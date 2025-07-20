@@ -15,6 +15,9 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
 
 namespace AxisDriver {
 
+struct VersionMessage;
+struct VersionMessageBuilder;
+
 struct I2CAddressMessage;
 struct I2CAddressMessageBuilder;
 
@@ -29,6 +32,67 @@ struct MacAddressMessageBuilder;
 
 struct SaveConfigurationMessage;
 struct SaveConfigurationMessageBuilder;
+
+struct VersionMessage FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef VersionMessageBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_MAJOR = 4,
+    VT_MINOR = 6,
+    VT_PATCH = 8
+  };
+  uint16_t major() const {
+    return GetField<uint16_t>(VT_MAJOR, 0);
+  }
+  uint16_t minor() const {
+    return GetField<uint16_t>(VT_MINOR, 0);
+  }
+  uint16_t patch() const {
+    return GetField<uint16_t>(VT_PATCH, 0);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint16_t>(verifier, VT_MAJOR, 2) &&
+           VerifyField<uint16_t>(verifier, VT_MINOR, 2) &&
+           VerifyField<uint16_t>(verifier, VT_PATCH, 2) &&
+           verifier.EndTable();
+  }
+};
+
+struct VersionMessageBuilder {
+  typedef VersionMessage Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_major(uint16_t major) {
+    fbb_.AddElement<uint16_t>(VersionMessage::VT_MAJOR, major, 0);
+  }
+  void add_minor(uint16_t minor) {
+    fbb_.AddElement<uint16_t>(VersionMessage::VT_MINOR, minor, 0);
+  }
+  void add_patch(uint16_t patch) {
+    fbb_.AddElement<uint16_t>(VersionMessage::VT_PATCH, patch, 0);
+  }
+  explicit VersionMessageBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<VersionMessage> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<VersionMessage>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<VersionMessage> CreateVersionMessage(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint16_t major = 0,
+    uint16_t minor = 0,
+    uint16_t patch = 0) {
+  VersionMessageBuilder builder_(_fbb);
+  builder_.add_patch(patch);
+  builder_.add_minor(minor);
+  builder_.add_major(major);
+  return builder_.Finish();
+}
 
 struct I2CAddressMessage FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef I2CAddressMessageBuilder Builder;

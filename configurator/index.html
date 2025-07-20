@@ -1,39 +1,57 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Axis Driver Configurator</title>
-    <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css?family=Inter:400,600&display=swap" rel="stylesheet">
 </head>
 <body>
-    <script>
-      document.body.innerHTML = `
-        <div style="font-family: monospace; max-width: 700px; margin: 2em auto;">
-          <button id="connectBtn">Connect</button>
-          <span id="status">Disconnected</span>
-          <div id="settings" style="margin-top:2em; display:none;">
-            <h2>Ethernet Settings</h2>
-            <div>Port: <span id="eth_port">-</span></div>
-            <div>IP Address: <span id="eth_ip">-</span></div>
-            <button id="refreshBtn">Read Settings</button>
-          </div>
-          <form id="haForm" style="margin-top:2em;">
-            <h2>Home Assistant Parameters</h2>
-            <label>HA Enable: <input type="text" id="ha_enable"></label>
-            <label>HA Mode: <input type="text" id="ha_mode"></label>
-            <label>HA IP Address: <input type="text" id="ha_ip_address"></label>
-            <label>HA Velocity Switch On Speed: <input type="text" id="ha_vel_switch_on"></label>
-            <label>HA Velocity Switch Off Speed: <input type="text" id="ha_vel_switch_off"></label>
-            <label>HA Position Switch On Position: <input type="text" id="ha_pos_switch_on"></label>
-            <label>HA Position Switch Off Position: <input type="text" id="ha_pos_switch_off"></label>
-            <label>HA Velocity Slider Min: <input type="text" id="ha_vel_slider_min"></label>
-            <label>HA Velocity Slider Max: <input type="text" id="ha_vel_slider_max"></label>
-            <label>HA Position Slider Min: <input type="text" id="ha_pos_slider_min"></label>
-            <label>HA Position Slider Max: <input type="text" id="ha_pos_slider_max"></label>
-            <label>HA MQTT User: <input type="text" id="ha_mqtt_user"></label>
-            <label>HA MQTT Password: <input type="text" id="ha_mqtt_password"></label>
-            <label>HA MQTT Name: <input type="text" id="ha_mqtt_name"></label>
+  <div class="container">
+    <header>
+      <h1>Axis Driver Configurator</h1>
+      <div class="connection-bar">
+        <button id="connectBtn" class="primary">Connect</button>
+        <span id="status" class="status disconnected">Disconnected</span>
+      </div>
+    </header>
+    <main>
+      <section id="settings" class="card" style="display:none;">
+        <h2>Ethernet Settings</h2>
+        <div class="settings-row">
+          <span>Port:</span>
+          <span id="eth_port" class="value">-</span>
+        </div>
+        <div class="settings-row">
+          <span>IP Address:</span>
+          <span id="eth_ip" class="value">-</span>
+        </div>
+        <button id="refreshBtn" class="secondary">Read Settings</button>
+      </section>
+      <form id="haForm" class="card">
+        <h2>Home Assistant Parameters</h2>
+        <div class="form-grid">
+          <label>HA Enable <input type="text" id="ha_enable"></label>
+          <label>HA Mode <input type="text" id="ha_mode"></label>
+          <label>HA IP Address <input type="text" id="ha_ip_address"></label>
+          <label>HA Velocity Switch On Speed <input type="text" id="ha_vel_switch_on"></label>
+          <label>HA Velocity Switch Off Speed <input type="text" id="ha_vel_switch_off"></label>
+          <label>HA Position Switch On Position <input type="text" id="ha_pos_switch_on"></label>
+          <label>HA Position Switch Off Position <input type="text" id="ha_pos_switch_off"></label>
+          <label>HA Velocity Slider Min <input type="text" id="ha_vel_slider_min"></label>
+          <label>HA Velocity Slider Max <input type="text" id="ha_vel_slider_max"></label>
+          <label>HA Position Slider Min <input type="text" id="ha_pos_slider_min"></label>
+          <label>HA Position Slider Max <input type="text" id="ha_pos_slider_max"></label>
+          <label>HA MQTT User <input type="text" id="ha_mqtt_user"></label>
+          <label>HA MQTT Password <input type="text" id="ha_mqtt_password"></label>
+          <label>HA MQTT Name <input type="text" id="ha_mqtt_name"></label>
+          <label>HA MQTT Icon <input type="text" id="ha_mqtt_icon"></label>
+        </div>
+        <button type="button" id="setHaBtn" class="primary">Set</button>
+      </form>
+      <section class="card terminal-section">
+        <h2>Terminal</h2>
+        <textarea id="terminal" rows="10" cols="80" readonly></textarea>
+      </section>
+    </main>
+  </div>
+  <script src="AxisMessages.js"></script>
+  <script src="main.js"></script>
             <label>HA MQTT Icon: <input type="text" id="ha_mqtt_icon"></label>
             <button type="button" id="setHaBtn">Set</button>
           </form>

@@ -1,79 +1,79 @@
 // Set Home Assistant parameters event
 const setHaBtn = document.getElementById('setHaBtn');
 if (setHaBtn) {
-  setHaBtn.addEventListener('click', async () => {
-    if (!writer || !port) {
-      printToTerminal('Not connected to device.\n');
-      return;
-    }
-    // Collect values from text boxes
-    const ha_enable = parseInt(document.getElementById('ha_enable').value) || 0;
-    const ha_mode = parseInt(document.getElementById('ha_mode').value) || 0;
-    // IP address as 4 bytes
-    const ha_ip_str = document.getElementById('ha_ip_address').value;
-    const ha_ip_parts = ha_ip_str.split('.').map(x => parseInt(x) || 0);
-    const ha_ip_address = new Uint8Array(4);
-    for (let i = 0; i < 4; ++i) ha_ip_address[i] = ha_ip_parts[i] || 0;
-    const ha_vel_switch_on = parseFloat(document.getElementById('ha_vel_switch_on').value) || 0;
-    const ha_vel_switch_off = parseFloat(document.getElementById('ha_vel_switch_off').value) || 0;
-    const ha_pos_switch_on = parseFloat(document.getElementById('ha_pos_switch_on').value) || 0;
-    const ha_pos_switch_off = parseFloat(document.getElementById('ha_pos_switch_off').value) || 0;
-    const ha_vel_slider_min = parseFloat(document.getElementById('ha_vel_slider_min').value) || 0;
-    const ha_vel_slider_max = parseFloat(document.getElementById('ha_vel_slider_max').value) || 0;
-    const ha_pos_slider_min = parseFloat(document.getElementById('ha_pos_slider_min').value) || 0;
-    const ha_pos_slider_max = parseFloat(document.getElementById('ha_pos_slider_max').value);
-    console.log('HA Settings:', {
-      ha_enable,
-      ha_mode,
-      ha_ip_address: Array.from(ha_ip_address),
-      ha_vel_switch_on,
-      ha_vel_switch_off,
-      ha_pos_switch_on,
-      ha_pos_switch_off,
-      ha_vel_slider_min,
-      ha_vel_slider_max,
-      ha_pos_slider_min,
-      ha_pos_slider_max
-    });
-    // Strings as 32-byte arrays
-    function strToBytes(str) {
-      const encoder = new TextEncoder();
-      const bytes = encoder.encode(str);
-      const arr = new Uint8Array(32);
-      arr.set(bytes.slice(0, 32));
-      return arr;
-    }
-    const ha_mqtt_user = strToBytes(document.getElementById('ha_mqtt_user').value);
-    const ha_mqtt_password = strToBytes(document.getElementById('ha_mqtt_password').value);
-    const ha_mqtt_name = strToBytes(document.getElementById('ha_mqtt_name').value);
-    const ha_mqtt_icon = strToBytes(document.getElementById('ha_mqtt_icon').value);
+    setHaBtn.addEventListener('click', async () => {
+        if (!writer || !port) {
+            printToTerminal('Not connected to device.\n');
+            return;
+        }
+        // Collect values from text boxes
+        const ha_enable = parseInt(document.getElementById('ha_enable').value) || 0;
+        const ha_mode = parseInt(document.getElementById('ha_mode').value) || 0;
+        // IP address as 4 bytes
+        const ha_ip_str = document.getElementById('ha_ip_address').value;
+        const ha_ip_parts = ha_ip_str.split('.').map(x => parseInt(x) || 0);
+        const ha_ip_address = new Uint8Array(4);
+        for (let i = 0; i < 4; ++i) ha_ip_address[i] = ha_ip_parts[i] || 0;
+        const ha_vel_switch_on = parseFloat(document.getElementById('ha_vel_switch_on').value) || 0;
+        const ha_vel_switch_off = parseFloat(document.getElementById('ha_vel_switch_off').value) || 0;
+        const ha_pos_switch_on = parseFloat(document.getElementById('ha_pos_switch_on').value) || 0;
+        const ha_pos_switch_off = parseFloat(document.getElementById('ha_pos_switch_off').value) || 0;
+        const ha_vel_slider_min = parseFloat(document.getElementById('ha_vel_slider_min').value) || 0;
+        const ha_vel_slider_max = parseFloat(document.getElementById('ha_vel_slider_max').value) || 0;
+        const ha_pos_slider_min = parseFloat(document.getElementById('ha_pos_slider_min').value) || 0;
+        const ha_pos_slider_max = parseFloat(document.getElementById('ha_pos_slider_max').value);
+        console.log('HA Settings:', {
+            ha_enable,
+            ha_mode,
+            ha_ip_address: Array.from(ha_ip_address),
+            ha_vel_switch_on,
+            ha_vel_switch_off,
+            ha_pos_switch_on,
+            ha_pos_switch_off,
+            ha_vel_slider_min,
+            ha_vel_slider_max,
+            ha_pos_slider_min,
+            ha_pos_slider_max
+        });
+        // Strings as 32-byte arrays
+        function strToBytes(str) {
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(str);
+            const arr = new Uint8Array(32);
+            arr.set(bytes.slice(0, 32));
+            return arr;
+        }
+        const ha_mqtt_user = strToBytes(document.getElementById('ha_mqtt_user').value);
+        const ha_mqtt_password = strToBytes(document.getElementById('ha_mqtt_password').value);
+        const ha_mqtt_name = strToBytes(document.getElementById('ha_mqtt_name').value);
+        const ha_mqtt_icon = strToBytes(document.getElementById('ha_mqtt_icon').value);
 
-    // Send all set messages
-    const setMessages = [
-      { builder: buildHAEnableMessage, id: MessageTypes.SetHAEnableId, value: ha_enable },
-      { builder: buildHAModeMessage, id: MessageTypes.SetHAModeId, value: ha_mode },
-      { builder: buildHAIpAddressMessage, id: MessageTypes.SetHAIpAddressId, value: ha_ip_address },
-      { builder: buildHAVelocitySwitchOnSpeedMessage, id: MessageTypes.SetHAVelocitySwitchOnSpeedId, value: ha_vel_switch_on },
-      { builder: buildHAVelocitySwitchOffSpeedMessage, id: MessageTypes.SetHAVelocitySwitchOffSpeedId, value: ha_vel_switch_off },
-      { builder: buildHAPositionSwitchOnPositionMessage, id: MessageTypes.SetHAPositionSwitchOnPositionId, value: ha_pos_switch_on },
-      { builder: buildHAPositionSwitchOffPositionMessage, id: MessageTypes.SetHAPositionSwitchOffPositionId, value: ha_pos_switch_off },
-      { builder: buildHAVelocitySliderMinMessage, id: MessageTypes.SetHAVelocitySliderMinId, value: ha_vel_slider_min },
-      { builder: buildHAVelocitySliderMaxMessage, id: MessageTypes.SetHAVelocitySliderMaxId, value: ha_vel_slider_max },
-      { builder: buildHAPositionSliderMinMessage, id: MessageTypes.SetHAPositionSliderMinId, value: ha_pos_slider_min },
-      { builder: buildHAPositionSliderMaxMessage, id: MessageTypes.SetHAPositionSliderMaxId, value: ha_pos_slider_max },
-      { builder: buildHAMqttUserMessage, id: MessageTypes.SetHAMqttUserId, value: ha_mqtt_user },
-      { builder: buildHAMqttPasswordMessage, id: MessageTypes.SetHAMqttPasswordId, value: ha_mqtt_password },
-      { builder: buildHAMqttNameMessage, id: MessageTypes.SetHAMqttNameId, value: ha_mqtt_name },
-      { builder: buildHAMqttIconMessage, id: MessageTypes.SetHAMqttIconId, value: ha_mqtt_icon },
-    ];
-    for (const msg of setMessages) {
-      let data = msg.builder(msg.id, msg.value);
-      await writer.write(data);
-      await new Promise(resolve => setTimeout(resolve, 100));
-        readLoop(); // Process any incoming messages
-    }
-    printToTerminal('Set messages sent.\n');
-  });
+        // Send all set messages
+        const setMessages = [
+            { builder: buildHAEnableMessage, id: MessageTypes.SetHAEnableId, value: ha_enable },
+            { builder: buildHAModeMessage, id: MessageTypes.SetHAModeId, value: ha_mode },
+            { builder: buildHAIpAddressMessage, id: MessageTypes.SetHAIpAddressId, value: ha_ip_address },
+            { builder: buildHAVelocitySwitchOnSpeedMessage, id: MessageTypes.SetHAVelocitySwitchOnSpeedId, value: ha_vel_switch_on },
+            { builder: buildHAVelocitySwitchOffSpeedMessage, id: MessageTypes.SetHAVelocitySwitchOffSpeedId, value: ha_vel_switch_off },
+            { builder: buildHAPositionSwitchOnPositionMessage, id: MessageTypes.SetHAPositionSwitchOnPositionId, value: ha_pos_switch_on },
+            { builder: buildHAPositionSwitchOffPositionMessage, id: MessageTypes.SetHAPositionSwitchOffPositionId, value: ha_pos_switch_off },
+            { builder: buildHAVelocitySliderMinMessage, id: MessageTypes.SetHAVelocitySliderMinId, value: ha_vel_slider_min },
+            { builder: buildHAVelocitySliderMaxMessage, id: MessageTypes.SetHAVelocitySliderMaxId, value: ha_vel_slider_max },
+            { builder: buildHAPositionSliderMinMessage, id: MessageTypes.SetHAPositionSliderMinId, value: ha_pos_slider_min },
+            { builder: buildHAPositionSliderMaxMessage, id: MessageTypes.SetHAPositionSliderMaxId, value: ha_pos_slider_max },
+            { builder: buildHAMqttUserMessage, id: MessageTypes.SetHAMqttUserId, value: ha_mqtt_user },
+            { builder: buildHAMqttPasswordMessage, id: MessageTypes.SetHAMqttPasswordId, value: ha_mqtt_password },
+            { builder: buildHAMqttNameMessage, id: MessageTypes.SetHAMqttNameId, value: ha_mqtt_name },
+            { builder: buildHAMqttIconMessage, id: MessageTypes.SetHAMqttIconId, value: ha_mqtt_icon },
+        ];
+        for (const msg of setMessages) {
+            let data = msg.builder(msg.id, msg.value);
+            await writer.write(data);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            readLoop(); // Process any incoming messages
+        }
+        printToTerminal('Set messages sent.\n');
+    });
 }
 
 
@@ -149,15 +149,16 @@ refreshBtn.addEventListener('click', async () => {
 async function readSettings() {
     // Only send requests, do not wait for responses
     const getterMessages = [
-         { builder: buildHAEnableMessage, id: MessageTypes.GetHAEnableId },
+        {builder:  buildGetVers}
+        { builder: buildHAEnableMessage, id: MessageTypes.GetHAEnableId },
         { builder: buildHAModeMessage, id: MessageTypes.GetHAModeId },
         { builder: buildHAIpAddressMessage, id: MessageTypes.GetHAIpAddressId },
-         { builder: buildHAVelocitySwitchOnSpeedMessage, id: MessageTypes.GetHAVelocitySwitchOnSpeedId },
-         { builder: buildHAVelocitySwitchOffSpeedMessage, id: MessageTypes.GetHAVelocitySwitchOffSpeedId },
-         { builder: buildHAPositionSwitchOnPositionMessage, id: MessageTypes.GetHAPositionSwitchOnPositionId },
-         { builder: buildHAPositionSwitchOffPositionMessage, id: MessageTypes.GetHAPositionSwitchOffPositionId },
-         { builder: buildHAVelocitySliderMinMessage, id: MessageTypes.GetHAVelocitySliderMinId },
-         { builder: buildHAVelocitySliderMaxMessage, id: MessageTypes.GetHAVelocitySliderMaxId },
+        { builder: buildHAVelocitySwitchOnSpeedMessage, id: MessageTypes.GetHAVelocitySwitchOnSpeedId },
+        { builder: buildHAVelocitySwitchOffSpeedMessage, id: MessageTypes.GetHAVelocitySwitchOffSpeedId },
+        { builder: buildHAPositionSwitchOnPositionMessage, id: MessageTypes.GetHAPositionSwitchOnPositionId },
+        { builder: buildHAPositionSwitchOffPositionMessage, id: MessageTypes.GetHAPositionSwitchOffPositionId },
+        { builder: buildHAVelocitySliderMinMessage, id: MessageTypes.GetHAVelocitySliderMinId },
+        { builder: buildHAVelocitySliderMaxMessage, id: MessageTypes.GetHAVelocitySliderMaxId },
         { builder: buildHAPositionSliderMinMessage, id: MessageTypes.GetHAPositionSliderMinId },
         { builder: buildHAPositionSliderMaxMessage, id: MessageTypes.GetHAPositionSliderMaxId },
         { builder: buildHAMqttUserMessage, id: MessageTypes.GetHAMqttUserId },
@@ -194,7 +195,7 @@ async function readLoop() {
             if (value) {
                 // Buffer the data for binary consumers
                 readBuffer.push(...value);
-                
+
                 if (value.some(byte => byte < 32 || byte > 126)) {
                     // Binary message, do not print
                 } else {

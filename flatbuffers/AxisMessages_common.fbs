@@ -77,14 +77,9 @@ enum MessageId : byte {
   GetHAMqttIconId
 }
 
-struct HeaderStruct {
+table Header {
   sync_bytes:uint (id: 0);
   message_type:ushort (id: 1);
-  body_size:ushort (id: 2);
-}
-
-table Header {
-  header:Header;
 }
 
 table Footer {

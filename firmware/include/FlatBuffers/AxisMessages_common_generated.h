@@ -21,6 +21,189 @@ struct HeaderBuilder;
 struct Footer;
 struct FooterBuilder;
 
+enum LedStates : int8_t {
+  LedStates_OFF = 0,
+  LedStates_FLASH_ERROR = 1,
+  LedStates_ERROR = 2,
+  LedStates_BOOTUP = 3,
+  LedStates_RAINBOW = 4,
+  LedStates_SOLID = 5,
+  LedStates_MAX_VALUE = 6,
+  LedStates_MIN = LedStates_OFF,
+  LedStates_MAX = LedStates_MAX_VALUE
+};
+
+inline const LedStates (&EnumValuesLedStates())[7] {
+  static const LedStates values[] = {
+    LedStates_OFF,
+    LedStates_FLASH_ERROR,
+    LedStates_ERROR,
+    LedStates_BOOTUP,
+    LedStates_RAINBOW,
+    LedStates_SOLID,
+    LedStates_MAX_VALUE
+  };
+  return values;
+}
+
+inline const char * const *EnumNamesLedStates() {
+  static const char * const names[8] = {
+    "OFF",
+    "FLASH_ERROR",
+    "ERROR",
+    "BOOTUP",
+    "RAINBOW",
+    "SOLID",
+    "MAX_VALUE",
+    nullptr
+  };
+  return names;
+}
+
+inline const char *EnumNameLedStates(LedStates e) {
+  if (::flatbuffers::IsOutRange(e, LedStates_OFF, LedStates_MAX_VALUE)) return "";
+  const size_t index = static_cast<size_t>(e);
+  return EnumNamesLedStates()[index];
+}
+
+enum MotorStates : int8_t {
+  MotorStates_OFF = 0,
+  MotorStates_POSITION = 1,
+  MotorStates_VELOCITY = 2,
+  MotorStates_VELOCITY_STEP = 3,
+  MotorStates_IDLE_ON = 4,
+  MotorStates_HOME = 5,
+  MotorStates_MIN = MotorStates_OFF,
+  MotorStates_MAX = MotorStates_HOME
+};
+
+inline const MotorStates (&EnumValuesMotorStates())[6] {
+  static const MotorStates values[] = {
+    MotorStates_OFF,
+    MotorStates_POSITION,
+    MotorStates_VELOCITY,
+    MotorStates_VELOCITY_STEP,
+    MotorStates_IDLE_ON,
+    MotorStates_HOME
+  };
+  return values;
+}
+
+inline const char * const *EnumNamesMotorStates() {
+  static const char * const names[7] = {
+    "OFF",
+    "POSITION",
+    "VELOCITY",
+    "VELOCITY_STEP",
+    "IDLE_ON",
+    "HOME",
+    nullptr
+  };
+  return names;
+}
+
+inline const char *EnumNameMotorStates(MotorStates e) {
+  if (::flatbuffers::IsOutRange(e, MotorStates_OFF, MotorStates_HOME)) return "";
+  const size_t index = static_cast<size_t>(e);
+  return EnumNamesMotorStates()[index];
+}
+
+enum MotorBrake : int8_t {
+  MotorBrake_NORMAL = 0,
+  MotorBrake_FREEWHEELING = 1,
+  MotorBrake_STRONG_BRAKING = 2,
+  MotorBrake_BRAKING = 3,
+  MotorBrake_MIN = MotorBrake_NORMAL,
+  MotorBrake_MAX = MotorBrake_BRAKING
+};
+
+inline const MotorBrake (&EnumValuesMotorBrake())[4] {
+  static const MotorBrake values[] = {
+    MotorBrake_NORMAL,
+    MotorBrake_FREEWHEELING,
+    MotorBrake_STRONG_BRAKING,
+    MotorBrake_BRAKING
+  };
+  return values;
+}
+
+inline const char * const *EnumNamesMotorBrake() {
+  static const char * const names[5] = {
+    "NORMAL",
+    "FREEWHEELING",
+    "STRONG_BRAKING",
+    "BRAKING",
+    nullptr
+  };
+  return names;
+}
+
+inline const char *EnumNameMotorBrake(MotorBrake e) {
+  if (::flatbuffers::IsOutRange(e, MotorBrake_NORMAL, MotorBrake_BRAKING)) return "";
+  const size_t index = static_cast<size_t>(e);
+  return EnumNamesMotorBrake()[index];
+}
+
+enum HomeDirection : int8_t {
+  HomeDirection_CLOCKWISE = 0,
+  HomeDirection_COUNTERCLOCKWISE = 1,
+  HomeDirection_MIN = HomeDirection_CLOCKWISE,
+  HomeDirection_MAX = HomeDirection_COUNTERCLOCKWISE
+};
+
+inline const HomeDirection (&EnumValuesHomeDirection())[2] {
+  static const HomeDirection values[] = {
+    HomeDirection_CLOCKWISE,
+    HomeDirection_COUNTERCLOCKWISE
+  };
+  return values;
+}
+
+inline const char * const *EnumNamesHomeDirection() {
+  static const char * const names[3] = {
+    "CLOCKWISE",
+    "COUNTERCLOCKWISE",
+    nullptr
+  };
+  return names;
+}
+
+inline const char *EnumNameHomeDirection(HomeDirection e) {
+  if (::flatbuffers::IsOutRange(e, HomeDirection_CLOCKWISE, HomeDirection_COUNTERCLOCKWISE)) return "";
+  const size_t index = static_cast<size_t>(e);
+  return EnumNamesHomeDirection()[index];
+}
+
+enum PositionMode : int8_t {
+  PositionMode_ABSOLUTE = 0,
+  PositionMode_RELATIVE = 1,
+  PositionMode_MIN = PositionMode_ABSOLUTE,
+  PositionMode_MAX = PositionMode_RELATIVE
+};
+
+inline const PositionMode (&EnumValuesPositionMode())[2] {
+  static const PositionMode values[] = {
+    PositionMode_ABSOLUTE,
+    PositionMode_RELATIVE
+  };
+  return values;
+}
+
+inline const char * const *EnumNamesPositionMode() {
+  static const char * const names[3] = {
+    "ABSOLUTE",
+    "RELATIVE",
+    nullptr
+  };
+  return names;
+}
+
+inline const char *EnumNamePositionMode(PositionMode e) {
+  if (::flatbuffers::IsOutRange(e, PositionMode_ABSOLUTE, PositionMode_RELATIVE)) return "";
+  const size_t index = static_cast<size_t>(e);
+  return EnumNamesPositionMode()[index];
+}
+
 enum MessageId : int8_t {
   MessageId_GetVersionId = 0,
   MessageId_SetI2CAddressId = 1,
@@ -253,8 +436,7 @@ struct Header FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef HeaderBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_SYNC_BYTES = 4,
-    VT_MESSAGE_TYPE = 6,
-    VT_BODY_SIZE = 8
+    VT_MESSAGE_TYPE = 6
   };
   uint32_t sync_bytes() const {
     return GetField<uint32_t>(VT_SYNC_BYTES, 0);
@@ -262,14 +444,10 @@ struct Header FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   uint16_t message_type() const {
     return GetField<uint16_t>(VT_MESSAGE_TYPE, 0);
   }
-  uint16_t body_size() const {
-    return GetField<uint16_t>(VT_BODY_SIZE, 0);
-  }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint32_t>(verifier, VT_SYNC_BYTES, 4) &&
            VerifyField<uint16_t>(verifier, VT_MESSAGE_TYPE, 2) &&
-           VerifyField<uint16_t>(verifier, VT_BODY_SIZE, 2) &&
            verifier.EndTable();
   }
 };
@@ -283,9 +461,6 @@ struct HeaderBuilder {
   }
   void add_message_type(uint16_t message_type) {
     fbb_.AddElement<uint16_t>(Header::VT_MESSAGE_TYPE, message_type, 0);
-  }
-  void add_body_size(uint16_t body_size) {
-    fbb_.AddElement<uint16_t>(Header::VT_BODY_SIZE, body_size, 0);
   }
   explicit HeaderBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -301,11 +476,9 @@ struct HeaderBuilder {
 inline ::flatbuffers::Offset<Header> CreateHeader(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     uint32_t sync_bytes = 0,
-    uint16_t message_type = 0,
-    uint16_t body_size = 0) {
+    uint16_t message_type = 0) {
   HeaderBuilder builder_(_fbb);
   builder_.add_sync_bytes(sync_bytes);
-  builder_.add_body_size(body_size);
   builder_.add_message_type(message_type);
   return builder_.Finish();
 }
