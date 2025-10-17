@@ -16,44 +16,51 @@ public:
 };
 enum class MessageTypes : uint16_t
 {
-	GetVersionId = 0x0,
-	SetI2CAddressId = 0x1,
-	GetI2CAddressId = 0x2,
-	SetEthernetAddressId = 0x3,
-	GetEthernetAddressId = 0x4,
-	SetEthernetPortId = 0x5,
-	GetEthernetPortId = 0x6,
-	GetMacAddressId = 0x7,
-	SaveConfigurationId = 0x8,
-	SetLedStateId = 0x9,
-	GetLedStateId = 0xA,
-	SetLedColorId = 0xB,
-	GetLedColorId = 0xC,
-	SetHomeDirectionId = 0xD,
-	GetHomeDirectionId = 0xE,
-	SetHomeThresholdId = 0xF,
-	GetHomeThresholdId = 0x10,
-	SetHomeSpeedId = 0x11,
-	GetHomeSpeedId = 0x12,
-	GetHomedStateId = 0x13,
-	HomeId = 0x14,
-	SetMotorStateId = 0x15,
-	GetMotorStateId = 0x16,
-	SetMotorBrakeId = 0x17,
-	GetMotorBrakeId = 0x18,
-	SetMaxSpeedId = 0x19,
-	GetMaxSpeedId = 0x1A,
-	SetAccelerationId = 0x1B,
-	GetAccelerationId = 0x1C,
-	SetCurrentPositionId = 0x1D,
-	GetCurrentPositionId = 0x1E,
-	SetTargetPositionId = 0x1F,
-	GetTargetPositionId = 0x20,
-	SetRelativeTargetPositionId = 0x21,
-	SetVelocityId = 0x22,
-	GetVelocityId = 0x23,
-	SetVelocityAndStepsId = 0x24,
-	StartPathId = 0x25,
+	AckId = 0x0100,
+	GetVersionId = 0x0101,
+	SetI2CAddressId = 0x0102,
+	GetI2CAddressId = 0x0103,
+	SetEthernetAddressId = 0x0104,
+	GetEthernetAddressId = 0x0105,
+	SetEthernetPortId = 0x0106,
+	GetEthernetPortId = 0x0107,
+	GetMacAddressId = 0x0108,
+	SaveConfigurationId = 0x0109,
+	SetLedStateId = 0x010A,
+	GetLedStateId = 0x010B,
+	SetLedColorId = 0x010C,
+	GetLedColorId = 0x010D,
+	SetHomeDirectionId = 0x010E,
+	GetHomeDirectionId = 0x010F,
+	SetHomeThresholdId = 0x0110,
+	GetHomeThresholdId = 0x0111,
+	SetHomeSpeedId = 0x0112,
+	GetHomeSpeedId = 0x0113,
+	GetHomedStateId = 0x0114,
+	HomeId = 0x0115,
+	SetMotorStateId = 0x0116,
+	GetMotorStateId = 0x0117,
+	SetMotorBrakeId = 0x0118,
+	GetMotorBrakeId = 0x0119,
+	SetMaxSpeedId = 0x011A,
+	GetMaxSpeedId = 0x011B,
+	SetAccelerationId = 0x011C,
+	GetAccelerationId = 0x011D,
+	SetCurrentPositionId = 0x011E,
+	GetCurrentPositionId = 0x011F,
+	SetTargetPositionId = 0x0120,
+	GetTargetPositionId = 0x0121,
+	SetRelativeTargetPositionId = 0x0122,
+	SetVelocityId = 0x0123,
+	GetVelocityId = 0x0124,
+	SetVelocityAndStepsId = 0x0125,
+	StartPathId = 0x0126,
+};
+
+enum class StatusCodes : uint8_t {
+	SUCCESS = 0x0,
+	ERROR = 0x1,
+	INVALID_COMMAND = 0x2,
 };
 
 enum class LedStates{
@@ -132,6 +139,13 @@ PACKEDSTRUCT DoubleMessage
 	Footer footer;
 };
 typedef U32Message VersionMessage;
+PACKEDSTRUCT AckMessage
+{
+	Header header;
+	uint16_t ack_message_type;
+	uint8_t status;
+	Footer footer;
+};
 typedef U8Message I2CAddressMessage;
 typedef U32Message EthernetAddressMessage;
 typedef U32Message EthernetPortMessage;
@@ -149,7 +163,7 @@ PACKEDSTRUCT LedColorMessage
 	uint8_t ledColor[3];
 	Footer footer;
 };
-typedef S8Message HomeDirectionMessage;
+typedef U8Message HomeDirectionMessage;
 typedef U32Message HomeSpeedMessage;
 typedef U32Message HomeThresholdMessage;
 typedef U8Message HomedStateMessage;

@@ -3,7 +3,7 @@ import threading
 import time
 import socket
 import re
-from AxisMessages import *
+
 
 class Axis:
     """

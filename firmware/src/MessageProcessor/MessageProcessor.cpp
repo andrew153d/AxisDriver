@@ -37,14 +37,28 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
 
   // TODO: check for checksum
 
-  //DEBUG_PRINTF("Received message type: 0x%x\n", hdr->message_type);
+  // DEBUG_PRINTF("Received message type: 0x%x\n", hdr->message_type);
 
   switch ((MessageTypes)hdr->message_type)
   {
+  case MessageTypes::GetVersionId: //0x0000
+  {
+    VersionMessage *msg = (VersionMessage *)&send_buffer[0];
+
+    msg->header.message_type = (uint16_t)MessageTypes::GetVersionId;
+    msg->header.body_size = sizeof(VersionMessage::value);
+    uint8_t *v_buf = (uint8_t *)&msg->value;
+    sscanf(FIRMWARE_VERSION, "%u.%u.%u.%u", &v_buf[0], &v_buf[1], &v_buf[2], &v_buf[3]);
+    msg->footer.checksum = 0;
+    SendMsg(send_buffer, sizeof(VersionMessage));
+    // DEBUG_PRINTF("0x%8X\n", msg->value);
+    break;
+  }
+
   case MessageTypes::SetLedColorId:
   {
     LedColorMessage *msg = (LedColorMessage *)recv_bytes;
-    // DEBUG_PRINTF("Setting LED color to: R=%d, G=%d, B=%d\n", msg->ledColor.r, msg->ledColor.g, msg->ledColor.b);
+    // DEBUG_PRINTF("Setting LED color                                           to: R=%d, G=%d, B=%d\n", msg->ledColor.r, msg->ledColor.g, msg->ledColor.b);
     addrLedController.SetLEDColor(CRGB(msg->ledColor[0], msg->ledColor[1], msg->ledColor[2]));
     break;
   }
@@ -59,20 +73,6 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->ledColor[2] = addrLedController.GetLedColor().b;
     msg->footer.checksum = 0;
     SendMsg(recv_bytes, sizeof(LedColorMessage));
-    break;
-  }
-
-  case MessageTypes::GetVersionId:
-  {
-    VersionMessage *msg = (VersionMessage *)&send_buffer[0];
-    
-    msg->header.message_type = (uint16_t)MessageTypes::GetVersionId;
-    msg->header.body_size = sizeof(VersionMessage::value);
-    uint8_t *v_buf = (uint8_t *)&msg->value;
-    sscanf(FIRMWARE_VERSION, "%u.%u.%u.%u", &v_buf[0], &v_buf[1], &v_buf[2], &v_buf[3]);
-    // DEBUG_PRINTF("0x%8X\n", msg->value);
-    msg->footer.checksum = 0;
-    SendMsg(send_buffer, sizeof(VersionMessage));
     break;
   }
 
@@ -228,7 +228,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
   case MessageTypes::GetCurrentPositionId:
   {
     DEBUG_PRINTLN("Getting Current Position");
-    CurrentPositionMessage *msg = (CurrentPositionMessage*)send_buffer;
+    CurrentPositionMessage *msg = (CurrentPositionMessage *)send_buffer;
     msg->header.message_type = (uint16_t)MessageTypes::GetCurrentPositionId;
     msg->header.body_size = sizeof(CurrentPositionMessage::value);
     msg->value = motorController.GetPosition();
@@ -240,28 +240,28 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
   case MessageTypes::SetTargetPositionId:
   {
     TargetPositionMessage *msg = (TargetPositionMessage *)recv_bytes;
-    //DEBUG_PRINTF("Setting Motor Position to: %f\n", msg->value);
+    // DEBUG_PRINTF("Setting Motor Position to: %f\n", msg->value);
     motorController.SetPositionTarget(msg->value);
     break;
   }
 
-  // case MessageTypes::GetTargetPositionId:
-  // {
-  //   PositionMessage *msg = (GetPositionMessage *)&send_buffer[0];
-  //   msg->header.message_type = (uint16_t)MessageTypes::GetTargetPositionId;
-  //   msg->header.body_size = sizeof(GetPositionMessage::value);
-  //   msg->value = motorController.GetPositionTarget();
-  //   msg->footer.checksum = 0;
-  //   SendMsg(send_buffer, sizeof(GetPositionMessage));
-  //   // DEBUG_PRINTF("Sending Motor Position: %f\n", motorController.GetPositionTarget());
-  //   break;
-  // }
+    // case MessageTypes::GetTargetPositionId:
+    // {
+    //   PositionMessage *msg = (GetPositionMessage *)&send_buffer[0];
+    //   msg->header.message_type = (uint16_t)MessageTypes::GetTargetPositionId;
+    //   msg->header.body_size = sizeof(GetPositionMessage::value);
+    //   msg->value = motorController.GetPositionTarget();
+    //   msg->footer.checksum = 0;
+    //   SendMsg(send_buffer, sizeof(GetPositionMessage));
+    //   // DEBUG_PRINTF("Sending Motor Position: %f\n", motorController.GetPositionTarget());
+    //   break;
+    // }
 
   case MessageTypes::SetRelativeTargetPositionId:
   {
     RelativeTargetPositionMessage *msg = (RelativeTargetPositionMessage *)recv_bytes;
     motorController.SetPositionTargetRelative(msg->value);
-    //DEBUG_PRINTF("Setting Motor Position Relative: %f\n", msg->value);
+    // DEBUG_PRINTF("Setting Motor Position Relative: %f\n", msg->value);
     break;
   }
 
@@ -360,7 +360,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
   {
     VelocityAndStepsMessage *msg = (VelocityAndStepsMessage *)&recv_bytes[0];
     motorController.AddVelocityStep(msg->velocity, msg->steps, msg->positionMode);
-    //DEBUG_PRINTF("Velocity: %d, Steps: %d, Position Mode: %d\n", msg->velocity, msg->steps, msg->positionMode);
+    // DEBUG_PRINTF("Velocity: %d, Steps: %d, Position Mode: %d\n", msg->velocity, msg->steps, msg->positionMode);
     break;
   }
 
@@ -374,7 +374,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
   }
 }
 
-void MessageProcessor::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size, IExternalInterface* calling_interface)
+void MessageProcessor::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size, IExternalInterface *calling_interface)
 {
   last_interface_ = calling_interface;
   if (recv_bytes_size == 0)
@@ -392,7 +392,7 @@ void MessageProcessor::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_byte
 
 void MessageProcessor::SendMsg(uint8_t *send_bytes, uint32_t send_bytes_size)
 {
-  if(last_interface_!=nullptr)
+  if (last_interface_ != nullptr)
   {
     last_interface_->SendMsg(send_bytes, send_bytes_size);
     return;
