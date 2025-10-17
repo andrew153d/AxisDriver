@@ -41,7 +41,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
 
   switch ((MessageTypes)hdr->message_type)
   {
-  case MessageTypes::GetVersionId: //0x0000
+  case MessageTypes::GetVersionId: // 0x0000
   {
     VersionMessage *msg = (VersionMessage *)&send_buffer[0];
 
@@ -52,6 +52,62 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->footer.checksum = 0;
     SendMsg(send_buffer, sizeof(VersionMessage));
     // DEBUG_PRINTF("0x%8X\n", msg->value);
+    break;
+  }
+
+  case MessageTypes::SetI2CAddressId:
+  {
+    I2CAddressMessage *msg = (I2CAddressMessage *)recv_bytes;
+    FlashStorage::GetI2CSettings()->address = msg->value;
+
+    AckMessage *ack_msg = (AckMessage *)&send_buffer[0];
+    ack_msg->header.message_type = (uint16_t)MessageTypes::AckId;
+    ack_msg->header.body_size = sizeof(AckMessage::ack_message_type) + sizeof(AckMessage::status);
+    ack_msg->ack_message_type = (uint16_t)MessageTypes::SetI2CAddressId;
+    ack_msg->status = (uint8_t)StatusCodes::SUCCESS;
+    ack_msg->footer.checksum = 0;
+    SendMsg(send_buffer, sizeof(AckMessage));
+
+    break;
+  }
+
+  case MessageTypes::GetI2CAddressId:
+  {
+    I2CAddressMessage *msg = (I2CAddressMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetI2CAddressId;
+    msg->header.body_size = sizeof(I2CAddressMessage::value);
+    msg->value = FlashStorage::GetI2CSettings()->address;
+    msg->footer.checksum = 0;
+    // DEBUG_PRINTF("Sending I2C Address: 0x%x\n", msg->value);
+    SendMsg(send_buffer, sizeof(I2CAddressMessage));
+    break;
+  }
+
+  case MessageTypes::SetEthernetAddressId:
+  {
+    EthernetAddressMessage *msg = (EthernetAddressMessage *)recv_bytes;
+    FlashStorage::GetEthernetSettings()->ip_address = msg->value;
+    
+    //Respond with Ack
+    AckMessage *ack_msg = (AckMessage *)&send_buffer[0];
+    ack_msg->header.message_type = (uint16_t)MessageTypes::AckId;
+    ack_msg->header.body_size = sizeof(AckMessage::ack_message_type) + sizeof(AckMessage::status);
+    ack_msg->ack_message_type = (uint16_t)MessageTypes::SetEthernetAddressId;
+    ack_msg->status = (uint8_t)StatusCodes::SUCCESS;
+    ack_msg->footer.checksum = 0;
+    SendMsg(send_buffer, sizeof(AckMessage));
+    break;
+  }
+
+  case MessageTypes::GetEthernetAddressId:
+  {
+    EthernetAddressMessage *msg = (EthernetAddressMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetEthernetAddressId;
+    msg->header.body_size = sizeof(EthernetAddressMessage::value);
+    msg->value = FlashStorage::GetEthernetSettings()->ip_address;
+    msg->footer.checksum = 0;
+    SendMsg(send_buffer, sizeof(EthernetAddressMessage));
+    // DEBUG_PRINTF("Sending IP Address: 0x%x\n", sizeof(IPAddressMessage));
     break;
   }
 
@@ -73,46 +129,6 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->ledColor[2] = addrLedController.GetLedColor().b;
     msg->footer.checksum = 0;
     SendMsg(recv_bytes, sizeof(LedColorMessage));
-    break;
-  }
-
-  case MessageTypes::SetI2CAddressId:
-  {
-    I2CAddressMessage *msg = (I2CAddressMessage *)recv_bytes;
-    FlashStorage::GetI2CSettings()->address = msg->value;
-    break;
-  }
-
-  case MessageTypes::GetI2CAddressId:
-  {
-    I2CAddressMessage *msg = (I2CAddressMessage *)&send_buffer[0];
-    msg->header.message_type = (uint16_t)MessageTypes::GetI2CAddressId;
-    msg->header.body_size = sizeof(I2CAddressMessage::value);
-    msg->value = FlashStorage::GetI2CSettings()->address;
-    msg->footer.checksum = 0;
-    // DEBUG_PRINTF("Sending I2C Address: 0x%x\n", msg->value);
-    SendMsg(send_buffer, sizeof(I2CAddressMessage));
-    break;
-  }
-
-  case MessageTypes::SetEthernetAddressId:
-  {
-    EthernetAddressMessage *msg = (EthernetAddressMessage *)recv_bytes;
-    FlashStorage::GetEthernetSettings()->ip_address = msg->value;
-    // DEBUG_PRINT("Setting IP Address: ");
-    // DEBUG_PRINTLN(IPAddress(msg->value));
-    break;
-  }
-
-  case MessageTypes::GetEthernetAddressId:
-  {
-    EthernetAddressMessage *msg = (EthernetAddressMessage *)&send_buffer[0];
-    msg->header.message_type = (uint16_t)MessageTypes::GetEthernetAddressId;
-    msg->header.body_size = sizeof(EthernetAddressMessage::value);
-    msg->value = FlashStorage::GetEthernetSettings()->ip_address;
-    msg->footer.checksum = 0;
-    SendMsg(send_buffer, sizeof(EthernetAddressMessage));
-    // DEBUG_PRINTF("Sending IP Address: 0x%x\n", sizeof(IPAddressMessage));
     break;
   }
 

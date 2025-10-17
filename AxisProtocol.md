@@ -24,17 +24,6 @@ All messages follow this basic structure:
 
 ## Message Types
 
-### 0x0101 - Get Version (GetVersionId)
-
-**Description**: Request firmware version information.
-
-| Byte Offset | Size | Field        | Description                  |
-| ----------- | ---- | ------------ | ---------------------------- |
-| 0-1         | 2    | message_type | 0x0101                       |
-| 2-3         | 2    | body_size    | 4                            |
-| 4-7         | 4    | version      | Firmware version as uint32_t |
-| 8-9         | 2    | checksum     | Message checksum             |
-
 ### 0x0100 - ACK (AckId)
 
 **Description**: Acknowledgment message for successful command reception and execution.
@@ -51,6 +40,18 @@ All messages follow this basic structure:
 - 0x0: SUCCESS - Command executed successfully
 - 0x1: ERROR - Command failed during execution
 - 0x2: INVALID_COMMAND - Unknown or malformed command
+
+### 0x0101 - Get Version (GetVersionId)
+
+**Description**: Request firmware version information.
+
+| Byte Offset | Size | Field        | Description                  |
+| ----------- | ---- | ------------ | ---------------------------- |
+| 0-1         | 2    | message_type | 0x0101                       |
+| 2-3         | 2    | body_size    | 4                            |
+| 4-7         | 4    | version      | Firmware version as uint32_t |
+| 8-9         | 2    | checksum     | Message checksum             |
+
 
 ### 0x0102 - Set I2C Address (SetI2CAddressId)
 
