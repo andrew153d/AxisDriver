@@ -22,7 +22,7 @@ long MotorController::degreesToSteps(double degrees)
 
 double MotorController::stepsToDegrees(long steps)
 {
-  return (steps / 64) * 360 / 200;
+  return (steps / 8) * 360 / 200;
 }
 
 void TC0_Handler()
@@ -343,32 +343,32 @@ uint32_t MotorController::GetAcceleration()
 
 void MotorController::SetPosition(double position)
 {
-  stepper.setCurrentPosition((long)position);
+  stepper.setCurrentPosition((long)degreesToSteps(position));
 }
 
 double MotorController::GetPosition()
 {
-  return stepper.currentPosition();
+  return stepsToDegrees(stepper.currentPosition());
 }
 
 void MotorController::SetPositionTargetRelative(double position)
 {
   // DEBUG_PRINTF("Steps: %f\n", position);
   SetMotorState(MotorStates::POSITION);
-  target_position += position;
+  target_position += degreesToSteps(position);
   stepper.moveTo(target_position);
 }
 
 void MotorController::SetPositionTarget(double position)
 {
   SetMotorState(MotorStates::POSITION);
-  target_position = position;
-  stepper.moveTo(position);
+  target_position = degreesToSteps(position);
+  stepper.moveTo(target_position);
 }
 
 double MotorController::GetPositionTarget()
 {
-  return target_position;
+  return stepsToDegrees(target_position);
 }
 
 void MotorController::SetVelocityTarget(double velocity)

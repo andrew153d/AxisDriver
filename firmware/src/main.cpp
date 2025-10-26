@@ -12,6 +12,7 @@
 #include "EthernetHAT/AxisMqtt.h"
 #include "AxisMessages.h"
 #include <cstdint>
+#include <cstdio>
 #include "Wire.h"
 #include "SPI.h"
 #include "DebugPrinter.h"
@@ -64,7 +65,8 @@ DeviceManager deviceManager(0xFFFFFFFF);
 void setup()
 {
   DEBUG_BEGIN(115200);
-  
+  Serial.begin(115200);
+
   Wire1.begin();
   Wire1.setClock(400000);
 
@@ -137,15 +139,14 @@ void EvaluateHatType()
   }
 }
 uint32_t loop_count = 0;
-uint32_t loop_count_timer = 0;
+uint32_t loop_count_timer = 15000;
 void loop()
 {
   loop_count++;
   if(millis()-loop_count_timer>1000)
   {
-    loop_count_timer = millis();
-    //DEBUG_PRINTF("%d loops per second\n", loop_count/1);
-    //DEBUG_PRINTF("Position: %f\n", encoderController.GetPositionDegrees());
+    DEBUG_PRINTF("Loops per second: %d\n", loop_count);
+    loop_count_timer=millis();
     loop_count=0;
   }
   manager.RunTasks();

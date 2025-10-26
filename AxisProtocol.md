@@ -141,157 +141,153 @@ All messages follow this basic structure:
 | 4           | 1    | save_flag    | 1 to save, 0 for no action |
 | 5-6         | 2    | checksum     | Message checksum           |
 
-### 0x010A - Set LED State (SetLedStateId)
 
-**Description**: Set the LED state/mode.
-
-| Byte Offset | Size | Field        | Description                    |
-| ----------- | ---- | ------------ | ------------------------------ |
-| 0-1         | 2    | message_type | 0x010A                         |
-| 2-3         | 2    | body_size    | 1                              |
-| 4           | 1    | led_state    | LED state (see LedStates enum) |
-| 5-6         | 2    | checksum     | Message checksum               |
-
-**LED States:**
-- 0x0: OFF
-- 0x1: FLASH_ERROR
-- 0x2: ERROR
-- 0x3: BOOTUP
-- 0x4: RAINBOW
-- 0x5: SOLID
-
-### 0x010B - Get LED State (GetLedStateId)
-
-**Description**: Request current LED state.
-
-| Byte Offset | Size | Field        | Description       |
-| ----------- | ---- | ------------ | ----------------- |
-| 0-1         | 2    | message_type | 0x010B            |
-| 2-3         | 2    | body_size    | 1                 |
-| 4           | 1    | led_state    | Current LED state |
-| 5-6         | 2    | checksum     | Message checksum  |
-
-### 0x010C - Set LED Color (SetLedColorId)
+### 0x0200 - Set LED Color (SetLedColorId)
 
 **Description**: Set the LED color (RGB values).
 
 | Byte Offset | Size | Field        | Description             |
 | ----------- | ---- | ------------ | ----------------------- |
-| 0-1         | 2    | message_type | 0x010C                  |
+| 0-1         | 2    | message_type | 0x0200                  |
 | 2-3         | 2    | body_size    | 3                       |
 | 4           | 1    | red          | Red component (0-255)   |
 | 5           | 1    | green        | Green component (0-255) |
 | 6           | 1    | blue         | Blue component (0-255)  |
 | 7-8         | 2    | checksum     | Message checksum        |
 
-### 0x010D - Get LED Color (GetLedColorId)
+
+### 0x0201 - Get LED Color (GetLedColorId)
 
 **Description**: Request current LED color.
 
 | Byte Offset | Size | Field        | Description             |
 | ----------- | ---- | ------------ | ----------------------- |
-| 0-1         | 2    | message_type | 0x010D                  |
+| 0-1         | 2    | message_type | 0x0201                  |
 | 2-3         | 2    | body_size    | 3                       |
 | 4           | 1    | red          | Current red component   |
 | 5           | 1    | green        | Current green component |
 | 6           | 1    | blue         | Current blue component  |
 | 7-8         | 2    | checksum     | Message checksum        |
 
-### 0x010E - Set Home Direction (SetHomeDirectionId)
+
+### 0x0202 - Add Led Step (AddLedStepId)
+
+**Description**: Add a timed LED step with a duration and color. Useful for sequencing LED patterns step-by-step.
+
+| Byte Offset | Size | Field        | Description                                |
+| ----------- | ---- | ------------ | ------------------------------------------ |
+| 0-1         | 2    | message_type | 0x0202                                     |
+| 2-3         | 2    | body_size    | 7                                          |
+| 4-7         | 4    | time_ms      | Duration/time in milliseconds (uint32_t)   |
+| 8           | 1    | red          | Red component (0-255)                      |
+| 9           | 1    | green        | Green component (0-255)                    |
+| 10          | 1    | blue         | Blue component (0-255)                     |
+| 11-12       | 2    | checksum     | Message checksum                           |
+
+
+### 0x0300 - Set Home Direction (SetHomeDirectionId)
 
 **Description**: Set the homing direction for the motor.
 
 | Byte Offset | Size | Field        | Description                                      |
 | ----------- | ---- | ------------ | ------------------------------------------------ |
-| 0-1         | 2    | message_type | 0x010E                                           |
+| 0-1         | 2    | message_type | 0x0300                                           |
 | 2-3         | 2    | body_size    | 1                                                |
 | 4           | 1    | direction    | Home direction (0=CLOCKWISE, 1=COUNTERCLOCKWISE) |
 | 5-6         | 2    | checksum     | Message checksum                                 |
 
-### 0x010F - Get Home Direction (GetHomeDirectionId)
+
+### 0x0301 - Get Home Direction (GetHomeDirectionId)
 
 **Description**: Request current homing direction.
 
 | Byte Offset | Size | Field        | Description            |
 | ----------- | ---- | ------------ | ---------------------- |
-| 0-1         | 2    | message_type | 0x010F                 |
+| 0-1         | 2    | message_type | 0x0301                 |
 | 2-3         | 2    | body_size    | 1                      |
 | 4           | 1    | direction    | Current home direction |
 | 5-6         | 2    | checksum     | Message checksum       |
 
-### 0x0110 - Set Home Threshold (SetHomeThresholdId)
+
+### 0x0302 - Set Home Threshold (SetHomeThresholdId)
 
 **Description**: Set the threshold value for homing detection.
 
 | Byte Offset | Size | Field        | Description                          |
 | ----------- | ---- | ------------ | ------------------------------------ |
-| 0-1         | 2    | message_type | 0x0110                               |
+| 0-1         | 2    | message_type | 0x0302                               |
 | 2-3         | 2    | body_size    | 4                                    |
 | 4-7         | 4    | threshold    | Home detection threshold as uint32_t |
 | 8-9         | 2    | checksum     | Message checksum                     |
 
-### 0x0111 - Get Home Threshold (GetHomeThresholdId)
+
+### 0x0303 - Get Home Threshold (GetHomeThresholdId)
 
 **Description**: Request current home threshold value.
 
 | Byte Offset | Size | Field        | Description            |
 | ----------- | ---- | ------------ | ---------------------- |
-| 0-1         | 2    | message_type | 0x0111                 |
+| 0-1         | 2    | message_type | 0x0303                 |
 | 2-3         | 2    | body_size    | 4                      |
 | 4-7         | 4    | threshold    | Current home threshold |
 | 8-9         | 2    | checksum     | Message checksum       |
 
-### 0x0112 - Set Home Speed (SetHomeSpeedId)
+
+### 0x0304 - Set Home Speed (SetHomeSpeedId)
 
 **Description**: Set the speed for homing operations.
 
 | Byte Offset | Size | Field        | Description            |
 | ----------- | ---- | ------------ | ---------------------- |
-| 0-1         | 2    | message_type | 0x0112                 |
+| 0-1         | 2    | message_type | 0x0304                 |
 | 2-3         | 2    | body_size    | 4                      |
 | 4-7         | 4    | speed        | Home speed as uint32_t |
 | 8-9         | 2    | checksum     | Message checksum       |
 
-### 0x0113 - Get Home Speed (GetHomeSpeedId)
+
+### 0x0305 - Get Home Speed (GetHomeSpeedId)
 
 **Description**: Request current homing speed.
 
 | Byte Offset | Size | Field        | Description        |
 | ----------- | ---- | ------------ | ------------------ |
-| 0-1         | 2    | message_type | 0x0113             |
+| 0-1         | 2    | message_type | 0x0305             |
 | 2-3         | 2    | body_size    | 4                  |
 | 4-7         | 4    | speed        | Current home speed |
 | 8-9         | 2    | checksum     | Message checksum   |
 
-### 0x0114 - Get Homed State (GetHomedStateId)
+
+### 0x0306 - Get Homed State (GetHomedStateId)
 
 **Description**: Request whether the motor has been homed.
 
 | Byte Offset | Size | Field        | Description                |
 | ----------- | ---- | ------------ | -------------------------- |
-| 0-1         | 2    | message_type | 0x0114                     |
+| 0-1         | 2    | message_type | 0x0306                     |
 | 2-3         | 2    | body_size    | 1                          |
 | 4           | 1    | homed        | 1 if homed, 0 if not homed |
 | 5-6         | 2    | checksum     | Message checksum           |
 
-### 0x0115 - Home (HomeId)
+
+### 0x0400 - Home (HomeId)
 
 **Description**: Initiate homing sequence.
 
 | Byte Offset | Size | Field        | Description        |
 | ----------- | ---- | ------------ | ------------------ |
-| 0-1         | 2    | message_type | 0x0115             |
+| 0-1         | 2    | message_type | 0x0400             |
 | 2-3         | 2    | body_size    | 4                  |
 | 4-7         | 4    | home_command | Home command value |
 | 8-9         | 2    | checksum     | Message checksum   |
 
-### 0x0116 - Set Motor State (SetMotorStateId)
+
+### 0x0307 - Set Motor State (SetMotorStateId)
 
 **Description**: Set the motor control state/mode.
 
 | Byte Offset | Size | Field        | Description                        |
 | ----------- | ---- | ------------ | ---------------------------------- |
-| 0-1         | 2    | message_type | 0x0116                             |
+| 0-1         | 2    | message_type | 0x0307                             |
 | 2-3         | 2    | body_size    | 1                                  |
 | 4           | 1    | motor_state  | Motor state (see MotorStates enum) |
 | 5-6         | 2    | checksum     | Message checksum                   |
@@ -304,24 +300,26 @@ All messages follow this basic structure:
 - 0x4: IDLE_ON
 - 0x5: HOME
 
-### 0x0117 - Get Motor State (GetMotorStateId)
+
+### 0x0308 - Get Motor State (GetMotorStateId)
 
 **Description**: Request current motor state.
 
 | Byte Offset | Size | Field        | Description         |
 | ----------- | ---- | ------------ | ------------------- |
-| 0-1         | 2    | message_type | 0x0117              |
+| 0-1         | 2    | message_type | 0x0308              |
 | 2-3         | 2    | body_size    | 1                   |
 | 4           | 1    | motor_state  | Current motor state |
 | 5-6         | 2    | checksum     | Message checksum    |
 
-### 0x0118 - Set Motor Brake (SetMotorBrakeId)
+
+### 0x0309 - Set Motor Brake (SetMotorBrakeId)
 
 **Description**: Set the motor braking mode.
 
 | Byte Offset | Size | Field        | Description                      |
 | ----------- | ---- | ------------ | -------------------------------- |
-| 0-1         | 2    | message_type | 0x0118                           |
+| 0-1         | 2    | message_type | 0x0309                           |
 | 2-3         | 2    | body_size    | 1                                |
 | 4           | 1    | brake_mode   | Brake mode (see MotorBrake enum) |
 | 5-6         | 2    | checksum     | Message checksum                 |
@@ -332,158 +330,172 @@ All messages follow this basic structure:
 - 0x2: STRONG_BRAKING
 - 0x3: BRAKING
 
-### 0x0119 - Get Motor Brake (GetMotorBrakeId)
+
+### 0x030A - Get Motor Brake (GetMotorBrakeId)
 
 **Description**: Request current motor brake mode.
 
 | Byte Offset | Size | Field        | Description        |
 | ----------- | ---- | ------------ | ------------------ |
-| 0-1         | 2    | message_type | 0x0119             |
+| 0-1         | 2    | message_type | 0x030A             |
 | 2-3         | 2    | body_size    | 1                  |
 | 4           | 1    | brake_mode   | Current brake mode |
 | 5-6         | 2    | checksum     | Message checksum   |
 
-### 0x011A - Set Max Speed (SetMaxSpeedId)
+
+### 0x030B - Set Max Speed (SetMaxSpeedId)
 
 **Description**: Set the maximum motor speed.
 
 | Byte Offset | Size | Field        | Description               |
 | ----------- | ---- | ------------ | ------------------------- |
-| 0-1         | 2    | message_type | 0x011A                    |
+| 0-1         | 2    | message_type | 0x030B                    |
 | 2-3         | 2    | body_size    | 4                         |
 | 4-7         | 4    | max_speed    | Maximum speed as uint32_t |
 | 8-9         | 2    | checksum     | Message checksum          |
 
-### 0x011B - Get Max Speed (GetMaxSpeedId)
+
+### 0x030C - Get Max Speed (GetMaxSpeedId)
 
 **Description**: Request current maximum speed setting.
 
 | Byte Offset | Size | Field        | Description           |
 | ----------- | ---- | ------------ | --------------------- |
-| 0-1         | 2    | message_type | 0x011B                |
+| 0-1         | 2    | message_type | 0x030C                |
 | 2-3         | 2    | body_size    | 4                     |
 | 4-7         | 4    | max_speed    | Current maximum speed |
 | 8-9         | 2    | checksum     | Message checksum      |
 
-### 0x011C - Set Acceleration (SetAccelerationId)
+
+### 0x030D - Set Acceleration (SetAccelerationId)
 
 **Description**: Set the motor acceleration value.
 
 | Byte Offset | Size | Field        | Description              |
 | ----------- | ---- | ------------ | ------------------------ |
-| 0-1         | 2    | message_type | 0x011C                   |
+| 0-1         | 2    | message_type | 0x030D                   |
 | 2-3         | 2    | body_size    | 4                        |
 | 4-7         | 4    | acceleration | Acceleration as uint32_t |
 | 8-9         | 2    | checksum     | Message checksum         |
 
-### 0x011D - Get Acceleration (GetAccelerationId)
+
+### 0x030E - Get Acceleration (GetAccelerationId)
 
 **Description**: Request current acceleration setting.
 
 | Byte Offset | Size | Field        | Description          |
 | ----------- | ---- | ------------ | -------------------- |
-| 0-1         | 2    | message_type | 0x011D               |
+| 0-1         | 2    | message_type | 0x030E               |
 | 2-3         | 2    | body_size    | 4                    |
 | 4-7         | 4    | acceleration | Current acceleration |
 | 8-9         | 2    | checksum     | Message checksum     |
 
-### 0x011E - Set Current Position (SetCurrentPositionId)
+
+### 0x030F - Set Current Position (SetCurrentPositionId)
 
 **Description**: Set the current position (zero/reference the position).
 
 | Byte Offset | Size | Field        | Description                   |
 | ----------- | ---- | ------------ | ----------------------------- |
-| 0-1         | 2    | message_type | 0x011E                        |
+| 0-1         | 2    | message_type | 0x030F                        |
 | 2-3         | 2    | body_size    | 8                             |
 | 4-11        | 8    | position     | Position in degrees as double |
 | 12-13       | 2    | checksum     | Message checksum              |
 
-### 0x011F - Get Current Position (GetCurrentPositionId)
+
+### 0x0310 - Get Current Position (GetCurrentPositionId)
 
 **Description**: Request current motor position.
 
 | Byte Offset | Size | Field        | Description                           |
 | ----------- | ---- | ------------ | ------------------------------------- |
-| 0-1         | 2    | message_type | 0x011F                                |
+| 0-1         | 2    | message_type | 0x0310                                |
 | 2-3         | 2    | body_size    | 8                                     |
 | 4-11        | 8    | position     | Current position in degrees as double |
 | 12-13       | 2    | checksum     | Message checksum                      |
 
-### 0x0120 - Set Target Position (SetTargetPositionId)
+
+### 0x0311 - Set Target Position (SetTargetPositionId)
 
 **Description**: Set the target position for position control mode.
 
 | Byte Offset | Size | Field        | Description                          |
 | ----------- | ---- | ------------ | ------------------------------------ |
-| 0-1         | 2    | message_type | 0x0120                               |
+| 0-1         | 2    | message_type | 0x0311                               |
 | 2-3         | 2    | body_size    | 8                                    |
 | 4-11        | 8    | position     | Target position in degrees as double |
 | 12-13       | 2    | checksum     | Message checksum                     |
 
-### 0x0121 - Get Target Position (GetTargetPositionId)
+
+### 0x0312 - Get Target Position (GetTargetPositionId)
 
 **Description**: Request current target position.
 
 | Byte Offset | Size | Field        | Description                                  |
 | ----------- | ---- | ------------ | -------------------------------------------- |
-| 0-1         | 2    | message_type | 0x0121                                       |
+| 0-1         | 2    | message_type | 0x0312                                       |
 | 2-3         | 2    | body_size    | 8                                            |
 | 4-11        | 8    | position     | Current target position in degrees as double |
 | 12-13       | 2    | checksum     | Message checksum                             |
 
-### 0x0122 - Set Relative Target Position (SetRelativeTargetPositionId)
+
+### 0x0401 - Set Relative Target Position (SetRelativeTargetPositionId)
 
 **Description**: Set a target position relative to the current position.
 
 | Byte Offset | Size | Field             | Description                            |
 | ----------- | ---- | ----------------- | -------------------------------------- |
-| 0-1         | 2    | message_type      | 0x0122                                 |
+| 0-1         | 2    | message_type      | 0x0401                                 |
 | 2-3         | 2    | body_size         | 8                                      |
 | 4-11        | 8    | relative_position | Relative position in degrees as double |
 | 12-13       | 2    | checksum          | Message checksum                       |
 
-### 0x0123 - Set Velocity (SetVelocityId)
+
+### 0x0313 - Set Velocity (SetVelocityId)
 
 **Description**: Set the motor velocity for velocity control mode.
 
 | Byte Offset | Size | Field        | Description                          |
 | ----------- | ---- | ------------ | ------------------------------------ |
-| 0-1         | 2    | message_type | 0x0123                               |
+| 0-1         | 2    | message_type | 0x0313                               |
 | 2-3         | 2    | body_size    | 8                                    |
 | 4-11        | 8    | velocity     | Velocity in degrees/second as double |
 | 12-13       | 2    | checksum     | Message checksum                     |
 
-### 0x0124 - Get Velocity (GetVelocityId)
+
+### 0x0314 - Get Velocity (GetVelocityId)
 
 **Description**: Request current motor velocity.
 
 | Byte Offset | Size | Field        | Description                                  |
 | ----------- | ---- | ------------ | -------------------------------------------- |
-| 0-1         | 2    | message_type | 0x0124                                       |
+| 0-1         | 2    | message_type | 0x0314                                       |
 | 2-3         | 2    | body_size    | 8                                            |
 | 4-11        | 8    | velocity     | Current velocity in degrees/second as double |
 | 12-13       | 2    | checksum     | Message checksum                             |
 
-### 0x0125 - Set Velocity and Steps (SetVelocityAndStepsId)
+
+### 0x0402 - Set Velocity and Steps (SetVelocityAndStepsId)
 
 **Description**: Set velocity and number of steps with position mode.
 
 | Byte Offset | Size | Field         | Description                            |
 | ----------- | ---- | ------------- | -------------------------------------- |
-| 0-1         | 2    | message_type  | 0x0125                                 |
+| 0-1         | 2    | message_type  | 0x0402                                 |
 | 2-3         | 2    | body_size     | 9                                      |
 | 4-7         | 4    | velocity      | Velocity as int32_t                    |
 | 8-11        | 4    | steps         | Number of steps as int32_t             |
 | 12          | 1    | position_mode | Position mode (0=ABSOLUTE, 1=RELATIVE) |
 | 13-14       | 2    | checksum      | Message checksum                       |
 
-### 0x0126 - Start Path (StartPathId)
+
+### 0x0403 - Start Path (StartPathId)
 
 **Description**: Start executing a predefined motion path.
 
 | Byte Offset | Size | Field        | Description                |
 | ----------- | ---- | ------------ | -------------------------- |
-| 0-1         | 2    | message_type | 0x0126                     |
+| 0-1         | 2    | message_type | 0x0403                     |
 | 2-3         | 2    | body_size    | 1                          |
 | 4           | 1    | path_id      | Path identifier to execute |
 | 5-6         | 2    | checksum     | Message checksum           |
@@ -495,3 +507,16 @@ The checksum is calculated as a 16-bit CRC or sum of all bytes in the header and
 ## Error Handling
 
 Messages with invalid checksums, unknown message types, or incorrect body sizes should be ignored or responded to with an error message.
+
+## LLM Prompt for File Generation
+
+Use the following prompt to instruct an LLM to generate implementation files based on this protocol documentation:
+
+"Based on the Axis Driver Protocol Documentation provided in AxisProtocol.md, update firmware/include/AxisMessages.h and examples/Python/AxisProtocol.py that implement the message structures, parsing, and serialization for the communication protocol. Include:
+
+- Definitions for all message types with their exact byte offsets, sizes, and field names.
+- Length definitions for each message type
+- Enums for status codes, motor states, brake modes, etc.
+- Update any existing functionality with any changes to the protocol
+
+Ensure the generated code is compatible with the data types specified (uint8_t, int32_t, double, etc.) and follows the packed structure without padding. Provide complete, runnable code snippets or files that can be integrated into firmware or client applications."

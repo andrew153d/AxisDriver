@@ -1,8 +1,10 @@
 #include "AxisEthernet.h"
+#include "DebugPrinter.h"
 #include "utility/w5100.h"
 #include "Site.h"
 #include "../EncoderController/EncoderController.h"
 #include "../LedController/LedController.h"
+#include <cstdarg>
 void HandleInturrupts();
 
 void AxisEthernet::OnStart()
@@ -59,8 +61,15 @@ void AxisEthernet::OnStart()
     uint16_t int_level = 0x0FFF;
     W5100.writeINTLEVEL((uint8_t*)&int_level);
     DEBUG_PRINT("Ip Address: ");
-    DEBUG_PRINTLN(Ethernet.localIP());
+    DEBUG_PRINTLN(String(Ethernet.localIP()).c_str());
     DEBUG_PRINTF("Port: 0x%x\n", Udp.localPort());
+
+    // Send startup message
+    IPAddress targetIP(255, 255, 255, 255);
+    Udp.beginPacket(targetIP, 35461);
+    const char* message = "Program started";
+    Udp.write((uint8_t*)message, strlen(message));
+    Udp.endPacket();
 
     interrupts();
     NVIC_EnableIRQ(EIC_3_IRQn);
@@ -130,7 +139,7 @@ void AxisEthernet::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     }
     else
     {
-        Serial.println("processor_interface is null");
+        DEBUG_PRINTLN("processor_interface is null");
     }
 }
 
@@ -143,6 +152,30 @@ void AxisEthernet::SendMsg(uint8_t *send_bytes, uint32_t send_bytes_size)
 
 void AxisEthernet::OnStop()
 {
+}
+
+void AxisEthernet::print(const char* str) {
+    Udp.beginPacket(IPAddress(255,255,255,255), 35461);
+    Udp.write((uint8_t*)str, strlen(str));
+    Udp.endPacket();
+}
+
+void AxisEthernet::println(const char* str) {
+    print(str);
+    print("\n");
+}
+
+void AxisEthernet::println() {
+    print("\n");
+}
+
+void AxisEthernet::printf(const char* format, ...) {
+    char buf[256];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(buf, sizeof(buf), format, args);
+    va_end(args);
+    print(buf);
 }
 
 AxisEthernet AEthernet(10);

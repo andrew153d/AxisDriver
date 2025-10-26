@@ -112,7 +112,7 @@ namespace FlashStorage
     {
         if ((uint16_t)address + (uint16_t)data_len > 256)
         {
-            Serial.println("Address too high");
+            DEBUG_PRINTLN("Address too high");
             return;
         }
 

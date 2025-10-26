@@ -36,9 +36,10 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
   Header *hdr = (Header *)&recv_bytes[0];
 
   // TODO: check for checksum
-
+  DEBUG_PRINTF("Received %d bytes\n", recv_bytes_size);
   // DEBUG_PRINTF("Received message type: 0x%x\n", hdr->message_type);
-
+  addrLedController.AddLedStep(CRGB::Blue, 1000);
+  addrLedController.AddLedStep(CRGB::Black, 1000);
   switch ((MessageTypes)hdr->message_type)
   {
   case MessageTypes::AckId: // 0x0100
@@ -63,7 +64,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     v_buf[3] = (uint8_t)v3;
     msg->footer.checksum = 0;
     SendMsg(send_buffer, sizeof(VersionMessage));
-    // DEBUG_PRINTF("0x%8X\n", msg->value);
+    DEBUG_PRINTF("0x%8X\n", msg->value);
     break;
   }
 
@@ -72,14 +73,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     I2CAddressMessage *msg = (I2CAddressMessage *)recv_bytes;
     FlashStorage::GetI2CSettings()->address = msg->value;
 
-    AckMessage *ack_msg = (AckMessage *)&send_buffer[0];
-    ack_msg->header.message_type = (uint16_t)MessageTypes::AckId;
-    ack_msg->header.body_size = sizeof(AckMessage::ack_message_type) + sizeof(AckMessage::status);
-    ack_msg->ack_message_type = (uint16_t)MessageTypes::SetI2CAddressId;
-    ack_msg->status = (uint8_t)StatusCodes::SUCCESS;
-    ack_msg->footer.checksum = 0;
-    SendMsg(send_buffer, sizeof(AckMessage));
-
+    SendAck(MessageTypes::SetI2CAddressId, StatusCodes::SUCCESS);
     break;
   }
 
@@ -99,15 +93,9 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
   {
     EthernetAddressMessage *msg = (EthernetAddressMessage *)recv_bytes;
     FlashStorage::GetEthernetSettings()->ip_address = msg->value;
-    
-    //Respond with Ack
-    AckMessage *ack_msg = (AckMessage *)&send_buffer[0];
-    ack_msg->header.message_type = (uint16_t)MessageTypes::AckId;
-    ack_msg->header.body_size = sizeof(AckMessage::ack_message_type) + sizeof(AckMessage::status);
-    ack_msg->ack_message_type = (uint16_t)MessageTypes::SetEthernetAddressId;
-    ack_msg->status = (uint8_t)StatusCodes::SUCCESS;
-    ack_msg->footer.checksum = 0;
-    SendMsg(send_buffer, sizeof(AckMessage));
+
+    // Respond with Ack
+    SendAck(MessageTypes::SetEthernetAddressId, StatusCodes::SUCCESS);
     break;
   }
 
@@ -127,7 +115,9 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
   {
     EthernetPortMessage *msg = (EthernetPortMessage *)recv_bytes;
     FlashStorage::GetEthernetSettings()->port = (uint16_t)(msg->value);
-    // DEBUG_PRINTF("Setting Port: 0x%x\n", FlashStorage::GetEthernetSettings()->port);
+
+    // Respond with Ack
+    SendAck(MessageTypes::SetEthernetPortId, StatusCodes::SUCCESS);
     break;
   }
 
@@ -158,48 +148,46 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
   case MessageTypes::SaveConfigurationId: // 0x0109
   {
     FlashStorage::WriteFlash();
-    // DEBUG_PRINTLN("Writing flash");
+    SendAck(MessageTypes::SaveConfigurationId, StatusCodes::SUCCESS);
     break;
   }
 
-  case MessageTypes::SetLedStateId: // 0x010A
-  {
-    // TODO: Implement SetLedStateId case
-    // LedStateMessage *msg = (LedStateMessage *)recv_bytes;
-    // addrLedController.SetLEDState((LedStates)msg->value);
-    break;
-  }
-
-  case MessageTypes::GetLedStateId: // 0x010B
-  {
-    // TODO: Implement GetLedStateId case
-    // LedStateMessage *msg = (LedStateMessage *)&send_buffer[0];
-    // msg->header.message_type = (uint16_t)MessageTypes::GetLedStateId;
-    // msg->header.body_size = sizeof(LedStateMessage::value);
-    // msg->value = (uint8_t)addrLedController.GetLEDState();
-    // msg->footer.checksum = 0;
-    // SendMsg(send_buffer, sizeof(LedStateMessage));
-    break;
-  }
-
-  case MessageTypes::SetLedColorId: // 0x010C
+  case MessageTypes::SetLedColorId: // 0x010A
   {
     LedColorMessage *msg = (LedColorMessage *)recv_bytes;
-    // DEBUG_PRINTF("Setting LED color                                           to: R=%d, G=%d, B=%d\n", msg->ledColor.r, msg->ledColor.g, msg->ledColor.b);
-    addrLedController.SetLEDColor(CRGB(msg->ledColor[0], msg->ledColor[1], msg->ledColor[2]));
+    //DEBUG_PRINTF("Setting LED Color: %d, %d, %d\n", msg->ledColor[0], msg->ledColor[1], msg->ledColor[2]);
+    addrLedController.SetLEDColor(CHSV(msg->ledColor[0], msg->ledColor[1], msg->ledColor[2]));
+    
+    AckMessage *ack_msg = (AckMessage *)&send_buffer[0];
+    ack_msg->header.message_type = (uint16_t)MessageTypes::AckId;
+    ack_msg->header.body_size = sizeof(AckMessage::ack_message_type) + sizeof(AckMessage::status);
+    ack_msg->ack_message_type = (uint16_t)MessageTypes::SetLedColorId;
+    ack_msg->status = (uint8_t)StatusCodes::SUCCESS;
+    ack_msg->footer.checksum = 0;
+    SendMsg(send_buffer, sizeof(AckMessage));
+
     break;
   }
 
-  case MessageTypes::GetLedColorId: // 0x010D
+  case MessageTypes::GetLedColorId: // 0x010B
   {
-    LedColorMessage *msg = (LedColorMessage *)recv_bytes;
+    CRGB led_color = addrLedController.GetLedColor();
+    LedColorMessage *msg = (LedColorMessage *)&send_buffer[0];
     msg->header.message_type = (uint16_t)MessageTypes::GetLedColorId;
     msg->header.body_size = sizeof(LedColorMessage::ledColor);
-    msg->ledColor[0] = addrLedController.GetLedColor().r;
-    msg->ledColor[1] = addrLedController.GetLedColor().g;
-    msg->ledColor[2] = addrLedController.GetLedColor().b;
+    msg->ledColor[0] = led_color.r;
+    msg->ledColor[1] = led_color.g;
+    msg->ledColor[2] = led_color.b;
     msg->footer.checksum = 0;
-    SendMsg(recv_bytes, sizeof(LedColorMessage));
+    SendMsg(send_buffer, sizeof(LedColorMessage));
+    break;
+  }
+
+  case MessageTypes::AddLedStepId: // Add LED Step
+  {
+    AddLedStepMessage *msg = (AddLedStepMessage *)recv_bytes;
+    addrLedController.AddLedStep(CRGB(msg->ledColor[0], msg->ledColor[1], msg->ledColor[2]), msg->time_ms);
+    SendAck(MessageTypes::AddLedStepId, StatusCodes::SUCCESS);
     break;
   }
 
@@ -207,6 +195,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
   {
     HomeDirectionMessage *msg = (HomeDirectionMessage *)recv_bytes;
     motorController.SetHomeDirection((HomeDirection)msg->value);
+    SendAck(MessageTypes::SetHomeDirectionId, StatusCodes::SUCCESS);
     break;
   }
 
@@ -226,6 +215,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     HomeThresholdMessage *msg = (HomeThresholdMessage *)&recv_bytes[0];
     motorController.SetHomeThreshold(msg->value);
     // DEBUG_PRINTF("Setting Home Threshold to: %d\n", msg->value);
+    SendAck(MessageTypes::SetHomeThresholdId, StatusCodes::SUCCESS);
     break;
   }
 
@@ -245,6 +235,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     HomeSpeedMessage *msg = (HomeSpeedMessage *)&recv_bytes[0];
     motorController.SetHomingSpeed(msg->value);
     // DEBUG_PRINTF("Setting Home Speed to: %d\n", msg->value);
+    SendAck(MessageTypes::SetHomeSpeedId, StatusCodes::SUCCESS);
     break;
   }
 
@@ -267,12 +258,14 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->value = (uint8_t)motorController.GetHomeState();
     msg->footer.checksum = 0;
     SendMsg(send_buffer, sizeof(HomedStateMessage));
-    DEBUG_PRINTF("Sending Homed State: %d\n", msg->value);
+    //DEBUG_PRINTF("Sending Homed State: %d\n", msg->value);
+
     break;
   }
 
   case MessageTypes::HomeId: // 0x0115
     motorController.Home();
+    SendAck(MessageTypes::HomeId, StatusCodes::SUCCESS);
     break;
 
   case MessageTypes::SetMotorStateId: // 0x0116
@@ -280,6 +273,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     MotorStateMessage *msg = (MotorStateMessage *)recv_bytes;
     // DEBUG_PRINTF("Setting Motor State to: %d\n", msg->value);
     motorController.SetMotorState((MotorStates)msg->value);
+    SendAck(MessageTypes::SetMotorStateId, StatusCodes::SUCCESS);
     break;
   }
 
@@ -299,18 +293,18 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
   {
     MotorBrakeMessage *msg = (MotorBrakeMessage *)&recv_bytes[0];
     motorController.SetMotorBraking((MotorBrake)msg->value);
+    SendAck(MessageTypes::SetMotorBrakeId, StatusCodes::SUCCESS);
     break;
   }
 
   case MessageTypes::GetMotorBrakeId: // 0x0119
   {
-    // TODO: Implement GetMotorBrakeId case
-    // MotorBrakeMessage *msg = (MotorBrakeMessage *)&send_buffer[0];
-    // msg->header.message_type = (uint16_t)MessageTypes::GetMotorBrakeId;
-    // msg->header.body_size = sizeof(MotorBrakeMessage::value);
-    // msg->value = (uint8_t)motorController.GetMotorBraking();
-    // msg->footer.checksum = 0;
-    // SendMsg(send_buffer, sizeof(MotorBrakeMessage));
+    MotorBrakeMessage *msg = (MotorBrakeMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetMotorBrakeId;
+    msg->header.body_size = sizeof(MotorBrakeMessage::value);
+    msg->value = (uint8_t)motorController.GetMotorBraking();
+    msg->footer.checksum = 0;
+    SendMsg(send_buffer, sizeof(MotorBrakeMessage));
     break;
   }
 
@@ -318,6 +312,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
   {
     MaxSpeedMessage *msg = (MaxSpeedMessage *)&recv_bytes[0];
     motorController.SetMaxSpeed(msg->value);
+    SendAck(MessageTypes::SetMaxSpeedId, StatusCodes::SUCCESS);
     break;
   }
 
@@ -336,6 +331,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
   {
     AccelerationMessage *msg = (AccelerationMessage *)&recv_bytes[0];
     motorController.SetAcceleration(msg->value);
+    SendAck(MessageTypes::SetAccelerationId, StatusCodes::SUCCESS);
     break;
   }
 
@@ -354,12 +350,13 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
   {
     CurrentPositionMessage *msg = (CurrentPositionMessage *)&recv_bytes[0];
     motorController.SetPosition(msg->value);
+    SendAck(MessageTypes::SetCurrentPositionId, StatusCodes::SUCCESS);
     break;
   }
 
   case MessageTypes::GetCurrentPositionId: // 0x011F
   {
-    DEBUG_PRINTLN("Getting Current Position");
+    //DEBUG_PRINTLN("Getting Current Position");
     CurrentPositionMessage *msg = (CurrentPositionMessage *)send_buffer;
     msg->header.message_type = (uint16_t)MessageTypes::GetCurrentPositionId;
     msg->header.body_size = sizeof(CurrentPositionMessage::value);
@@ -374,19 +371,18 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     TargetPositionMessage *msg = (TargetPositionMessage *)recv_bytes;
     // DEBUG_PRINTF("Setting Motor Position to: %f\n", msg->value);
     motorController.SetPositionTarget(msg->value);
+    SendAck(MessageTypes::SetTargetPositionId, StatusCodes::SUCCESS);
     break;
   }
 
   case MessageTypes::GetTargetPositionId: // 0x0121
   {
-    // TODO: Implement GetTargetPositionId case
-    // TargetPositionMessage *msg = (TargetPositionMessage *)&send_buffer[0];
-    // msg->header.message_type = (uint16_t)MessageTypes::GetTargetPositionId;
-    // msg->header.body_size = sizeof(TargetPositionMessage::value);
-    // msg->value = motorController.GetPositionTarget();
-    // msg->footer.checksum = 0;
-    // SendMsg(send_buffer, sizeof(TargetPositionMessage));
-    // DEBUG_PRINTF("Sending Motor Position: %f\n", motorController.GetPositionTarget());
+    TargetPositionMessage *msg = (TargetPositionMessage *)&send_buffer[0];
+    msg->header.message_type = (uint16_t)MessageTypes::GetTargetPositionId;
+    msg->header.body_size = sizeof(TargetPositionMessage::value);
+    msg->value = motorController.GetPositionTarget();
+    msg->footer.checksum = 0;
+    SendMsg(send_buffer, sizeof(TargetPositionMessage));
     break;
   }
 
@@ -395,6 +391,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     RelativeTargetPositionMessage *msg = (RelativeTargetPositionMessage *)recv_bytes;
     motorController.SetPositionTargetRelative(msg->value);
     // DEBUG_PRINTF("Setting Motor Position Relative: %f\n", msg->value);
+    SendAck(MessageTypes::SetRelativeTargetPositionId, StatusCodes::SUCCESS);
     break;
   }
 
@@ -403,6 +400,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     VelocityMessage *msg = (VelocityMessage *)recv_bytes;
     motorController.SetVelocityTarget(msg->value);
     // DEBUG_PRINTF("Setting Motor Velocity to: %d\n", msg->value);
+    SendAck(MessageTypes::SetVelocityId, StatusCodes::SUCCESS);
     break;
   }
 
@@ -422,11 +420,13 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     VelocityAndStepsMessage *msg = (VelocityAndStepsMessage *)&recv_bytes[0];
     motorController.AddVelocityStep(msg->velocity, msg->steps, msg->positionMode);
     // DEBUG_PRINTF("Velocity: %d, Steps: %d, Position Mode: %d\n", msg->velocity, msg->steps, msg->positionMode);
+    SendAck(MessageTypes::SetVelocityAndStepsId, StatusCodes::SUCCESS);
     break;
   }
 
   case MessageTypes::StartPathId: // 0x0126
     motorController.StartPath();
+    SendAck(MessageTypes::StartPathId, StatusCodes::SUCCESS);
     break;
 
   default:
@@ -464,4 +464,15 @@ void MessageProcessor::SendMsg(uint8_t *send_bytes, uint32_t send_bytes_size)
     i->SendMsg(send_bytes, send_bytes_size);
   }
   memset(send_bytes, 0, send_bytes_size);
+}
+
+void MessageProcessor::SendAck(MessageTypes msg_type, StatusCodes status)
+{
+  AckMessage *ack_msg = (AckMessage *)&send_buffer[0];
+  ack_msg->header.message_type = (uint16_t)MessageTypes::AckId;
+  ack_msg->header.body_size = sizeof(AckMessage::ack_message_type) + sizeof(AckMessage::status);
+  ack_msg->ack_message_type = (uint16_t)msg_type;
+  ack_msg->status = (uint8_t)status;
+  ack_msg->footer.checksum = 0;
+  SendMsg(send_buffer, sizeof(AckMessage));
 }

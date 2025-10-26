@@ -49,6 +49,7 @@ private:
   std::vector<IExternalInterface *> externalInterfaces; // Vector to hold pointers to interfaces
   IExternalInterface *last_interface_ = nullptr;
   uint8_t send_buffer[1024];
+  void SendAck(MessageTypes msg_type, StatusCodes status);
 public:
   MessageProcessor(uint32_t period);
 

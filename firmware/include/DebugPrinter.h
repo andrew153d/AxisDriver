@@ -1,24 +1,41 @@
 #pragma once
 
-#define DEBUG_APP
+//#define DEBUG_SERIAL
+//#define DEBUG_UDP
 
-#ifdef DEBUG_APP
-#define DEBUG_PRINTER Serial
-#define DEBUG_PRINT(...)                  \
-    {                                     \
-        DEBUG_PRINTER.print(__VA_ARGS__); \
+#ifdef DEBUG_SERIAL
+#define DEBUG_PRINT(...)           \
+    {                              \
+        Serial.print(__VA_ARGS__); \
     }
-#define DEBUG_PRINTLN(...)                  \
-    {                                       \
-        DEBUG_PRINTER.println(__VA_ARGS__); \
+#define DEBUG_PRINTLN(...)           \
+    {                                \
+        Serial.println(__VA_ARGS__); \
     }
-#define DEBUG_PRINTF(...)                  \
-    {                                      \
-        DEBUG_PRINTER.printf(__VA_ARGS__); \
+#define DEBUG_PRINTF(...)           \
+    {                               \
+        Serial.printf(__VA_ARGS__); \
     }
-#define DEBUG_BEGIN(...)                  \
-    {                                     \
-        DEBUG_PRINTER.begin(__VA_ARGS__); \
+#define DEBUG_BEGIN(...)           \
+    {                              \
+        Serial.begin(__VA_ARGS__); \
+    }
+#elif defined(DEBUG_UDP)
+#include "EthernetHAT/AxisEthernet.h"
+#define DEBUG_PRINT(...)              \
+    {                                 \
+        AEthernet.print(__VA_ARGS__); \
+    }
+#define DEBUG_PRINTLN(...)              \
+    {                                   \
+        AEthernet.println(__VA_ARGS__); \
+    }
+#define DEBUG_PRINTF(...)              \
+    {                                  \
+        AEthernet.printf(__VA_ARGS__); \
+    }
+#define DEBUG_BEGIN(...) \
+    {                    \
     }
 #else
 #define DEBUG_PRINT(...) \

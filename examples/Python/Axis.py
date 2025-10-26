@@ -3,6 +3,7 @@ import threading
 import time
 import socket
 import re
+import io
 
 
 class Axis:
@@ -42,6 +43,7 @@ class AxisSerial(Axis):
         self.SERIAL_PORT = port
         self.baudrate = baudrate
         self.motor_port = serial.Serial()
+        self.buffer = io.BytesIO()  # Buffer for accumulating data
 
         try:
             self.motor_port = serial.Serial(
@@ -75,12 +77,24 @@ class AxisSerial(Axis):
         if self.motor_port.is_open:
             self.motor_port.write(msg)
 
-    def wait_message(self, timeout=1):
+    def wait_message(self, expected_bytes, timeout=1):
+        print("Waiting for {} bytes...".format(expected_bytes))
         start_time = time.time()
         while time.time() - start_time < timeout:
             with self.mutex:
+                # Read any available data into buffer
                 if self.motor_port.in_waiting > 0:
-                    message = self.motor_port.readline()
+                    data = self.motor_port.read(self.motor_port.in_waiting)
+                    self.buffer.write(data)
+                
+                # Check if we have the expected number of bytes
+                self.buffer.seek(0)
+                buffered_data = self.buffer.read()
+                if len(buffered_data) >= expected_bytes:
+                    message = buffered_data[:expected_bytes]
+                    # Remove processed data from buffer
+                    remaining = buffered_data[expected_bytes:]
+                    self.buffer = io.BytesIO(remaining)
                     return message
         return None
 

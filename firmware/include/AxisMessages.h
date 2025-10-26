@@ -26,35 +26,34 @@ enum class MessageTypes : uint16_t
 	GetEthernetPortId = 0x0107,
 	GetMacAddressId = 0x0108,
 	SaveConfigurationId = 0x0109,
-	SetLedStateId = 0x010A,
-	GetLedStateId = 0x010B,
-	SetLedColorId = 0x010C,
-	GetLedColorId = 0x010D,
-	SetHomeDirectionId = 0x010E,
-	GetHomeDirectionId = 0x010F,
-	SetHomeThresholdId = 0x0110,
-	GetHomeThresholdId = 0x0111,
-	SetHomeSpeedId = 0x0112,
-	GetHomeSpeedId = 0x0113,
-	GetHomedStateId = 0x0114,
-	HomeId = 0x0115,
-	SetMotorStateId = 0x0116,
-	GetMotorStateId = 0x0117,
-	SetMotorBrakeId = 0x0118,
-	GetMotorBrakeId = 0x0119,
-	SetMaxSpeedId = 0x011A,
-	GetMaxSpeedId = 0x011B,
-	SetAccelerationId = 0x011C,
-	GetAccelerationId = 0x011D,
-	SetCurrentPositionId = 0x011E,
-	GetCurrentPositionId = 0x011F,
-	SetTargetPositionId = 0x0120,
-	GetTargetPositionId = 0x0121,
-	SetRelativeTargetPositionId = 0x0122,
-	SetVelocityId = 0x0123,
-	GetVelocityId = 0x0124,
-	SetVelocityAndStepsId = 0x0125,
-	StartPathId = 0x0126,
+	SetLedColorId = 0x0200,
+	GetLedColorId = 0x0201,
+	AddLedStepId = 0x0202,
+	SetHomeDirectionId = 0x0300,
+	GetHomeDirectionId = 0x0301,
+	SetHomeThresholdId = 0x0302,
+	GetHomeThresholdId = 0x0303,
+	SetHomeSpeedId = 0x0304,
+	GetHomeSpeedId = 0x0305,
+	GetHomedStateId = 0x0306,
+	HomeId = 0x0400,
+	SetMotorStateId = 0x0307,
+	GetMotorStateId = 0x0308,
+	SetMotorBrakeId = 0x0309,
+	GetMotorBrakeId = 0x030A,
+	SetMaxSpeedId = 0x030B,
+	GetMaxSpeedId = 0x030C,
+	SetAccelerationId = 0x030D,
+	GetAccelerationId = 0x030E,
+	SetCurrentPositionId = 0x030F,
+	GetCurrentPositionId = 0x0310,
+	SetTargetPositionId = 0x0311,
+	GetTargetPositionId = 0x0312,
+	SetRelativeTargetPositionId = 0x0401,
+	SetVelocityId = 0x0313,
+	GetVelocityId = 0x0314,
+	SetVelocityAndStepsId = 0x0402,
+	StartPathId = 0x0403,
 };
 
 enum class StatusCodes : uint8_t {
@@ -163,6 +162,14 @@ PACKEDSTRUCT LedColorMessage
 	uint8_t ledColor[3];
 	Footer footer;
 };
+// AddLedStep message per spec (time in ms + RGB)
+PACKEDSTRUCT AddLedStepMessage
+{
+	Header header;
+	uint32_t time_ms;
+	uint8_t ledColor[3];
+	Footer footer;
+};
 typedef U8Message HomeDirectionMessage;
 typedef U32Message HomeSpeedMessage;
 typedef U32Message HomeThresholdMessage;
@@ -185,3 +192,30 @@ PACKEDSTRUCT VelocityAndStepsMessage
 	Footer footer;
 };
 typedef U8Message StartPathMessage;
+
+
+// Message length definitions (in bytes)
+const size_t ACK_MESSAGE_LENGTH = sizeof(AckMessage);
+const size_t VERSION_MESSAGE_LENGTH = sizeof(VersionMessage);
+const size_t I2C_ADDRESS_MESSAGE_LENGTH = sizeof(I2CAddressMessage);
+const size_t ETHERNET_ADDRESS_MESSAGE_LENGTH = sizeof(EthernetAddressMessage);
+const size_t ETHERNET_PORT_MESSAGE_LENGTH = sizeof(EthernetPortMessage);
+const size_t MAC_ADDRESS_MESSAGE_LENGTH = sizeof(MacAddressMessage);
+const size_t SAVE_CONFIGURATION_MESSAGE_LENGTH = sizeof(SaveConfigurationMessage);
+const size_t LED_COLOR_MESSAGE_LENGTH = sizeof(LedColorMessage);
+const size_t ADD_LED_STEP_MESSAGE_LENGTH = sizeof(AddLedStepMessage);
+const size_t HOME_DIRECTION_MESSAGE_LENGTH = sizeof(HomeDirectionMessage);
+const size_t HOME_THRESHOLD_MESSAGE_LENGTH = sizeof(HomeThresholdMessage);
+const size_t HOME_SPEED_MESSAGE_LENGTH = sizeof(HomeSpeedMessage);
+const size_t HOMED_STATE_MESSAGE_LENGTH = sizeof(HomedStateMessage);
+const size_t HOME_MESSAGE_LENGTH = sizeof(HomeMessage);
+const size_t MOTOR_STATE_MESSAGE_LENGTH = sizeof(MotorStateMessage);
+const size_t MOTOR_BRAKE_MESSAGE_LENGTH = sizeof(MotorBrakeMessage);
+const size_t MAX_SPEED_MESSAGE_LENGTH = sizeof(MaxSpeedMessage);
+const size_t ACCELERATION_MESSAGE_LENGTH = sizeof(AccelerationMessage);
+const size_t CURRENT_POSITION_MESSAGE_LENGTH = sizeof(CurrentPositionMessage);
+const size_t TARGET_POSITION_MESSAGE_LENGTH = sizeof(TargetPositionMessage);
+const size_t RELATIVE_TARGET_POSITION_MESSAGE_LENGTH = sizeof(RelativeTargetPositionMessage);
+const size_t VELOCITY_MESSAGE_LENGTH = sizeof(VelocityMessage);
+const size_t VELOCITY_AND_STEPS_MESSAGE_LENGTH = sizeof(VelocityAndStepsMessage);
+const size_t START_PATH_MESSAGE_LENGTH = sizeof(StartPathMessage);

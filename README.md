@@ -26,3 +26,9 @@ The AxisDriver project is a comprehensive solution for controlling motorized dev
    ```bash
    python3 <script_name>.py
    ```
+
+### Ethernet Debugging
+- If DEBUG_UDP is defined, run the following in a linux terminal to see messages
+```
+nc -u -lk 35461
+```

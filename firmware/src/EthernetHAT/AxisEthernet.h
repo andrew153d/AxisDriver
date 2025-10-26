@@ -5,7 +5,6 @@
 #include "Task/Task.h"
 #include "MessageProcessor/MessageProcessor.hpp"
 #include "FlashStorage/FlashStorage.h"
-#include "DebugPrinter.h"
 #include <EthernetUdp.h> 
 #include <Ethernet.h>
 #include <ArduinoHA.h>
@@ -57,6 +56,11 @@ public:
     // messageHandlers
     void HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_bytes_size);
     void SendMsg(uint8_t* send_bytes, uint32_t send_bytes_size);
+
+    void print(const char* str);
+    void println(const char* str);
+    void println();
+    void printf(const char* format, ...);
 
     void HandleInturrupt();
 };
