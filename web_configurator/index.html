@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Axis Driver Configurator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Axis Driver Configurator</h1>
+            <p class="subtitle">Configure and control your Axis Driver device</p>
+        </header>
+
+        <section class="connection-section">
+            <h2>Device Connection</h2>
+            <button id="connect" class="primary">Connect to Serial</button>
+            <div id="status" class="disconnected">Not connected</div>
+        </section>
+
+        <section class="section">
+            <h2>Basic Configuration</h2>
+
+            <h3>Firmware Version</h3>
+            <div class="control-group">
+                <span class="label">Version:</span>
+                <div class="value-display" id="version">-</div>
+                <div class="button-group">
+                    <button id="getVersion" class="primary">Get Version</button>
+                </div>
+            </div>
+
+            <h3>I2C Address</h3>
+            <div class="control-group">
+                <span class="label">Address:</span>
+                <div class="input-group">
+                    <input type="number" id="i2cAddress" min="0" max="127" value="42">
+                    <div class="button-group">
+                        <button id="setI2CAddress" class="primary">Set Address</button>
+                        <button id="getI2CAddress" class="secondary">Get Address</button>
+                    </div>
+                </div>
+            </div>
+            <div class="control-group">
+                <span class="label">Current:</span>
+                <div class="value-display" id="currentI2CAddress">-</div>
+            </div>
+
+            <h3>Ethernet Configuration</h3>
+            <div class="control-group">
+                <span class="label">IP Address:</span>
+                <div class="input-group">
+                    <input type="text" id="ethernetAddress" class="ip-input" value="192.168.1.100">
+                    <div class="button-group">
+                        <button id="setEthernetAddress" class="primary">Set IP</button>
+                        <button id="getEthernetAddress" class="secondary">Get IP</button>
+                    </div>
+                </div>
+            </div>
+            <div class="control-group">
+                <span class="label">Current IP:</span>
+                <div class="value-display" id="currentEthernetAddress">-</div>
+            </div>
+
+            <div class="control-group">
+                <span class="label">Port:</span>
+                <div class="input-group">
+                    <input type="number" id="ethernetPort" min="0" max="65535" value="8080">
+                    <div class="button-group">
+                        <button id="setEthernetPort" class="primary">Set Port</button>
+                        <button id="getEthernetPort" class="secondary">Get Port</button>
+                    </div>
+                </div>
+            </div>
+            <div class="control-group">
+                <span class="label">Current Port:</span>
+                <div class="value-display" id="currentEthernetPort">-</div>
+            </div>
+
+            <h3>MAC Address</h3>
+            <div class="control-group">
+                <span class="label">MAC:</span>
+                <div class="value-display mac-display" id="currentMacAddress">-</div>
+                <div class="button-group">
+                    <button id="getMacAddress" class="primary">Get MAC</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="button-group">
+                    <button id="saveConfiguration" class="success">Save Configuration</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>LED Control</h2>
+
+            <h3>LED Color</h3>
+            <div class="control-group">
+                <span class="label">RGB Values:</span>
+                <div class="color-inputs">
+                    <input type="number" id="ledR" min="0" max="255" value="0" placeholder="R">
+                    <input type="number" id="ledG" min="0" max="255" value="0" placeholder="G">
+                    <input type="number" id="ledB" min="0" max="255" value="0" placeholder="B">
+                </div>
+                <div class="button-group">
+                    <button id="setLedColor" class="primary">Set Color</button>
+                    <button id="getLedColor" class="secondary">Get Color</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <span class="label">Current:</span>
+                <div class="value-display" id="currentLedColor">-</div>
+            </div>
+
+            <h3>Add LED Step</h3>
+            <div class="control-group">
+                <span class="label">Duration (ms):</span>
+                <input type="number" id="ledStepTime" min="0" value="1000">
+                <span class="label">RGB:</span>
+                <div class="color-inputs">
+                    <input type="number" id="ledStepR" min="0" max="255" value="255" placeholder="R">
+                    <input type="number" id="ledStepG" min="0" max="255" value="0" placeholder="G">
+                    <input type="number" id="ledStepB" min="0" max="255" value="0" placeholder="B">
+                </div>
+                <div class="button-group">
+                    <button id="addLedStep" class="primary">Add Step</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Home Configuration</h2>
+
+            <h3>Home Direction</h3>
+            <div class="control-group">
+                <span class="label">Direction:</span>
+                <select id="homeDirection">
+                    <option value="0">Clockwise</option>
+                    <option value="1">Counterclockwise</option>
+                </select>
+                <div class="button-group">
+                    <button id="setHomeDirection" class="primary">Set Direction</button>
+                    <button id="getHomeDirection" class="secondary">Get Direction</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <span class="label">Current:</span>
+                <div class="value-display" id="currentHomeDirection">-</div>
+            </div>
+
+            <h3>Home Threshold</h3>
+            <div class="control-group">
+                <span class="label">Threshold:</span>
+                <div class="input-group">
+                    <input type="number" id="homeThreshold" min="0" value="1000">
+                    <div class="button-group">
+                        <button id="setHomeThreshold" class="primary">Set Threshold</button>
+                        <button id="getHomeThreshold" class="secondary">Get Threshold</button>
+                    </div>
+                </div>
+            </div>
+            <div class="control-group">
+                <span class="label">Current:</span>
+                <div class="value-display" id="currentHomeThreshold">-</div>
+            </div>
+
+            <h3>Home Speed</h3>
+            <div class="control-group">
+                <span class="label">Speed:</span>
+                <div class="input-group">
+                    <input type="number" id="homeSpeed" min="0" value="1000">
+                    <div class="button-group">
+                        <button id="setHomeSpeed" class="primary">Set Speed</button>
+                        <button id="getHomeSpeed" class="secondary">Get Speed</button>
+                    </div>
+                </div>
+            </div>
+            <div class="control-group">
+                <span class="label">Current:</span>
+                <div class="value-display" id="currentHomeSpeed">-</div>
+            </div>
+
+            <h3>Homed State</h3>
+            <div class="control-group">
+                <span class="label">Status:</span>
+                <div class="value-display" id="currentHomedState">-</div>
+                <div class="button-group">
+                    <button id="getHomedState" class="primary">Check State</button>
+                </div>
+            </div>
+
+            <h3>Home Command</h3>
+            <div class="control-group">
+                <span class="label">Command:</span>
+                <input type="number" id="homeCommand" value="1">
+                <div class="button-group">
+                    <button id="home" class="success">Execute Home</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Motor Control</h2>
+
+            <h3>Motor State</h3>
+            <div class="control-group">
+                <span class="label">State:</span>
+                <select id="motorState">
+                    <option value="0">OFF</option>
+                    <option value="1">POSITION</option>
+                    <option value="2">VELOCITY</option>
+                    <option value="3">VELOCITY_STEP</option>
+                    <option value="4">IDLE_ON</option>
+                    <option value="5">HOME</option>
+                </select>
+                <div class="button-group">
+                    <button id="setMotorState" class="primary">Set State</button>
+                    <button id="getMotorState" class="secondary">Get State</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <span class="label">Current:</span>
+                <div class="value-display" id="currentMotorState">-</div>
+            </div>
+
+            <h3>Motor Brake</h3>
+            <div class="control-group">
+                <span class="label">Brake Mode:</span>
+                <select id="motorBrake">
+                    <option value="0">NORMAL</option>
+                    <option value="1">FREEWHEELING</option>
+                    <option value="2">STRONG_BRAKING</option>
+                    <option value="3">BRAKING</option>
+                </select>
+                <div class="button-group">
+                    <button id="setMotorBrake" class="primary">Set Brake</button>
+                    <button id="getMotorBrake" class="secondary">Get Brake</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <span class="label">Current:</span>
+                <div class="value-display" id="currentMotorBrake">-</div>
+            </div>
+
+            <h3>Max Speed</h3>
+            <div class="control-group">
+                <span class="label">Max Speed:</span>
+                <div class="input-group">
+                    <input type="number" id="maxSpeed" min="0" value="1000">
+                    <div class="button-group">
+                        <button id="setMaxSpeed" class="primary">Set Max Speed</button>
+                        <button id="getMaxSpeed" class="secondary">Get Max Speed</button>
+                    </div>
+                </div>
+            </div>
+            <div class="control-group">
+                <span class="label">Current:</span>
+                <div class="value-display" id="currentMaxSpeed">-</div>
+            </div>
+
+            <h3>Acceleration</h3>
+            <div class="control-group">
+                <span class="label">Acceleration:</span>
+                <div class="input-group">
+                    <input type="number" id="acceleration" min="0" value="1000">
+                    <div class="button-group">
+                        <button id="setAcceleration" class="primary">Set Acceleration</button>
+                        <button id="getAcceleration" class="secondary">Get Acceleration</button>
+                    </div>
+                </div>
+            </div>
+            <div class="control-group">
+                <span class="label">Current:</span>
+                <div class="value-display" id="currentAcceleration">-</div>
+            </div>
+
+            <h3>Current Position</h3>
+            <div class="control-group">
+                <span class="label">Position (°):</span>
+                <div class="input-group">
+                    <input type="number" id="currentPosition" class="position-input" step="0.01" value="0">
+                    <div class="button-group">
+                        <button id="setCurrentPosition" class="primary">Set Position</button>
+                        <button id="getCurrentPosition" class="secondary">Get Position</button>
+                    </div>
+                </div>
+            </div>
+            <div class="control-group">
+                <span class="label">Current:</span>
+                <div class="value-display" id="currentPositionValue">-</div>
+            </div>
+
+            <h3>Target Position</h3>
+            <div class="control-group">
+                <span class="label">Position (°):</span>
+                <div class="input-group">
+                    <input type="number" id="targetPosition" class="position-input" step="0.01" value="0">
+                    <div class="button-group">
+                        <button id="setTargetPosition" class="primary">Set Target</button>
+                        <button id="getTargetPosition" class="secondary">Get Target</button>
+                    </div>
+                </div>
+            </div>
+            <div class="control-group">
+                <span class="label">Current:</span>
+                <div class="value-display" id="currentTargetPosition">-</div>
+            </div>
+
+            <h3>Relative Target Position</h3>
+            <div class="control-group">
+                <span class="label">Relative (°):</span>
+                <input type="number" id="relativeTargetPosition" class="position-input" step="0.01" value="90">
+                <div class="button-group">
+                    <button id="setRelativeTargetPosition" class="primary">Move Relative</button>
+                </div>
+            </div>
+
+            <h3>Velocity</h3>
+            <div class="control-group">
+                <span class="label">Velocity (°/s):</span>
+                <div class="input-group">
+                    <input type="number" id="velocity" class="velocity-input" step="0.01" value="10">
+                    <div class="button-group">
+                        <button id="setVelocity" class="primary">Set Velocity</button>
+                        <button id="getVelocity" class="secondary">Get Velocity</button>
+                    </div>
+                </div>
+            </div>
+            <div class="control-group">
+                <span class="label">Current:</span>
+                <div class="value-display" id="currentVelocity">-</div>
+            </div>
+
+            <h3>Velocity and Steps</h3>
+            <div class="control-group">
+                <span class="label">Velocity:</span>
+                <input type="number" id="velocityStepsVelocity" class="velocity-input" value="100">
+                <span class="label">Steps:</span>
+                <input type="number" id="velocityStepsSteps" class="steps-input" value="1000">
+                <span class="label">Mode:</span>
+                <select id="velocityStepsMode">
+                    <option value="0">ABSOLUTE</option>
+                    <option value="1">RELATIVE</option>
+                </select>
+                <div class="button-group">
+                    <button id="setVelocityAndSteps" class="primary">Set Velocity & Steps</button>
+                </div>
+            </div>
+
+            <h3>Path Control</h3>
+            <div class="control-group">
+                <span class="label">Path ID:</span>
+                <input type="number" id="pathId" class="path-input" min="0" value="0">
+                <div class="button-group">
+                    <button id="startPath" class="success">Start Path</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="AxisProtocol.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

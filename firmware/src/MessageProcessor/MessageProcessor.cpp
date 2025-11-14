@@ -38,8 +38,6 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
   // TODO: check for checksum
   DEBUG_PRINTF("Received %d bytes\n", recv_bytes_size);
   // DEBUG_PRINTF("Received message type: 0x%x\n", hdr->message_type);
-  addrLedController.AddLedStep(CRGB::Blue, 1000);
-  addrLedController.AddLedStep(CRGB::Black, 1000);
   switch ((MessageTypes)hdr->message_type)
   {
   case MessageTypes::AckId: // 0x0100
@@ -62,7 +60,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     v_buf[1] = (uint8_t)v1;
     v_buf[2] = (uint8_t)v2;
     v_buf[3] = (uint8_t)v3;
-    msg->footer.checksum = 0;
+    msg->footer.checksum = CalculateChecksum((uint8_t *)msg, sizeof(VersionMessage) - sizeof(Footer));
     SendMsg(send_buffer, sizeof(VersionMessage));
     DEBUG_PRINTF("0x%8X\n", msg->value);
     break;
@@ -83,7 +81,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->header.message_type = (uint16_t)MessageTypes::GetI2CAddressId;
     msg->header.body_size = sizeof(I2CAddressMessage::value);
     msg->value = FlashStorage::GetI2CSettings()->address;
-    msg->footer.checksum = 0;
+    msg->footer.checksum = CalculateChecksum((uint8_t *)msg, sizeof(I2CAddressMessage) - sizeof(Footer));
     // DEBUG_PRINTF("Sending I2C Address: 0x%x\n", msg->value);
     SendMsg(send_buffer, sizeof(I2CAddressMessage));
     break;
@@ -105,7 +103,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->header.message_type = (uint16_t)MessageTypes::GetEthernetAddressId;
     msg->header.body_size = sizeof(EthernetAddressMessage::value);
     msg->value = FlashStorage::GetEthernetSettings()->ip_address;
-    msg->footer.checksum = 0;
+    msg->footer.checksum = CalculateChecksum((uint8_t *)msg, sizeof(EthernetAddressMessage) - sizeof(Footer));
     SendMsg(send_buffer, sizeof(EthernetAddressMessage));
     // DEBUG_PRINTF("Sending IP Address: 0x%x\n", sizeof(IPAddressMessage));
     break;
@@ -127,7 +125,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->header.message_type = (uint16_t)MessageTypes::GetEthernetPortId;
     msg->header.body_size = sizeof(EthernetPortMessage::value);
     msg->value = FlashStorage::GetEthernetSettings()->port;
-    msg->footer.checksum = 0;
+    msg->footer.checksum = CalculateChecksum((uint8_t *)msg, sizeof(EthernetPortMessage) - sizeof(Footer));
     SendMsg(send_buffer, sizeof(EthernetPortMessage));
     DEBUG_PRINTF("Sending Port: %d\n", msg->value);
     // DEBUG_PRINTF("Port msg size: %d\n", sizeof(EthernetPortMessage));
@@ -140,7 +138,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->header.message_type = (uint16_t)MessageTypes::GetMacAddressId;
     msg->header.body_size = sizeof(MacAddressMessage::mac);
     memcpy(&(msg->mac[0]), FlashStorage::GetMacAddress(), 6);
-    msg->footer.checksum = 0;
+    msg->footer.checksum = CalculateChecksum((uint8_t *)msg, sizeof(MacAddressMessage) - sizeof(Footer));
     SendMsg(send_buffer, sizeof(MacAddressMessage));
     break;
   }
@@ -156,14 +154,14 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
   {
     LedColorMessage *msg = (LedColorMessage *)recv_bytes;
     //DEBUG_PRINTF("Setting LED Color: %d, %d, %d\n", msg->ledColor[0], msg->ledColor[1], msg->ledColor[2]);
-    addrLedController.SetLEDColor(CHSV(msg->ledColor[0], msg->ledColor[1], msg->ledColor[2]));
+    addrLedController.SetLEDColor(CRGB(msg->ledColor[0], msg->ledColor[1], msg->ledColor[2]));
     
     AckMessage *ack_msg = (AckMessage *)&send_buffer[0];
     ack_msg->header.message_type = (uint16_t)MessageTypes::AckId;
     ack_msg->header.body_size = sizeof(AckMessage::ack_message_type) + sizeof(AckMessage::status);
     ack_msg->ack_message_type = (uint16_t)MessageTypes::SetLedColorId;
     ack_msg->status = (uint8_t)StatusCodes::SUCCESS;
-    ack_msg->footer.checksum = 0;
+    ack_msg->footer.checksum = CalculateChecksum((uint8_t *)ack_msg, sizeof(AckMessage) - sizeof(Footer));
     SendMsg(send_buffer, sizeof(AckMessage));
 
     break;
@@ -178,7 +176,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->ledColor[0] = led_color.r;
     msg->ledColor[1] = led_color.g;
     msg->ledColor[2] = led_color.b;
-    msg->footer.checksum = 0;
+    msg->footer.checksum = CalculateChecksum((uint8_t *)msg, sizeof(LedColorMessage) - sizeof(Footer));
     SendMsg(send_buffer, sizeof(LedColorMessage));
     break;
   }
@@ -205,7 +203,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->header.message_type = (uint16_t)MessageTypes::GetHomeDirectionId;
     msg->header.body_size = sizeof(HomeDirectionMessage::value);
     msg->value = (uint8_t)motorController.GetHomeDirection();
-    msg->footer.checksum = 0;
+    msg->footer.checksum = CalculateChecksum((uint8_t *)msg, sizeof(HomeDirectionMessage) - sizeof(Footer));
     SendMsg(send_buffer, sizeof(HomeDirectionMessage));
     break;
   }
@@ -225,7 +223,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->header.message_type = (uint16_t)MessageTypes::GetHomeThresholdId;
     msg->header.body_size = sizeof(HomeThresholdMessage::value);
     msg->value = motorController.GetHomeThreshold();
-    msg->footer.checksum = 0;
+    msg->footer.checksum = CalculateChecksum((uint8_t *)msg, sizeof(HomeThresholdMessage) - sizeof(Footer));
     SendMsg(send_buffer, sizeof(HomeThresholdMessage));
     break;
   }
@@ -245,7 +243,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->header.message_type = (uint16_t)MessageTypes::GetHomeSpeedId;
     msg->header.body_size = sizeof(HomeSpeedMessage::value);
     msg->value = motorController.GetHomingSpeed();
-    msg->footer.checksum = 0;
+    msg->footer.checksum = CalculateChecksum((uint8_t *)msg, sizeof(HomeSpeedMessage) - sizeof(Footer));
     SendMsg(send_buffer, sizeof(HomeSpeedMessage));
     break;
   }
@@ -256,7 +254,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->header.message_type = (uint16_t)MessageTypes::GetHomedStateId;
     msg->header.body_size = sizeof(HomedStateMessage::value);
     msg->value = (uint8_t)motorController.GetHomeState();
-    msg->footer.checksum = 0;
+    msg->footer.checksum = CalculateChecksum((uint8_t *)msg, sizeof(HomedStateMessage) - sizeof(Footer));
     SendMsg(send_buffer, sizeof(HomedStateMessage));
     //DEBUG_PRINTF("Sending Homed State: %d\n", msg->value);
 
@@ -283,7 +281,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->header.message_type = (uint16_t)MessageTypes::GetMotorStateId;
     msg->header.body_size = sizeof(MotorStateMessage::value);
     msg->value = (uint8_t)motorController.GetMotorState();
-    msg->footer.checksum = 0;
+    msg->footer.checksum = CalculateChecksum((uint8_t *)msg, sizeof(MotorStateMessage) - sizeof(Footer));
     SendMsg(send_buffer, sizeof(MotorStateMessage));
     // DEBUG_PRINTF("Sending Motor State: %d\n", (uint8_t)motorController.GetMotorState());
     break;
@@ -303,7 +301,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->header.message_type = (uint16_t)MessageTypes::GetMotorBrakeId;
     msg->header.body_size = sizeof(MotorBrakeMessage::value);
     msg->value = (uint8_t)motorController.GetMotorBraking();
-    msg->footer.checksum = 0;
+    msg->footer.checksum = CalculateChecksum((uint8_t *)msg, sizeof(MotorBrakeMessage) - sizeof(Footer));
     SendMsg(send_buffer, sizeof(MotorBrakeMessage));
     break;
   }
@@ -322,7 +320,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->header.message_type = (uint16_t)MessageTypes::GetMaxSpeedId;
     msg->header.body_size = sizeof(MaxSpeedMessage::value);
     msg->value = motorController.GetMaxSpeed();
-    msg->footer.checksum = 0;
+    msg->footer.checksum = CalculateChecksum((uint8_t *)msg, sizeof(MaxSpeedMessage) - sizeof(Footer));
     SendMsg(send_buffer, sizeof(MaxSpeedMessage));
     break;
   }
@@ -341,7 +339,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->header.message_type = (uint16_t)MessageTypes::GetAccelerationId;
     msg->header.body_size = sizeof(AccelerationMessage::value);
     msg->value = motorController.GetAcceleration();
-    msg->footer.checksum = 0;
+    msg->footer.checksum = CalculateChecksum((uint8_t *)msg, sizeof(AccelerationMessage) - sizeof(Footer));
     SendMsg(send_buffer, sizeof(AccelerationMessage));
     break;
   }
@@ -361,7 +359,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->header.message_type = (uint16_t)MessageTypes::GetCurrentPositionId;
     msg->header.body_size = sizeof(CurrentPositionMessage::value);
     msg->value = motorController.GetPosition();
-    msg->footer.checksum = 0;
+    msg->footer.checksum = CalculateChecksum((uint8_t *)msg, sizeof(CurrentPositionMessage) - sizeof(Footer));
     SendMsg(send_buffer, sizeof(CurrentPositionMessage));
     break;
   }
@@ -381,7 +379,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->header.message_type = (uint16_t)MessageTypes::GetTargetPositionId;
     msg->header.body_size = sizeof(TargetPositionMessage::value);
     msg->value = motorController.GetPositionTarget();
-    msg->footer.checksum = 0;
+    msg->footer.checksum = CalculateChecksum((uint8_t *)msg, sizeof(TargetPositionMessage) - sizeof(Footer));
     SendMsg(send_buffer, sizeof(TargetPositionMessage));
     break;
   }
@@ -410,7 +408,7 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
     msg->header.message_type = (uint16_t)MessageTypes::GetVelocityId;
     msg->header.body_size = sizeof(VelocityMessage::value);
     msg->value = motorController.GetVelocityTarget();
-    msg->footer.checksum = 0;
+    msg->footer.checksum = CalculateChecksum((uint8_t *)msg, sizeof(VelocityMessage) - sizeof(Footer));
     SendMsg(send_buffer, sizeof(VelocityMessage));
     break;
   }
@@ -441,14 +439,8 @@ void MessageProcessor::HandleIncomingMsg(uint8_t *recv_bytes, uint32_t recv_byte
   if (recv_bytes_size == 0)
     return;
 
-  if (recv_bytes[0] == '{')
-  {
-    HandleJsonMsg(recv_bytes, recv_bytes_size);
-  }
-  else
-  {
-    HandleByteMsg(recv_bytes, recv_bytes_size);
-  }
+  HandleByteMsg(recv_bytes, recv_bytes_size);
+
 }
 
 void MessageProcessor::SendMsg(uint8_t *send_bytes, uint32_t send_bytes_size)
@@ -473,6 +465,16 @@ void MessageProcessor::SendAck(MessageTypes msg_type, StatusCodes status)
   ack_msg->header.body_size = sizeof(AckMessage::ack_message_type) + sizeof(AckMessage::status);
   ack_msg->ack_message_type = (uint16_t)msg_type;
   ack_msg->status = (uint8_t)status;
-  ack_msg->footer.checksum = 0;
+  ack_msg->footer.checksum = CalculateChecksum((uint8_t *)ack_msg, sizeof(AckMessage) - sizeof(Footer));
   SendMsg(send_buffer, sizeof(AckMessage));
+}
+
+uint16_t MessageProcessor::CalculateChecksum(uint8_t *data, uint32_t size)
+{
+  uint16_t checksum = 0;
+  for (uint32_t i = 0; i < size; ++i)
+  {
+    checksum += data[i];
+  }
+  return checksum;
 }

@@ -50,6 +50,7 @@ private:
   IExternalInterface *last_interface_ = nullptr;
   uint8_t send_buffer[1024];
   void SendAck(MessageTypes msg_type, StatusCodes status);
+  uint16_t CalculateChecksum(uint8_t *data, uint32_t size);
 public:
   MessageProcessor(uint32_t period);
 

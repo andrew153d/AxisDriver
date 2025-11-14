@@ -512,7 +512,7 @@ Messages with invalid checksums, unknown message types, or incorrect body sizes 
 
 Use the following prompt to instruct an LLM to generate implementation files based on this protocol documentation:
 
-"Based on the Axis Driver Protocol Documentation provided in AxisProtocol.md, update firmware/include/AxisMessages.h and examples/Python/AxisProtocol.py that implement the message structures, parsing, and serialization for the communication protocol. Include:
+"Based on the Axis Driver Protocol Documentation provided in AxisProtocol.md, update firmware/include/AxisMessages.h, examples/Python/AxisProtocol.py, and web_configurator/AxisProtocol.js that implement the message structures, parsing, and serialization for the communication protocol. Include:
 
 - Definitions for all message types with their exact byte offsets, sizes, and field names.
 - Length definitions for each message type
