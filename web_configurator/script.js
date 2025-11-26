@@ -4,10 +4,15 @@ let buffer = new Uint8Array();
 // Initialize status
 document.addEventListener('DOMContentLoaded', function() {
     const statusElement = document.getElementById('status');
+    const indicatorElement = document.getElementById('connectionIndicator');
     statusElement.className = 'disconnected';
+    indicatorElement.className = 'connection-indicator disconnected';
 });
 
-document.getElementById('connect').addEventListener('click', connect);
+document.getElementById('connect').addEventListener('click', function() {
+    console.log('Connect button clicked');
+    connect();
+});
 
 // Basic Configuration
 document.getElementById('getVersion').addEventListener('click', () => sendMessage(buildGetVersion()));
@@ -56,20 +61,34 @@ document.getElementById('startPath').addEventListener('click', startPath);
 
 async function connect() {
     const statusElement = document.getElementById('status');
+    const indicatorElement = document.getElementById('connectionIndicator');
+    
+    // Check if Web Serial API is supported
+    if (!('serial' in navigator)) {
+        alert('Web Serial API not supported. Please use Chrome/Edge 89+ and ensure the page is served over HTTPS.');
+        statusElement.textContent = 'Web Serial not supported';
+        statusElement.className = 'disconnected';
+        indicatorElement.className = 'connection-indicator disconnected';
+        return;
+    }
+    
     statusElement.textContent = 'Connecting...';
     statusElement.className = 'connecting';
+    indicatorElement.className = 'connection-indicator connecting';
 
     try {
         port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
         statusElement.textContent = 'Connected';
         statusElement.className = 'connected';
+        indicatorElement.className = 'connection-indicator connected';
         const reader = port.readable.getReader();
         readLoop(reader);
     } catch (error) {
         console.error('Error connecting:', error);
-        statusElement.textContent = 'Connection failed';
+        statusElement.textContent = 'Connection failed: ' + error.message;
         statusElement.className = 'disconnected';
+        indicatorElement.className = 'connection-indicator disconnected';
     }
 }
 
@@ -82,6 +101,12 @@ async function readLoop(reader) {
         }
     } catch (error) {
         console.error('Read error:', error);
+        // Update connection status
+        const statusElement = document.getElementById('status');
+        const indicatorElement = document.getElementById('connectionIndicator');
+        statusElement.textContent = 'Connection lost';
+        statusElement.className = 'disconnected';
+        indicatorElement.className = 'connection-indicator disconnected';
     }
 }
 

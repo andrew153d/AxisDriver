@@ -72,6 +72,52 @@ h1 {
     font-size: 1.5rem;
 }
 
+.connection-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.connection-indicator {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.connection-indicator.connected {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+    animation: connectedPulse 2s infinite ease-in-out;
+}
+
+.connection-indicator.connecting {
+    background-color: var(--warning-color);
+    border-color: var(--warning-color);
+    animation: connectingBlink 1s infinite ease-in-out;
+}
+
+.connection-indicator.disconnected {
+    background-color: var(--error-color);
+    border-color: var(--error-color);
+}
+
+@keyframes connectedPulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes connectingBlink {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+
 #status {
     display: inline-block;
     padding: 0.5rem 1rem;
@@ -382,3 +428,4 @@ button:disabled {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--secondary-color);
 }
+
