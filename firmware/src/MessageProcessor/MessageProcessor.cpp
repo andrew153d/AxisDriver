@@ -35,6 +35,9 @@ void MessageProcessor::HandleByteMsg(uint8_t *recv_bytes, uint32_t recv_bytes_si
 {
   Header *hdr = (Header *)&recv_bytes[0];
 
+  addrLedController.AddLedStep(CRGB::Green, 20);
+  addrLedController.AddLedStep(CRGB::Black, 1);
+
   // TODO: check for checksum
   DEBUG_PRINTF("Received %d bytes\n", recv_bytes_size);
   // DEBUG_PRINTF("Received message type: 0x%x\n", hdr->message_type);
@@ -447,6 +450,9 @@ void MessageProcessor::SendMsg(uint8_t *send_bytes, uint32_t send_bytes_size)
 {
   if (last_interface_ != nullptr)
   {
+    addrLedController.AddLedStep(CRGB::Blue, 20);
+    addrLedController.AddLedStep(CRGB::Black, 1);
+
     last_interface_->SendMsg(send_bytes, send_bytes_size);
     return;
   }

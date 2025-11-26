@@ -156,6 +156,8 @@ void MotorController::OnTimer()
         // DEBUG_PRINTF("Finished velocity step at %ld\n", stepper.currentPosition());
         stepper.setSpeed(0);
         SetMotorState(MotorStates::IDLE_ON);
+        addrLedController.AddLedStep(CRGB::Purple, 500);
+        addrLedController.AddLedStep(CRGB::Black, 1);
         return;
       }
 

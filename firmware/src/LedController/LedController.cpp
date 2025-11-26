@@ -12,15 +12,12 @@ void AddrLedController::OnStop()
 
 void AddrLedController::OnRun()
 {
-    if(ledSteps.size() > 0)
+    if (ledSteps.size() > 0)
     {
-        if(millis() - led_step_timer > ledSteps.front().duration)
-        {
-            leds[0] = ledSteps.front().color;
-            FastLED.show();
-            ledSteps.pop();
-            led_step_timer = millis();
-        }
+        leds[0] = ledSteps.front().color;
+        executionPeriod = ledSteps.front().duration;
+        FastLED.show();
+        ledSteps.pop();
         return;
     }
 }
@@ -42,8 +39,9 @@ CRGB AddrLedController::GetLedColor()
     return leds[0];
 }
 
-void AddrLedController::AddLedStep(CRGB color, uint32_t duration){
-      ledSteps.push({color, duration});
+void AddrLedController::AddLedStep(CRGB color, uint32_t duration)
+{
+    ledSteps.push({color, duration});
 }
 
 AddrLedController addrLedController(500);
