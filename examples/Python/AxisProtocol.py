@@ -473,6 +473,7 @@ def SetVelocityAndStepsMessage(velocity: int, steps: int, position_mode: Positio
         position_mode: Position mode from PositionMode enum
     """
     body = struct.pack('<iiB', velocity, steps, position_mode)
+    print("SetVelocityAndStepsMessage: velocity=%d, steps=%d, position_mode=%s" % (velocity, steps, position_mode))
     return create_message(MessageTypes.SET_VELOCITY_AND_STEPS_ID, body)
 
 def StartPathMessage(path_id: int) -> bytes:
