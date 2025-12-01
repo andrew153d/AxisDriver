@@ -1,13 +1,41 @@
 let port;
 let buffer = new Uint8Array();
 
-// Initialize status
+// Initialize status and start retro effects
 document.addEventListener('DOMContentLoaded', function() {
     const statusElement = document.getElementById('status');
     const indicatorElement = document.getElementById('connectionIndicator');
     statusElement.className = 'disconnected';
     indicatorElement.className = 'connection-indicator disconnected';
+    
+    // Start timestamp update
+    updateTimestamp();
+    setInterval(updateTimestamp, 1000);
+    
+    // Add terminal boot effect
+    setTimeout(() => {
+        document.body.classList.add('booted');
+    }, 800);
 });
+
+// Update timestamp display
+function updateTimestamp() {
+    const now = new Date();
+    const timestamp = now.toLocaleString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    }).replace(/[/,]/g, '-').replace(' ', ' ');
+    
+    const timestampElement = document.getElementById('timestamp');
+    if (timestampElement) {
+        timestampElement.textContent = timestamp;
+    }
+}
 
 document.getElementById('connect').addEventListener('click', function() {
     console.log('Connect button clicked');
@@ -66,27 +94,27 @@ async function connect() {
     // Check if Web Serial API is supported
     if (!('serial' in navigator)) {
         alert('Web Serial API not supported. Please use Chrome/Edge 89+ and ensure the page is served over HTTPS.');
-        statusElement.textContent = 'Web Serial not supported';
+        statusElement.textContent = 'OFFLINE';
         statusElement.className = 'disconnected';
         indicatorElement.className = 'connection-indicator disconnected';
         return;
     }
     
-    statusElement.textContent = 'Connecting...';
+    statusElement.textContent = 'CONNECTING';
     statusElement.className = 'connecting';
     indicatorElement.className = 'connection-indicator connecting';
 
     try {
         port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
-        statusElement.textContent = 'Connected';
+        statusElement.textContent = 'ONLINE';
         statusElement.className = 'connected';
         indicatorElement.className = 'connection-indicator connected';
         const reader = port.readable.getReader();
         readLoop(reader);
     } catch (error) {
         console.error('Error connecting:', error);
-        statusElement.textContent = 'Connection failed: ' + error.message;
+        statusElement.textContent = 'CONNECTION FAILED';
         statusElement.className = 'disconnected';
         indicatorElement.className = 'connection-indicator disconnected';
     }
@@ -104,23 +132,64 @@ async function readLoop(reader) {
         // Update connection status
         const statusElement = document.getElementById('status');
         const indicatorElement = document.getElementById('connectionIndicator');
-        statusElement.textContent = 'Connection lost';
+        statusElement.textContent = 'CONNECTION LOST';
         statusElement.className = 'disconnected';
         indicatorElement.className = 'connection-indicator disconnected';
     }
 }
 
 function processData(data) {
+    // Log all incoming raw bytes
+    const hexBytes = Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+    console.log(`[SERIAL RX] Received ${data.length} bytes: ${hexBytes}`);
+    console.log(`[SERIAL RX] Raw bytes (decimal): [${Array.from(data).join(', ')}]`);
+    
     buffer = new Uint8Array([...buffer, ...data]);
+    console.log(`[SERIAL] Buffer now has ${buffer.length} bytes total`);
+    
     while (buffer.length >= 6) {
-        const view = new DataView(buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.length));
-        const message_type = view.getUint16(0, true);
-        const body_size = view.getUint16(2, true);
-        const total_size = 4 + body_size + 2;
-        if (buffer.length < total_size) break;
-        const message = buffer.slice(0, total_size);
-        buffer = buffer.slice(total_size);
-        handleMessage(message);
+        try {
+            const view = new DataView(buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.length));
+            const message_type = view.getUint16(0, true);
+            const body_size = view.getUint16(2, true);
+            const total_size = 4 + body_size + 2;
+            
+            console.log(`[SERIAL] Found potential message: Type=0x${message_type.toString(16).padStart(4, '0').toUpperCase()}, BodySize=${body_size}, TotalSize=${total_size}`);
+            
+            if (buffer.length < total_size) {
+                console.log(`[SERIAL] Need more data: have ${buffer.length}, need ${total_size}`);
+                break;
+            }
+            
+            const message = buffer.slice(0, total_size);
+            buffer = buffer.slice(total_size);
+            
+            // Log the complete message being processed
+            const msgHex = Array.from(message).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+            console.log(`[SERIAL] Processing complete message (${total_size} bytes): ${msgHex}`);
+            
+            // Verify checksum before processing
+            if (verifyChecksum(message)) {
+                console.log('[SERIAL] ✓ Checksum valid');
+                handleMessage(message);
+            } else {
+                console.error('[SERIAL] ✗ Checksum invalid - message corrupted:', msgHex);
+                // Continue processing in case there are other valid messages in buffer
+            }
+            
+        } catch (error) {
+            console.error(`[SERIAL] Error processing data: ${error.message}`);
+            // If we can't parse header, try to recover by dropping one byte
+            if (buffer.length > 0) {
+                console.warn(`[SERIAL] Dropping one byte to try to resync: 0x${buffer[0].toString(16).padStart(2, '0').toUpperCase()}`);
+                buffer = buffer.slice(1);
+            }
+        }
+    }
+    
+    if (buffer.length > 0) {
+        const bufferHex = Array.from(buffer).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+        console.log(`[SERIAL] ${buffer.length} bytes remaining in buffer: ${bufferHex}`);
     }
 }
 
@@ -128,110 +197,178 @@ function handleMessage(msg) {
     const view = new DataView(msg.buffer);
     const message_type = view.getUint16(0, true);
     const body_size = view.getUint16(2, true);
-    switch (message_type) {
-        case MESSAGE_TYPES.AckId:
-            const ack = parseAck(msg);
-            console.log('ACK for', ack.ackType.toString(16), 'status', ack.status);
-            break;
+    
+    // Find message type name for logging
+    const messageTypeName = Object.keys(MESSAGE_TYPES).find(key => MESSAGE_TYPES[key] === message_type) || 'UNKNOWN';
+    console.log(`[PROTOCOL] Handling message: ${messageTypeName} (0x${message_type.toString(16).padStart(4, '0').toUpperCase()})`);
+    
+    try {
+        switch (message_type) {
+            case MESSAGE_TYPES.AckId:
+                const ack = parseAck(msg);
+                const ackTypeName = Object.keys(MESSAGE_TYPES).find(key => MESSAGE_TYPES[key] === ack.ackType) || 'UNKNOWN';
+                console.log(`[PROTOCOL] ACK received: ${ackTypeName} (0x${ack.ackType.toString(16).padStart(4, '0').toUpperCase()}) Status: ${ack.status}`);
+                console.log('ACK for', ack.ackType.toString(16), 'status', ack.status);
+                break;
         case MESSAGE_TYPES.GetVersionId:
             const ver = parseGetVersion(msg);
-            document.getElementById('version').textContent = ver.version;
+            document.getElementById('version').textContent = `v${ver.version}`;
             break;
         case MESSAGE_TYPES.GetI2CAddressId:
             const i2c = parseGetI2CAddress(msg);
-            document.getElementById('currentI2CAddress').textContent = i2c.address;
+            // Update the input field with current value
+            document.getElementById('i2cAddress').value = i2c.address;
+            console.log(`[PROTOCOL] Current I2C Address: 0x${i2c.address.toString(16).toUpperCase().padStart(2, '0')}`);
             break;
         case MESSAGE_TYPES.GetEthernetAddressId:
             const eth = parseGetEthernetAddress(msg);
-            document.getElementById('currentEthernetAddress').textContent = ipToString(eth.ipAddress);
+            // Update the input field with current value
+            document.getElementById('ethernetAddress').value = ipToString(eth.ipAddress);
+            console.log(`[PROTOCOL] Current Ethernet Address: ${ipToString(eth.ipAddress)}`);
             break;
         case MESSAGE_TYPES.GetEthernetPortId:
             const port = parseGetEthernetPort(msg);
-            document.getElementById('currentEthernetPort').textContent = port.port;
+            // Update the input field with current value
+            document.getElementById('ethernetPort').value = port.port;
+            console.log(`[PROTOCOL] Current Ethernet Port: ${port.port}`);
             break;
         case MESSAGE_TYPES.GetMacAddressId:
             const mac = parseGetMacAddress(msg);
-            document.getElementById('currentMacAddress').textContent = mac.mac.map(b => b.toString(16).padStart(2, '0')).join(':');
+            document.getElementById('currentMacAddress').textContent = mac.mac.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(':');
             break;
         case MESSAGE_TYPES.GetLedColorId:
             const color = parseGetLedColor(msg);
-            document.getElementById('currentLedColor').textContent = `R:${color.r} G:${color.g} B:${color.b}`;
+            // Update the input fields with current values
+            document.getElementById('ledR').value = color.r;
+            document.getElementById('ledG').value = color.g;
+            document.getElementById('ledB').value = color.b;
+            console.log(`[PROTOCOL] Current LED Color: RGB(${color.r},${color.g},${color.b})`);
             break;
         case MESSAGE_TYPES.GetHomeDirectionId:
             const dir = parseGetHomeDirection(msg);
-            document.getElementById('currentHomeDirection').textContent = dir.direction === 0 ? 'Clockwise' : 'Counterclockwise';
+            // Update the select field with current value
+            document.getElementById('homeDirection').value = dir.direction;
+            console.log(`[PROTOCOL] Current Home Direction: ${dir.direction === 0 ? 'CLOCKWISE' : 'COUNTER-CLOCKWISE'}`);
             break;
         case MESSAGE_TYPES.GetHomeThresholdId:
             const thresh = parseGetHomeThreshold(msg);
-            document.getElementById('currentHomeThreshold').textContent = thresh.threshold;
+            // Update the input field with current value
+            document.getElementById('homeThreshold').value = thresh.threshold;
+            console.log(`[PROTOCOL] Current Home Threshold: ${thresh.threshold}`);
             break;
         case MESSAGE_TYPES.GetHomeSpeedId:
             const hspeed = parseGetHomeSpeed(msg);
-            document.getElementById('currentHomeSpeed').textContent = hspeed.speed;
+            // Update the input field with current value
+            document.getElementById('homeSpeed').value = hspeed.speed;
+            console.log(`[PROTOCOL] Current Home Speed: ${hspeed.speed}`);
             break;
         case MESSAGE_TYPES.GetHomedStateId:
             const homed = parseGetHomedState(msg);
-            document.getElementById('currentHomedState').textContent = homed.homed ? 'Homed' : 'Not Homed';
+            document.getElementById('currentHomedState').textContent = homed.homed ? 'HOMED' : 'NOT_HOMED';
             break;
         case MESSAGE_TYPES.GetMotorStateId:
             const mstate = parseGetMotorState(msg);
             const stateNames = ['OFF', 'POSITION', 'VELOCITY', 'VELOCITY_STEP', 'IDLE_ON', 'HOME'];
-            document.getElementById('currentMotorState').textContent = stateNames[mstate.motorState] || 'Unknown';
+            // Update the select field with current value
+            document.getElementById('motorState').value = mstate.motorState;
+            console.log(`[PROTOCOL] Current Motor State: ${stateNames[mstate.motorState] || 'UNKNOWN'} (${mstate.motorState})`);
             break;
         case MESSAGE_TYPES.GetMotorBrakeId:
             const brake = parseGetMotorBrake(msg);
             const brakeNames = ['NORMAL', 'FREEWHEELING', 'STRONG_BRAKING', 'BRAKING'];
-            document.getElementById('currentMotorBrake').textContent = brakeNames[brake.brakeMode] || 'Unknown';
+            // Update the select field with current value
+            document.getElementById('motorBrake').value = brake.brakeMode;
+            console.log(`[PROTOCOL] Current Motor Brake: ${brakeNames[brake.brakeMode] || 'UNKNOWN'} (${brake.brakeMode})`);
             break;
         case MESSAGE_TYPES.GetMaxSpeedId:
             const maxspd = parseGetMaxSpeed(msg);
-            document.getElementById('currentMaxSpeed').textContent = maxspd.maxSpeed;
+            // Update the input field with current value
+            document.getElementById('maxSpeed').value = maxspd.maxSpeed;
+            console.log(`[PROTOCOL] Current Max Speed: ${maxspd.maxSpeed}`);
             break;
         case MESSAGE_TYPES.GetAccelerationId:
             const accel = parseGetAcceleration(msg);
-            document.getElementById('currentAcceleration').textContent = accel.acceleration;
+            // Update the input field with current value
+            document.getElementById('acceleration').value = accel.acceleration;
+            console.log(`[PROTOCOL] Current Acceleration: ${accel.acceleration}`);
             break;
         case MESSAGE_TYPES.GetCurrentPositionId:
             const cpos = parseGetCurrentPosition(msg);
-            document.getElementById('currentPositionValue').textContent = cpos.position.toFixed(2);
+            // Update the input field with current value
+            document.getElementById('currentPosition').value = cpos.position.toFixed(2);
+            console.log(`[PROTOCOL] Current Position: ${cpos.position.toFixed(2)}°`);
             break;
         case MESSAGE_TYPES.GetTargetPositionId:
             const tpos = parseGetTargetPosition(msg);
-            document.getElementById('currentTargetPosition').textContent = tpos.position.toFixed(2);
+            // Update the input field with current value
+            document.getElementById('targetPosition').value = tpos.position.toFixed(2);
+            console.log(`[PROTOCOL] Current Target Position: ${tpos.position.toFixed(2)}°`);
             break;
         case MESSAGE_TYPES.GetVelocityId:
             const vel = parseGetVelocity(msg);
-            document.getElementById('currentVelocity').textContent = vel.velocity.toFixed(2);
+            // Update the input field with current value
+            document.getElementById('velocity').value = vel.velocity.toFixed(2);
+            console.log(`[PROTOCOL] Current Velocity: ${vel.velocity.toFixed(2)}°/s`);
             break;
         default:
+            console.warn(`[PROTOCOL] Unknown message type: 0x${message_type.toString(16).padStart(4, '0').toUpperCase()}`);
+            const unknownHex = Array.from(msg).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+            console.log(`[PROTOCOL] Unknown message bytes: ${unknownHex}`);
             console.log('Unknown message type:', message_type.toString(16));
+    }
+    } catch (error) {
+        console.error(`[PROTOCOL] Error parsing message: ${error.message}`);
+        const errorHex = Array.from(msg).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+        console.error(`[PROTOCOL] Failed message bytes: ${errorHex}`);
+        console.error('Message parsing error:', error);
     }
 }
 
 async function sendMessage(msg) {
-    if (!port) return;
+    if (!port) {
+        console.error('[SERIAL TX] Cannot send message - no serial port connection');
+        return;
+    }
+    
+    // Determine message type for logging
+    if (msg.length >= 2) {
+        const view = new DataView(msg.buffer, msg.byteOffset);
+        const message_type = view.getUint16(0, true);
+        const messageTypeName = Object.keys(MESSAGE_TYPES).find(key => MESSAGE_TYPES[key] === message_type) || 'UNKNOWN';
+        const hexBytes = Array.from(msg).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+        console.log(`[SERIAL TX] Sending message: ${messageTypeName} (0x${message_type.toString(16).padStart(4, '0').toUpperCase()}) - ${msg.length} bytes`);
+        console.log(`[SERIAL TX] Bytes: ${hexBytes}`);
+    } else {
+        const hexBytes = Array.from(msg).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+        console.log(`[SERIAL TX] Sending ${msg.length} bytes: ${hexBytes}`);
+    }
+    
     try {
         const writer = port.writable.getWriter();
         await writer.write(msg);
         writer.releaseLock();
+        console.log('[SERIAL TX] Message sent successfully');
     } catch (error) {
+        console.error(`[SERIAL TX] Send error: ${error.message}`);
         console.error('Send error:', error);
     }
 }
 
 // Utility functions
 function ipToString(ip) {
+    // IP is stored as little-endian 32-bit integer, so bytes are reversed
     return [
-        (ip >>> 24) & 0xFF,
-        (ip >>> 16) & 0xFF,
+        ip & 0xFF,
         (ip >>> 8) & 0xFF,
-        ip & 0xFF
+        (ip >>> 16) & 0xFF,
+        (ip >>> 24) & 0xFF
     ].join('.');
 }
 
 function stringToIp(ipString) {
     const parts = ipString.split('.').map(Number);
-    return (parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3];
+    // Store as little-endian: first octet in least significant byte
+    return parts[0] | (parts[1] << 8) | (parts[2] << 16) | (parts[3] << 24);
 }
 
 // Handler functions

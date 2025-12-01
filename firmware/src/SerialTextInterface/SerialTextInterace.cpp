@@ -69,5 +69,5 @@ void SerialTextInterface::HandleIncomingMsg(uint8_t* recv_bytes, uint32_t recv_b
 void SerialTextInterface::SendMsg(uint8_t* send_bytes, uint32_t send_bytes_size) {
     Serial.write(send_bytes, send_bytes_size);
     
-    Serial.println();  // Optionally add a newline at the end
+    //Serial.println();  // Optionally add a newline at the end
 }

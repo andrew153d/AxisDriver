@@ -3,363 +3,328 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Axis Driver Configurator</title>
+    <title>AXIS CONTROL TERMINAL</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <div class="terminal-bg"></div>
+    <div class="scan-lines"></div>
     <div class="container">
-        <header>
-            <h1>Axis Driver Configurator</h1>
-            <p class="subtitle">Configure and control your Axis Driver device</p>
+        <header class="terminal-header">
+            <div class="terminal-title">
+                <span class="blink">█</span> AXIS MOTOR CONTROL SYSTEM v2.1 <span class="blink">█</span>
+            </div>
+            <div class="system-status">
+                <span class="timestamp" id="timestamp"></span>
+                <span class="separator">|</span>
+                <span class="status-indicator">SYSTEM READY</span>
+            </div>
         </header>
 
-        <section class="connection-section">
-            <h2>Device Connection</h2>
-            <div class="connection-controls">
-                <div class="connection-indicator" id="connectionIndicator"></div>
-                <button id="connect" class="primary">Connect to Serial</button>
-            </div>
-            <div id="status" class="disconnected">Not connected</div>
-        </section>
-
-        <section class="section">
-            <h2>Basic Configuration</h2>
-
-            <h3>Firmware Version</h3>
-            <div class="control-group">
-                <span class="label">Version:</span>
-                <div class="value-display" id="version">-</div>
-                <div class="button-group">
-                    <button id="getVersion" class="primary">Get Version</button>
+        <section class="terminal-window">
+            <div class="window-header">
+                <span class="window-title">[DEVICE CONNECTION]</span>
+                <div class="window-controls">
+                    <span class="control-dot red"></span>
+                    <span class="control-dot yellow"></span>
+                    <span class="control-dot green"></span>
                 </div>
             </div>
-
-            <h3>I2C Address</h3>
-            <div class="control-group">
-                <span class="label">Address:</span>
-                <div class="input-group">
-                    <input type="number" id="i2cAddress" min="0" max="127" value="42">
-                    <div class="button-group">
-                        <button id="setI2CAddress" class="primary">Set Address</button>
-                        <button id="getI2CAddress" class="secondary">Get Address</button>
-                    </div>
+            <div class="terminal-content">
+                <div class="connection-display">
+                    <span class="prompt">CONNECTION&gt;</span>
+                    <span class="connection-indicator" id="connectionIndicator">●</span>
+                    <span id="status" class="disconnected">OFFLINE</span>
                 </div>
-            </div>
-            <div class="control-group">
-                <span class="label">Current:</span>
-                <div class="value-display" id="currentI2CAddress">-</div>
-            </div>
-
-            <h3>Ethernet Configuration</h3>
-            <div class="control-group">
-                <span class="label">IP Address:</span>
-                <div class="input-group">
-                    <input type="text" id="ethernetAddress" class="ip-input" value="192.168.1.100">
-                    <div class="button-group">
-                        <button id="setEthernetAddress" class="primary">Set IP</button>
-                        <button id="getEthernetAddress" class="secondary">Get IP</button>
-                    </div>
-                </div>
-            </div>
-            <div class="control-group">
-                <span class="label">Current IP:</span>
-                <div class="value-display" id="currentEthernetAddress">-</div>
-            </div>
-
-            <div class="control-group">
-                <span class="label">Port:</span>
-                <div class="input-group">
-                    <input type="number" id="ethernetPort" min="0" max="65535" value="8080">
-                    <div class="button-group">
-                        <button id="setEthernetPort" class="primary">Set Port</button>
-                        <button id="getEthernetPort" class="secondary">Get Port</button>
-                    </div>
-                </div>
-            </div>
-            <div class="control-group">
-                <span class="label">Current Port:</span>
-                <div class="value-display" id="currentEthernetPort">-</div>
-            </div>
-
-            <h3>MAC Address</h3>
-            <div class="control-group">
-                <span class="label">MAC:</span>
-                <div class="value-display mac-display" id="currentMacAddress">-</div>
-                <div class="button-group">
-                    <button id="getMacAddress" class="primary">Get MAC</button>
-                </div>
-            </div>
-
-            <div class="control-group">
-                <div class="button-group">
-                    <button id="saveConfiguration" class="success">Save Configuration</button>
+                <div class="command-line">
+                    <span class="prompt">COMMAND&gt;</span>
+                    <button id="connect" class="terminal-button">[ESTABLISH LINK]</button>
                 </div>
             </div>
         </section>
 
-        <section class="section">
-            <h2>LED Control</h2>
-
-            <h3>LED Color</h3>
-            <div class="control-group">
-                <span class="label">RGB Values:</span>
-                <div class="color-inputs">
-                    <input type="number" id="ledR" min="0" max="255" value="0" placeholder="R">
-                    <input type="number" id="ledG" min="0" max="255" value="0" placeholder="G">
-                    <input type="number" id="ledB" min="0" max="255" value="0" placeholder="B">
-                </div>
-                <div class="button-group">
-                    <button id="setLedColor" class="primary">Set Color</button>
-                    <button id="getLedColor" class="secondary">Get Color</button>
+        <section class="terminal-window">
+            <div class="window-header">
+                <span class="window-title">[SYSTEM CONFIG]</span>
+                <div class="window-controls">
+                    <span class="control-dot red"></span>
+                    <span class="control-dot yellow"></span>
+                    <span class="control-dot green"></span>
                 </div>
             </div>
-            <div class="control-group">
-                <span class="label">Current:</span>
-                <div class="value-display" id="currentLedColor">-</div>
+            <div class="terminal-content">
+
+            <div class="terminal-section">
+                <div class="section-header">FIRMWARE VERSION</div>
+                <div class="command-line">
+                    <span class="prompt">VERSION&gt;</span>
+                    <span class="data-field" id="version">UNKNOWN</span>
+                    <button id="getVersion" class="terminal-button">[QUERY]</button>
+                </div>
             </div>
 
-            <h3>Add LED Step</h3>
-            <div class="control-group">
-                <span class="label">Duration (ms):</span>
-                <input type="number" id="ledStepTime" min="0" value="1000">
-                <span class="label">RGB:</span>
-                <div class="color-inputs">
-                    <input type="number" id="ledStepR" min="0" max="255" value="255" placeholder="R">
-                    <input type="number" id="ledStepG" min="0" max="255" value="0" placeholder="G">
-                    <input type="number" id="ledStepB" min="0" max="255" value="0" placeholder="B">
+            <div class="terminal-section">
+                <div class="section-header">I2C ADDRESS CONFIG</div>
+                <div class="command-line">
+                    <span class="prompt">I2C&gt;</span>
+                    <input type="number" id="i2cAddress" class="terminal-input" min="0" max="127" placeholder="Current I2C Address (0-127)">
+                    <button id="setI2CAddress" class="terminal-button">[SET]</button>
+                    <button id="getI2CAddress" class="terminal-button secondary">[READ]</button>
                 </div>
-                <div class="button-group">
-                    <button id="addLedStep" class="primary">Add Step</button>
+            </div>
+
+            <div class="terminal-section">
+                <div class="section-header">ETHERNET CONFIG</div>
+                <div class="command-line">
+                    <span class="prompt">NETWORK&gt;</span>
+                    <input type="text" id="ethernetAddress" class="terminal-input ip-input" placeholder="Current IP Address (e.g. 192.168.1.100)">
+                    <button id="setEthernetAddress" class="terminal-button">[SET]</button>
+                    <button id="getEthernetAddress" class="terminal-button secondary">[READ]</button>
                 </div>
+                <div class="command-line">
+                    <span class="prompt">PORT&gt;</span>
+                    <input type="number" id="ethernetPort" class="terminal-input" min="0" max="65535" placeholder="Current Port Number (e.g. 8080)">
+                    <button id="setEthernetPort" class="terminal-button">[SET]</button>
+                    <button id="getEthernetPort" class="terminal-button secondary">[READ]</button>
+                </div>
+            </div>
+
+            <div class="terminal-section">
+                <div class="section-header">MAC ADDRESS</div>
+                <div class="command-line">
+                    <span class="prompt">MAC&gt;</span>
+                    <span class="data-field mac-display" id="currentMacAddress">--:--:--:--:--:--</span>
+                    <button id="getMacAddress" class="terminal-button">[SCAN]</button>
+                </div>
+            </div>
+
+            <div class="terminal-section save-section">
+                <div class="command-line">
+                    <span class="prompt">SYSTEM&gt;</span>
+                    <button id="saveConfiguration" class="terminal-button critical">[SAVE CONFIG TO FLASH]</button>
+                </div>
+            </div>
             </div>
         </section>
 
-        <section class="section">
-            <h2>Home Configuration</h2>
-
-            <h3>Home Direction</h3>
-            <div class="control-group">
-                <span class="label">Direction:</span>
-                <select id="homeDirection">
-                    <option value="0">Clockwise</option>
-                    <option value="1">Counterclockwise</option>
-                </select>
-                <div class="button-group">
-                    <button id="setHomeDirection" class="primary">Set Direction</button>
-                    <button id="getHomeDirection" class="secondary">Get Direction</button>
+        <section class="terminal-window">
+            <div class="window-header">
+                <span class="window-title">[LED CONTROL]</span>
+                <div class="window-controls">
+                    <span class="control-dot red"></span>
+                    <span class="control-dot yellow"></span>
+                    <span class="control-dot green"></span>
                 </div>
             </div>
-            <div class="control-group">
-                <span class="label">Current:</span>
-                <div class="value-display" id="currentHomeDirection">-</div>
-            </div>
-
-            <h3>Home Threshold</h3>
-            <div class="control-group">
-                <span class="label">Threshold:</span>
-                <div class="input-group">
-                    <input type="number" id="homeThreshold" min="0" value="1000">
-                    <div class="button-group">
-                        <button id="setHomeThreshold" class="primary">Set Threshold</button>
-                        <button id="getHomeThreshold" class="secondary">Get Threshold</button>
-                    </div>
-                </div>
-            </div>
-            <div class="control-group">
-                <span class="label">Current:</span>
-                <div class="value-display" id="currentHomeThreshold">-</div>
-            </div>
-
-            <h3>Home Speed</h3>
-            <div class="control-group">
-                <span class="label">Speed:</span>
-                <div class="input-group">
-                    <input type="number" id="homeSpeed" min="0" value="1000">
-                    <div class="button-group">
-                        <button id="setHomeSpeed" class="primary">Set Speed</button>
-                        <button id="getHomeSpeed" class="secondary">Get Speed</button>
-                    </div>
-                </div>
-            </div>
-            <div class="control-group">
-                <span class="label">Current:</span>
-                <div class="value-display" id="currentHomeSpeed">-</div>
-            </div>
-
-            <h3>Homed State</h3>
-            <div class="control-group">
-                <span class="label">Status:</span>
-                <div class="value-display" id="currentHomedState">-</div>
-                <div class="button-group">
-                    <button id="getHomedState" class="primary">Check State</button>
+            <div class="terminal-content">
+            <div class="terminal-section">
+                <div class="section-header">RGB COLOR VALUES</div>
+                <div class="command-line">
+                    <span class="prompt">RGB&gt;</span>
+                    <input type="number" id="ledR" class="terminal-input color-input" min="0" max="255" placeholder="Red (0-255)">
+                    <input type="number" id="ledG" class="terminal-input color-input" min="0" max="255" placeholder="Green (0-255)">
+                    <input type="number" id="ledB" class="terminal-input color-input" min="0" max="255" placeholder="Blue (0-255)">
+                    <button id="setLedColor" class="terminal-button">[SET]</button>
+                    <button id="getLedColor" class="terminal-button secondary">[READ]</button>
                 </div>
             </div>
 
-            <h3>Home Command</h3>
-            <div class="control-group">
-                <span class="label">Command:</span>
-                <input type="number" id="homeCommand" value="1">
-                <div class="button-group">
-                    <button id="home" class="success">Execute Home</button>
+            <div class="terminal-section">
+                <div class="section-header">ADD LED SEQUENCE STEP</div>
+                <div class="command-line">
+                    <span class="prompt">DURATION&gt;</span>
+                    <input type="number" id="ledStepTime" class="terminal-input" min="0" value="1000" placeholder="ms">
+                    <span class="separator">RGB:</span>
+                    <input type="number" id="ledStepR" class="terminal-input color-input" min="0" max="255" value="255" placeholder="R">
+                    <input type="number" id="ledStepG" class="terminal-input color-input" min="0" max="255" value="0" placeholder="G">
+                    <input type="number" id="ledStepB" class="terminal-input color-input" min="0" max="255" value="0" placeholder="B">
+                    <button id="addLedStep" class="terminal-button">[ADD STEP]</button>
                 </div>
+            </div>
             </div>
         </section>
 
-        <section class="section">
-            <h2>Motor Control</h2>
-
-            <h3>Motor State</h3>
-            <div class="control-group">
-                <span class="label">State:</span>
-                <select id="motorState">
-                    <option value="0">OFF</option>
-                    <option value="1">POSITION</option>
-                    <option value="2">VELOCITY</option>
-                    <option value="3">VELOCITY_STEP</option>
-                    <option value="4">IDLE_ON</option>
-                    <option value="5">HOME</option>
-                </select>
-                <div class="button-group">
-                    <button id="setMotorState" class="primary">Set State</button>
-                    <button id="getMotorState" class="secondary">Get State</button>
+        <section class="terminal-window">
+            <div class="window-header">
+                <span class="window-title">[HOME CALIBRATION]</span>
+                <div class="window-controls">
+                    <span class="control-dot red"></span>
+                    <span class="control-dot yellow"></span>
+                    <span class="control-dot green"></span>
                 </div>
             </div>
-            <div class="control-group">
-                <span class="label">Current:</span>
-                <div class="value-display" id="currentMotorState">-</div>
-            </div>
-
-            <h3>Motor Brake</h3>
-            <div class="control-group">
-                <span class="label">Brake Mode:</span>
-                <select id="motorBrake">
-                    <option value="0">NORMAL</option>
-                    <option value="1">FREEWHEELING</option>
-                    <option value="2">STRONG_BRAKING</option>
-                    <option value="3">BRAKING</option>
-                </select>
-                <div class="button-group">
-                    <button id="setMotorBrake" class="primary">Set Brake</button>
-                    <button id="getMotorBrake" class="secondary">Get Brake</button>
-                </div>
-            </div>
-            <div class="control-group">
-                <span class="label">Current:</span>
-                <div class="value-display" id="currentMotorBrake">-</div>
-            </div>
-
-            <h3>Max Speed</h3>
-            <div class="control-group">
-                <span class="label">Max Speed:</span>
-                <div class="input-group">
-                    <input type="number" id="maxSpeed" min="0" value="1000">
-                    <div class="button-group">
-                        <button id="setMaxSpeed" class="primary">Set Max Speed</button>
-                        <button id="getMaxSpeed" class="secondary">Get Max Speed</button>
-                    </div>
-                </div>
-            </div>
-            <div class="control-group">
-                <span class="label">Current:</span>
-                <div class="value-display" id="currentMaxSpeed">-</div>
-            </div>
-
-            <h3>Acceleration</h3>
-            <div class="control-group">
-                <span class="label">Acceleration:</span>
-                <div class="input-group">
-                    <input type="number" id="acceleration" min="0" value="1000">
-                    <div class="button-group">
-                        <button id="setAcceleration" class="primary">Set Acceleration</button>
-                        <button id="getAcceleration" class="secondary">Get Acceleration</button>
-                    </div>
-                </div>
-            </div>
-            <div class="control-group">
-                <span class="label">Current:</span>
-                <div class="value-display" id="currentAcceleration">-</div>
-            </div>
-
-            <h3>Current Position</h3>
-            <div class="control-group">
-                <span class="label">Position (°):</span>
-                <div class="input-group">
-                    <input type="number" id="currentPosition" class="position-input" step="0.01" value="0">
-                    <div class="button-group">
-                        <button id="setCurrentPosition" class="primary">Set Position</button>
-                        <button id="getCurrentPosition" class="secondary">Get Position</button>
-                    </div>
-                </div>
-            </div>
-            <div class="control-group">
-                <span class="label">Current:</span>
-                <div class="value-display" id="currentPositionValue">-</div>
-            </div>
-
-            <h3>Target Position</h3>
-            <div class="control-group">
-                <span class="label">Position (°):</span>
-                <div class="input-group">
-                    <input type="number" id="targetPosition" class="position-input" step="0.01" value="0">
-                    <div class="button-group">
-                        <button id="setTargetPosition" class="primary">Set Target</button>
-                        <button id="getTargetPosition" class="secondary">Get Target</button>
-                    </div>
-                </div>
-            </div>
-            <div class="control-group">
-                <span class="label">Current:</span>
-                <div class="value-display" id="currentTargetPosition">-</div>
-            </div>
-
-            <h3>Relative Target Position</h3>
-            <div class="control-group">
-                <span class="label">Relative (°):</span>
-                <input type="number" id="relativeTargetPosition" class="position-input" step="0.01" value="90">
-                <div class="button-group">
-                    <button id="setRelativeTargetPosition" class="primary">Move Relative</button>
+            <div class="terminal-content">
+            <div class="terminal-section">
+                <div class="section-header">HOME DIRECTION</div>
+                <div class="command-line">
+                    <span class="prompt">DIRECTION&gt;</span>
+                    <select id="homeDirection" class="terminal-select">
+                        <option value="" disabled selected>Current Direction</option>
+                        <option value="0">CLOCKWISE</option>
+                        <option value="1">COUNTER-CLOCKWISE</option>
+                    </select>
+                    <button id="setHomeDirection" class="terminal-button">[SET]</button>
+                    <button id="getHomeDirection" class="terminal-button secondary">[READ]</button>
                 </div>
             </div>
 
-            <h3>Velocity</h3>
-            <div class="control-group">
-                <span class="label">Velocity (°/s):</span>
-                <div class="input-group">
-                    <input type="number" id="velocity" class="velocity-input" step="0.01" value="10">
-                    <div class="button-group">
-                        <button id="setVelocity" class="primary">Set Velocity</button>
-                        <button id="getVelocity" class="secondary">Get Velocity</button>
-                    </div>
-                </div>
-            </div>
-            <div class="control-group">
-                <span class="label">Current:</span>
-                <div class="value-display" id="currentVelocity">-</div>
-            </div>
-
-            <h3>Velocity and Steps</h3>
-            <div class="control-group">
-                <span class="label">Velocity:</span>
-                <input type="number" id="velocityStepsVelocity" class="velocity-input" value="100">
-                <span class="label">Steps:</span>
-                <input type="number" id="velocityStepsSteps" class="steps-input" value="1000">
-                <span class="label">Mode:</span>
-                <select id="velocityStepsMode">
-                    <option value="0">ABSOLUTE</option>
-                    <option value="1">RELATIVE</option>
-                </select>
-                <div class="button-group">
-                    <button id="setVelocityAndSteps" class="primary">Set Velocity & Steps</button>
+            <div class="terminal-section">
+                <div class="section-header">HOME THRESHOLD</div>
+                <div class="command-line">
+                    <span class="prompt">THRESHOLD&gt;</span>
+                    <input type="number" id="homeThreshold" class="terminal-input" min="0" placeholder="Current Threshold Value">
+                    <button id="setHomeThreshold" class="terminal-button">[SET]</button>
+                    <button id="getHomeThreshold" class="terminal-button secondary">[READ]</button>
                 </div>
             </div>
 
-            <h3>Path Control</h3>
-            <div class="control-group">
-                <span class="label">Path ID:</span>
-                <input type="number" id="pathId" class="path-input" min="0" value="0">
-                <div class="button-group">
-                    <button id="startPath" class="success">Start Path</button>
+            <div class="terminal-section">
+                <div class="section-header">HOME SPEED</div>
+                <div class="command-line">
+                    <span class="prompt">SPEED&gt;</span>
+                    <input type="number" id="homeSpeed" class="terminal-input" min="0" placeholder="Current Speed Value">
+                    <button id="setHomeSpeed" class="terminal-button">[SET]</button>
+                    <button id="getHomeSpeed" class="terminal-button secondary">[READ]</button>
                 </div>
+            </div>
+
+            <div class="terminal-section">
+                <div class="section-header">HOMED STATE STATUS</div>
+                <div class="command-line">
+                    <span class="prompt">STATUS&gt;</span>
+                    <span class="data-field" id="currentHomedState">UNKNOWN</span>
+                    <button id="getHomedState" class="terminal-button">[QUERY]</button>
+                </div>
+            </div>
+
+            <div class="terminal-section critical-section">
+                <div class="section-header">HOME EXECUTE</div>
+                <div class="command-line">
+                    <span class="prompt">COMMAND&gt;</span>
+                    <input type="number" id="homeCommand" class="terminal-input" value="1" placeholder="cmd">
+                    <button id="home" class="terminal-button critical">[EXECUTE HOME SEQUENCE]</button>
+                </div>
+            </div>
+            </div>
+        </section>
+
+        <section class="terminal-window motor-control">
+            <div class="window-header">
+                <span class="window-title">[MOTOR CONTROL SYSTEM]</span>
+                <div class="window-controls">
+                    <span class="control-dot red"></span>
+                    <span class="control-dot yellow"></span>
+                    <span class="control-dot green"></span>
+                </div>
+            </div>
+            <div class="terminal-content">
+            <div class="terminal-section">
+                <div class="section-header">MOTOR STATE CONTROL</div>
+                <div class="command-line">
+                    <span class="prompt">MODE&gt;</span>
+                    <select id="motorState" class="terminal-select">
+                        <option value="" disabled selected>Current Motor State</option>
+                        <option value="0">OFF</option>
+                        <option value="1">POSITION</option>
+                        <option value="2">VELOCITY</option>
+                        <option value="3">VELOCITY_STEP</option>
+                        <option value="4">IDLE_ON</option>
+                        <option value="5">HOME</option>
+                    </select>
+                    <button id="setMotorState" class="terminal-button">[SET]</button>
+                    <button id="getMotorState" class="terminal-button secondary">[READ]</button>
+                </div>
+            </div>
+
+            <div class="terminal-section">
+                <div class="section-header">BRAKE CONTROL</div>
+                <div class="command-line">
+                    <span class="prompt">BRAKE&gt;</span>
+                    <select id="motorBrake" class="terminal-select">
+                        <option value="" disabled selected>Current Brake State</option>
+                        <option value="0">NORMAL</option>
+                        <option value="1">FREEWHEELING</option>
+                        <option value="2">STRONG_BRAKING</option>
+                        <option value="3">BRAKING</option>
+                    </select>
+                    <button id="setMotorBrake" class="terminal-button">[SET]</button>
+                    <button id="getMotorBrake" class="terminal-button secondary">[READ]</button>
+                </div>
+            </div>
+
+            <div class="terminal-section">
+                <div class="section-header">SPEED & ACCELERATION LIMITS</div>
+                <div class="command-line">
+                    <span class="prompt">MAX SPEED&gt;</span>
+                    <input type="number" id="maxSpeed" class="terminal-input" min="0" placeholder="Current Maximum Speed">
+                    <button id="setMaxSpeed" class="terminal-button">[SET]</button>
+                    <button id="getMaxSpeed" class="terminal-button secondary">[READ]</button>
+                </div>
+                <div class="command-line">
+                    <span class="prompt">ACCELERATION&gt;</span>
+                    <input type="number" id="acceleration" class="terminal-input" min="0" placeholder="Current Acceleration Value">
+                    <button id="setAcceleration" class="terminal-button">[SET]</button>
+                    <button id="getAcceleration" class="terminal-button secondary">[READ]</button>
+                </div>
+            </div>
+
+            <div class="terminal-section">
+                <div class="section-header">POSITION CONTROL</div>
+                <div class="command-line">
+                    <span class="prompt">POSITION&gt;</span>
+                    <input type="number" id="currentPosition" class="terminal-input position-input" step="0.01" placeholder="Current Position (degrees)">
+                    <button id="setCurrentPosition" class="terminal-button">[SET]</button>
+                    <button id="getCurrentPosition" class="terminal-button secondary">[READ]</button>
+                </div>
+                <div class="command-line">
+                    <span class="prompt">TARGET&gt;</span>
+                    <input type="number" id="targetPosition" class="terminal-input position-input" step="0.01" placeholder="Target Position (degrees)">
+                    <button id="setTargetPosition" class="terminal-button">[SET TARGET]</button>
+                    <button id="getTargetPosition" class="terminal-button secondary">[READ]</button>
+                </div>
+                <div class="command-line">
+                    <span class="prompt">RELATIVE&gt;</span>
+                    <input type="number" id="relativeTargetPosition" class="terminal-input position-input" step="0.01" value="90" placeholder="relative°">
+                    <button id="setRelativeTargetPosition" class="terminal-button">[MOVE REL]</button>
+                </div>
+            </div>
+
+            <div class="terminal-section">
+                <div class="section-header">VELOCITY CONTROL</div>
+                <div class="command-line">
+                    <span class="prompt">VELOCITY&gt;</span>
+                    <input type="number" id="velocity" class="terminal-input velocity-input" step="0.01" placeholder="Current Velocity (°/s)">
+                    <button id="setVelocity" class="terminal-button">[SET]</button>
+                    <button id="getVelocity" class="terminal-button secondary">[READ]</button>
+                </div>
+            </div>
+
+            <div class="terminal-section">
+                <div class="section-header">VELOCITY + STEPS</div>
+                <div class="command-line">
+                    <span class="prompt">VELOCITY+STEPS&gt;</span>
+                    <input type="number" id="velocityStepsVelocity" class="terminal-input velocity-input" value="100" placeholder="vel">
+                    <span class="separator">STEPS:</span>
+                    <input type="number" id="velocityStepsSteps" class="terminal-input steps-input" value="1000" placeholder="steps">
+                    <select id="velocityStepsMode" class="terminal-select">
+                        <option value="0">ABSOLUTE</option>
+                        <option value="1">RELATIVE</option>
+                    </select>
+                    <button id="setVelocityAndSteps" class="terminal-button">[EXECUTE]</button>
+                </div>
+            </div>
+
+            <div class="terminal-section critical-section">
+                <div class="section-header">PATH EXECUTION</div>
+                <div class="command-line">
+                    <span class="prompt">PATH&gt;</span>
+                    <input type="number" id="pathId" class="terminal-input path-input" min="0" value="0" placeholder="path ID">
+                    <button id="startPath" class="terminal-button critical">[START PATH]</button>
+                </div>
+            </div>
             </div>
         </section>
     </div>
