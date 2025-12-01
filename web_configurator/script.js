@@ -42,6 +42,11 @@ document.getElementById('connect').addEventListener('click', function() {
     connect();
 });
 
+document.getElementById('disconnect').addEventListener('click', function() {
+    console.log('Disconnect button clicked');
+    disconnect();
+});
+
 // Basic Configuration
 document.getElementById('getVersion').addEventListener('click', () => sendMessage(buildGetVersion()));
 document.getElementById('setI2CAddress').addEventListener('click', setI2CAddress);
@@ -51,6 +56,7 @@ document.getElementById('getEthernetAddress').addEventListener('click', () => se
 document.getElementById('setEthernetPort').addEventListener('click', setEthernetPort);
 document.getElementById('getEthernetPort').addEventListener('click', () => sendMessage(buildGetEthernetPort()));
 document.getElementById('getMacAddress').addEventListener('click', () => sendMessage(buildGetMacAddress()));
+document.getElementById('pollAllSettings').addEventListener('click', pollAllSettings);
 document.getElementById('saveConfiguration').addEventListener('click', () => sendMessage(buildSaveConfiguration()));
 
 // LED Control
@@ -117,6 +123,51 @@ async function connect() {
         statusElement.textContent = 'CONNECTION FAILED';
         statusElement.className = 'disconnected';
         indicatorElement.className = 'connection-indicator disconnected';
+    }
+}
+
+async function disconnect() {
+    const statusElement = document.getElementById('status');
+    const indicatorElement = document.getElementById('connectionIndicator');
+    
+    if (!port) {
+        console.log('No active connection to disconnect');
+        return;
+    }
+    
+    statusElement.textContent = 'DISCONNECTING';
+    statusElement.className = 'connecting';
+    indicatorElement.className = 'connection-indicator connecting';
+    
+    try {
+        // Close the port if it's open
+        if (port.readable && !port.readable.locked) {
+            const reader = port.readable.getReader();
+            await reader.cancel();
+            reader.releaseLock();
+        }
+        
+        if (port.writable && !port.writable.locked) {
+            const writer = port.writable.getWriter();
+            await writer.close();
+        }
+        
+        await port.close();
+        port = null;
+        buffer = new Uint8Array();
+        
+        statusElement.textContent = 'OFFLINE';
+        statusElement.className = 'disconnected';
+        indicatorElement.className = 'connection-indicator disconnected';
+        
+        console.log('[SERIAL] Connection closed successfully');
+    } catch (error) {
+        console.error('Error disconnecting:', error);
+        statusElement.textContent = 'OFFLINE';
+        statusElement.className = 'disconnected';
+        indicatorElement.className = 'connection-indicator disconnected';
+        port = null;
+        buffer = new Uint8Array();
     }
 }
 
@@ -492,4 +543,44 @@ function startPath() {
     const pathId = parseInt(document.getElementById('pathId').value);
     const msg = buildStartPath(pathId);
     sendMessage(msg);
+}
+
+async function pollAllSettings() {
+    console.log('[POLL] Starting poll of all settings...');
+    
+    const messages = [
+        // Basic Configuration
+        buildGetVersion(),
+        buildGetI2CAddress(),
+        buildGetEthernetAddress(),
+        buildGetEthernetPort(),
+        buildGetMacAddress(),
+        
+        // LED Control
+        buildGetLedColor(),
+        
+        // Home Configuration
+        buildGetHomeDirection(),
+        buildGetHomeThreshold(),
+        buildGetHomeSpeed(),
+        buildGetHomedState(),
+        
+        // Motor Control
+        buildGetMotorState(),
+        buildGetMotorBrake(),
+        buildGetMaxSpeed(),
+        buildGetAcceleration(),
+        buildGetCurrentPosition(),
+        buildGetTargetPosition(),
+        buildGetVelocity()
+    ];
+    
+    // Send messages with delays to avoid WritableStream locking issues
+    for (let i = 0; i < messages.length; i++) {
+        await sendMessage(messages[i]);
+        // Add 50ms delay between messages to prevent stream locking
+        await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    
+    console.log('[POLL] All setting queries sent');
 }
