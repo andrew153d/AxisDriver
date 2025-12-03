@@ -1,33 +1,49 @@
 #!/usr/bin/env python3
 """
-Simple HTTP server for the Axis Driver Web Configurator.
-This serves the files over HTTP which is required for Web Serial API to work.
+Flask-based backend for the Axis Driver Web Configurator.
+
+Replaces the previous SimpleHTTPRequestHandler server with a Flask app that:
+- Serves the files in the web_configurator directory as static files
+- Exposes POST /udp/send to send UDP packets (payload base64)
+- Exposes GET /udp/stream as an SSE endpoint delivering incoming UDP packets
+
+This file tries to preserve the behaviour of the prior script but uses Flask
+for easier extensibility.
 """
 
-import http.server
-import socketserver
-import os
 import sys
-from pathlib import Path
-import threading
-import socket
-import json
-import base64
 import time
+import socket
+import threading
+import base64
+import json
+from pathlib import Path
+import queue
 
-# Set the directory to serve
+try:
+    from flask import Flask, request, send_from_directory, Response, stream_with_context, jsonify
+except Exception:
+    print("Flask is required. Install with: pip install flask")
+    sys.exit(1)
+
+# Directory containing the web UI (this file's parent)
 WEB_DIR = Path(__file__).parent
 PORT = 8081
 
-# UDP forwarding state
+# UDP and SSE state
 udp_socket = None
 udp_lock = threading.Lock()
-# SSE clients: list of handler objects (instances of CustomHTTPRequestHandler)
+
+# For SSE we maintain a list of queues (one per connected client). The UDP
+# receiver thread will put JSON payload strings into each queue.
 sse_clients = []
 sse_clients_lock = threading.Lock()
 
+app = Flask(__name__, static_folder=str(WEB_DIR), static_url_path="")
+
+
 def udp_receiver_loop(sock):
-    """Receive UDP packets on the given socket and forward them to SSE clients as base64 strings."""
+    """Receive UDP packets and forward them to all SSE client queues as base64 JSON."""
     while True:
         try:
             data, addr = sock.recvfrom(65536)
@@ -36,137 +52,118 @@ def udp_receiver_loop(sock):
             b64 = base64.b64encode(data).decode('ascii')
             payload = json.dumps({'from': addr[0], 'port': addr[1], 'payload': b64})
 
-            # Send to all SSE clients
             with sse_clients_lock:
-                for client in list(sse_clients):
+                for q in list(sse_clients):
                     try:
-                        # SSE: data: <line>\n\n
-                        client.wfile.write(f"data: {payload}\n\n".encode('utf-8'))
-                        client.wfile.flush()
+                        # Put the payload string into each client's queue (non-blocking)
+                        q.put_nowait(payload)
                     except Exception:
-                        try:
-                            sse_clients.remove(client)
-                        except ValueError:
-                            pass
+                        # If queue is full or other error, drop this client later
+                        pass
         except Exception:
-            # sleep briefly to avoid busy-looping on persistent errors
+            # Avoid tight-looping on persistent errors
             time.sleep(0.1)
 
-class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, directory=str(WEB_DIR), **kwargs)
-    
-    def end_headers(self):
-        # Add headers for better compatibility
-        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
-        self.send_header('Pragma', 'no-cache')
-        self.send_header('Expires', '0')
-        super().end_headers()
 
-    def do_POST(self):
-        """
-        POST /udp/send  -> { ip, port, payload: base64 }
-        The server will send the payload via UDP to (ip,port) using a shared UDP socket.
-        """
-        if self.path == '/udp/send':
-            length = int(self.headers.get('Content-Length', 0))
-            body = self.rfile.read(length) if length else b''
+@app.route('/udp/send', methods=['POST'])
+def udp_send():
+    """POST /udp/send -> { ip, port, payload: base64 }
+    Sends the provided payload to (ip, port) using a shared UDP socket.
+    """
+    data = None
+    try:
+        data = request.get_json(force=True)
+    except Exception:
+        return "Invalid JSON", 400
+
+    if not data:
+        return "Invalid JSON", 400
+
+    ip = data.get('ip')
+    port = data.get('port')
+    payload_b64 = data.get('payload')
+
+    try:
+        port = int(port)
+    except Exception:
+        return "Invalid port", 400
+
+    try:
+        payload = base64.b64decode(payload_b64) if payload_b64 else b''
+    except Exception:
+        return "Invalid base64 payload", 400
+
+    global udp_socket
+    with udp_lock:
+        if udp_socket is None:
+            udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            udp_socket.bind(('', 0))
+            t = threading.Thread(target=udp_receiver_loop, args=(udp_socket,), daemon=True)
+            t.start()
+
+        try:
+            udp_socket.sendto(payload, (ip, port))
+        except Exception as e:
+            return str(e), 500
+
+    return jsonify({'status': 'ok'})
+
+
+def sse_stream(client_queue):
+    """Generator that yields Server-Sent Events from the given queue."""
+    try:
+        while True:
+            # Wait for next payload (blocking)
+            payload = client_queue.get()
+            yield f"data: {payload}\n\n"
+    except GeneratorExit:
+        # Client disconnected
+        return
+    finally:
+        # ensure the client's queue is removed
+        with sse_clients_lock:
             try:
-                data = json.loads(body.decode('utf-8'))
-                ip = data.get('ip')
-                port = int(data.get('port'))
-                payload_b64 = data.get('payload')
-                payload = base64.b64decode(payload_b64) if payload_b64 else b''
-            except Exception as e:
-                self.send_response(400)
-                self.end_headers()
-                self.wfile.write(b'Invalid JSON')
-                return
-
-            # Ensure UDP socket exists and is bound
-            global udp_socket
-            with udp_lock:
-                if udp_socket is None:
-                    udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                    # Bind to an OS-assigned port so replies come back here
-                    udp_socket.bind(('', 0))
-                    # Start receiver thread
-                    t = threading.Thread(target=udp_receiver_loop, args=(udp_socket,), daemon=True)
-                    t.start()
-
-            try:
-                with udp_lock:
-                    udp_socket.sendto(payload, (ip, port))
-                self.send_response(200)
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
-                resp = {'status': 'ok'}
-                self.wfile.write(json.dumps(resp).encode('utf-8'))
-            except Exception as e:
-                self.send_response(500)
-                self.end_headers()
-                self.wfile.write(str(e).encode('utf-8'))
-            return
-
-        # Fallback to default behaviour for other POSTs
-        return super().do_POST()
-
-    def do_GET(self):
-        # SSE stream for incoming UDP packets
-        if self.path == '/udp/stream':
-            self.send_response(200)
-            self.send_header('Content-Type', 'text/event-stream')
-            self.send_header('Cache-Control', 'no-cache')
-            self.send_header('Connection', 'keep-alive')
-            self.end_headers()
-
-            # Register client
-            with sse_clients_lock:
-                sse_clients.append(self)
-
-            try:
-                # Keep the connection open. The udp_receiver_loop will write to self.wfile when data arrives.
-                while True:
-                    time.sleep(0.5)
-                    # If wfile is closed, break
-                    if getattr(self, 'wfile', None) is None:
-                        break
-            except Exception:
+                sse_clients.remove(client_queue)
+            except ValueError:
                 pass
-            finally:
-                with sse_clients_lock:
-                    try:
-                        sse_clients.remove(self)
-                    except ValueError:
-                        pass
-            return
 
-        return super().do_GET()
+
+@app.route('/udp/stream')
+def udp_stream():
+    """SSE endpoint that streams incoming UDP packets to the browser."""
+    q = queue.Queue()
+    with sse_clients_lock:
+        sse_clients.append(q)
+
+    # Use stream_with_context to ensure the Flask request context stays alive
+    return Response(stream_with_context(sse_stream(q)), mimetype='text/event-stream')
+
+
+@app.route('/', defaults={'path': 'index.html'})
+@app.route('/<path:path>')
+def static_proxy(path):
+    # Serve static files from the WEB_DIR
+    return send_from_directory(str(WEB_DIR), path)
 
 
 def main():
     try:
-        # Use a threading server so SSE connections and POST handlers can run concurrently
-        with http.server.ThreadingHTTPServer(("", PORT), CustomHTTPRequestHandler) as httpd:
-            print(f"🚀 Axis Driver Web Configurator Server")
-            print(f"📡 Serving at: http://localhost:{PORT}")
-            print(f"📁 Directory: {WEB_DIR}")
-            print(f"🌐 Open your browser to: http://localhost:{PORT}")
-            print(f"🔌 Make sure your Axis Driver is connected via USB")
-            print(f"⚡ Press Ctrl+C to stop the server")
-            print("-" * 60)
-            
-            httpd.serve_forever()
-            
-    except KeyboardInterrupt:
-        print("\n🛑 Server stopped by user")
+        print(f"🚀 Axis Driver Web Configurator (Flask)")
+        print(f"📡 Serving at: http://localhost:{PORT}")
+        print(f"📁 Directory: {WEB_DIR}")
+        print("⚡ Press Ctrl+C to stop the server")
+        print("-" * 60)
+        app.run(host='0.0.0.0', port=PORT, threaded=True)
     except OSError as e:
-        if e.errno == 98:  # Address already in use
+        if getattr(e, 'errno', None) == 98:
             print(f"❌ Port {PORT} is already in use. Try a different port or stop the existing server.")
             sys.exit(1)
         else:
             print(f"❌ Error starting server: {e}")
             sys.exit(1)
+    except KeyboardInterrupt:
+        print("\n🛑 Server stopped by user")
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     main()
