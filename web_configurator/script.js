@@ -1,5 +1,6 @@
 let port;
 let buffer = new Uint8Array();
+let udpEventSource = null;
 
 // Initialize status and start retro effects
 document.addEventListener('DOMContentLoaded', function() {
@@ -16,6 +17,38 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         document.body.classList.add('booted');
     }, 800);
+
+    // Show/hide UDP target inputs based on connection type
+    const connSel = document.getElementById('connectionType');
+    const udpIp = document.getElementById('udpTargetIp');
+    const udpPort = document.getElementById('udpTargetPort');
+    const mainIp = document.getElementById('ethernetAddress');
+    const mainPort = document.getElementById('ethernetPort');
+
+    function updateUdpFieldsVisibility() {
+        if (!connSel) return;
+        const visible = connSel.value === 'udp';
+        if (udpIp) udpIp.style.display = visible ? 'inline-block' : 'none';
+        if (udpPort) udpPort.style.display = visible ? 'inline-block' : 'none';
+    }
+
+    if (connSel) {
+        connSel.addEventListener('change', updateUdpFieldsVisibility);
+        updateUdpFieldsVisibility();
+    }
+
+    // Keep the main ethernet fields and the shortcut fields in sync
+    if (udpIp && mainIp) {
+        // populate shortcut from main on load
+        if (mainIp.value && !udpIp.value) udpIp.value = mainIp.value;
+        udpIp.addEventListener('input', () => { mainIp.value = udpIp.value; });
+        mainIp.addEventListener('input', () => { udpIp.value = mainIp.value; });
+    }
+    if (udpPort && mainPort) {
+        if (mainPort.value && !udpPort.value) udpPort.value = mainPort.value;
+        udpPort.addEventListener('input', () => { mainPort.value = udpPort.value; });
+        mainPort.addEventListener('input', () => { udpPort.value = mainPort.value; });
+    }
 });
 
 // Update timestamp display
@@ -96,78 +129,121 @@ document.getElementById('startPath').addEventListener('click', startPath);
 async function connect() {
     const statusElement = document.getElementById('status');
     const indicatorElement = document.getElementById('connectionIndicator');
-    
-    // Check if Web Serial API is supported
-    if (!('serial' in navigator)) {
-        alert('Web Serial API not supported. Please use Chrome/Edge 89+ and ensure the page is served over HTTPS.');
-        statusElement.textContent = 'OFFLINE';
-        statusElement.className = 'disconnected';
-        indicatorElement.className = 'connection-indicator disconnected';
-        return;
-    }
-    
+    const connectionType = document.getElementById('connectionType') ? document.getElementById('connectionType').value : 'serial';
+
     statusElement.textContent = 'CONNECTING';
     statusElement.className = 'connecting';
     indicatorElement.className = 'connection-indicator connecting';
 
-    try {
-        port = await navigator.serial.requestPort();
-        await port.open({ baudRate: 115200 });
-        statusElement.textContent = 'ONLINE';
-        statusElement.className = 'connected';
-        indicatorElement.className = 'connection-indicator connected';
-        const reader = port.readable.getReader();
-        readLoop(reader);
-    } catch (error) {
-        console.error('Error connecting:', error);
-        statusElement.textContent = 'CONNECTION FAILED';
-        statusElement.className = 'disconnected';
-        indicatorElement.className = 'connection-indicator disconnected';
+    if (connectionType === 'serial') {
+        // Check if Web Serial API is supported
+        if (!('serial' in navigator)) {
+            alert('Web Serial API not supported. Please use Chrome/Edge 89+ and ensure the page is served over HTTPS.');
+            statusElement.textContent = 'OFFLINE';
+            statusElement.className = 'disconnected';
+            indicatorElement.className = 'connection-indicator disconnected';
+            return;
+        }
+
+        try {
+            port = await navigator.serial.requestPort();
+            await port.open({ baudRate: 115200 });
+            statusElement.textContent = 'ONLINE';
+            statusElement.className = 'connected';
+            indicatorElement.className = 'connection-indicator connected';
+            const reader = port.readable.getReader();
+            readLoop(reader);
+        } catch (error) {
+            console.error('Error connecting:', error);
+            statusElement.textContent = 'CONNECTION FAILED';
+            statusElement.className = 'disconnected';
+            indicatorElement.className = 'connection-indicator disconnected';
+        }
+    } else if (connectionType === 'udp') {
+        // Open SSE to receive incoming UDP packets from the server
+        try {
+            if (udpEventSource) udpEventSource.close();
+            udpEventSource = new EventSource('/udp/stream');
+            udpEventSource.onmessage = function(e) {
+                try {
+                    const obj = JSON.parse(e.data);
+                    const b64 = obj.payload;
+                    const bytes = base64ToUint8Array(b64);
+                    processData(bytes);
+                } catch (err) {
+                    console.error('Error parsing UDP SSE message:', err, e.data);
+                }
+            };
+            udpEventSource.onerror = function(err) {
+                console.error('UDP EventSource error', err);
+            };
+
+            statusElement.textContent = 'ONLINE';
+            statusElement.className = 'connected';
+            indicatorElement.className = 'connection-indicator connected';
+        } catch (error) {
+            console.error('Error connecting (UDP):', error);
+            statusElement.textContent = 'CONNECTION FAILED';
+            statusElement.className = 'disconnected';
+            indicatorElement.className = 'connection-indicator disconnected';
+        }
     }
 }
 
 async function disconnect() {
     const statusElement = document.getElementById('status');
     const indicatorElement = document.getElementById('connectionIndicator');
-    
-    if (!port) {
-        console.log('No active connection to disconnect');
-        return;
-    }
-    
-    statusElement.textContent = 'DISCONNECTING';
-    statusElement.className = 'connecting';
-    indicatorElement.className = 'connection-indicator connecting';
-    
-    try {
-        // Close the port if it's open
-        if (port.readable && !port.readable.locked) {
-            const reader = port.readable.getReader();
-            await reader.cancel();
-            reader.releaseLock();
+    const connectionType = document.getElementById('connectionType') ? document.getElementById('connectionType').value : 'serial';
+
+    if (connectionType === 'serial') {
+        if (!port) {
+            console.log('No active connection to disconnect');
+            return;
         }
-        
-        if (port.writable && !port.writable.locked) {
-            const writer = port.writable.getWriter();
-            await writer.close();
+
+        statusElement.textContent = 'DISCONNECTING';
+        statusElement.className = 'connecting';
+        indicatorElement.className = 'connection-indicator connecting';
+
+        try {
+            // Close the port if it's open
+            if (port.readable && !port.readable.locked) {
+                const reader = port.readable.getReader();
+                await reader.cancel();
+                reader.releaseLock();
+            }
+
+            if (port.writable && !port.writable.locked) {
+                const writer = port.writable.getWriter();
+                await writer.close();
+            }
+
+            await port.close();
+            port = null;
+            buffer = new Uint8Array();
+
+            statusElement.textContent = 'OFFLINE';
+            statusElement.className = 'disconnected';
+            indicatorElement.className = 'connection-indicator disconnected';
+
+            console.log('[SERIAL] Connection closed successfully');
+        } catch (error) {
+            console.error('Error disconnecting:', error);
+            statusElement.textContent = 'OFFLINE';
+            statusElement.className = 'disconnected';
+            indicatorElement.className = 'connection-indicator disconnected';
+            port = null;
+            buffer = new Uint8Array();
         }
-        
-        await port.close();
-        port = null;
+    } else if (connectionType === 'udp') {
+        if (udpEventSource) {
+            udpEventSource.close();
+            udpEventSource = null;
+        }
         buffer = new Uint8Array();
-        
         statusElement.textContent = 'OFFLINE';
         statusElement.className = 'disconnected';
         indicatorElement.className = 'connection-indicator disconnected';
-        
-        console.log('[SERIAL] Connection closed successfully');
-    } catch (error) {
-        console.error('Error disconnecting:', error);
-        statusElement.textContent = 'OFFLINE';
-        statusElement.className = 'disconnected';
-        indicatorElement.className = 'connection-indicator disconnected';
-        port = null;
-        buffer = new Uint8Array();
     }
 }
 
@@ -376,8 +452,37 @@ function handleMessage(msg) {
 }
 
 async function sendMessage(msg) {
-    if (!port) {
-        console.error('[SERIAL TX] Cannot send message - no serial port connection');
+    const connectionType = document.getElementById('connectionType') ? document.getElementById('connectionType').value : 'serial';
+
+    if (connectionType === 'udp') {
+        // Send payload to server which will forward over UDP
+        // Prefer the nearby udpTarget inputs if present
+        const ipField = document.getElementById('udpTargetIp') || document.getElementById('ethernetAddress');
+        const portField = document.getElementById('udpTargetPort') || document.getElementById('ethernetPort');
+        const ip = ipField ? ipField.value : '';
+        const portVal = portField ? parseInt(portField.value) || 0 : 0;
+        if (!ip || !portVal) {
+            console.error('[UDP TX] Missing target IP or port');
+            alert('Please enter target IP and port for UDP connection');
+            return;
+        }
+
+        const payloadB64 = uint8ArrayToBase64(msg);
+        try {
+            const resp = await fetch('/udp/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ip: ip, port: portVal, payload: payloadB64 })
+            });
+            if (!resp.ok) console.error('[UDP TX] Send failed', resp.statusText);
+            else console.log('[UDP TX] Sent', msg.length, 'bytes to', ip + ':' + portVal);
+        } catch (err) {
+            console.error('[UDP TX] Error sending:', err);
+        }
+
+        // Log message locally as UDP TX
+        const hexBytes = Array.from(msg).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+        console.log(`[UDP TX] Sending ${msg.length} bytes: ${hexBytes}`);
         return;
     }
     
@@ -403,6 +508,30 @@ async function sendMessage(msg) {
         console.error(`[SERIAL TX] Send error: ${error.message}`);
         console.error('Send error:', error);
     }
+}
+
+// Helpers for base64 <-> Uint8Array
+function uint8ArrayToBase64(u8) {
+    let CHUNK_SIZE = 0x8000;
+    let index = 0;
+    let length = u8.length;
+    let result = '';
+    while (index < length) {
+        let slice = u8.subarray(index, Math.min(index + CHUNK_SIZE, length));
+        result += String.fromCharCode.apply(null, slice);
+        index += CHUNK_SIZE;
+    }
+    return btoa(result);
+}
+
+function base64ToUint8Array(b64) {
+    const binary_string = atob(b64);
+    const len = binary_string.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binary_string.charCodeAt(i);
+    }
+    return bytes;
 }
 
 // Utility functions

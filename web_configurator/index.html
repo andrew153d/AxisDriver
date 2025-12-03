@@ -41,6 +41,15 @@
                 </div>
                 <div class="command-line">
                     <span class="prompt">COMMAND&gt;</span>
+                    <select id="connectionType" class="terminal-select" style="width:150px; margin-right:8px;">
+                        <option value="serial">Serial (WebSerial)</option>
+                        <option value="udp">UDP (Network)</option>
+                    </select>
+
+                    <!-- UDP target inputs (visible when UDP selected) -->
+                    <input id="udpTargetIp" class="terminal-input ip-input" style="width:150px; margin-right:6px; display:none;" placeholder="Target IP (e.g. 192.168.1.100)">
+                    <input id="udpTargetPort" class="terminal-input" type="number" min="0" max="65535" style="width:90px; margin-right:8px; display:none;" placeholder="Port">
+
                     <button id="connect" class="terminal-button">[ESTABLISH LINK]</button>
                     <button id="disconnect" class="terminal-button secondary">[DISCONNECT]</button>
                 </div>
