@@ -52,7 +52,7 @@ void init_timer()
   while (GCLK->SYNCBUSY.bit.GENCTRL1)
     ;
 
-  Serial.printf("Prescaler: %d\n", GCLK->GENCTRL[0].bit.DIV);
+  DEBUG_PRINTF("Prescaler: %d\n", GCLK->GENCTRL[0].bit.DIV);
 
   // Reset TC0
   TC0->COUNT16.CTRLA.bit.SWRST = 1;

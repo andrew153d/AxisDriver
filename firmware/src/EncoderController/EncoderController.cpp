@@ -18,14 +18,14 @@ void EncoderController::OnStart()
     byte error = Wire1.endTransmission();
     if (error)
     {
-        Serial.println("Failed to find Encoder");
+        DEBUG_PRINTLN("Failed to find Encoder");
 
         addrLedController.AddLedStep(CRGB::Red, 100);
         addrLedController.AddLedStep(CRGB::Black, 100);
     }
     else
     {
-        Serial.println("Can communicate with Encoder");
+        DEBUG_PRINTLN("Can communicate with Encoder");
 
         addrLedController.AddLedStep(0x222200, 100);
         addrLedController.AddLedStep(CRGB::Black, 100);
